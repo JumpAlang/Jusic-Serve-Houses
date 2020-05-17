@@ -29,11 +29,11 @@
 
 3. 安装音乐基础服务
 
-   3.1 网易云音乐（后面会改成nodejs，参照https://github.com/jsososo/NeteaseMusic）：你需要一个可以提供音乐的服务，本项目中使用的是另一个仓库的 [Musicoo](https://github.com/hanhuoer/Musicoo) 搭建的
+   3.1 网易云音乐（后面会改成nodejs，参照<https://github.com/jsososo/NeteaseMusic>）：你需要一个可以提供音乐的服务，本项目中使用的是另一个仓库的 [Musicoo](https://github.com/hanhuoer/Musicoo) 搭建的
    
-   3.2 qq音乐:https://github.com/jsososo/QQMusicApi
+   3.2 qq音乐:<https://github.com/jsososo/QQMusicApi>
    
-   3.3 咪咕音乐：参照这个项目https://github.com/jsososo/MiguMusicApi，但有做了一些修改，修改后的代码后续上传
+   3.3 咪咕音乐：参照这个项目<https://github.com/jsososo/MiguMusicApi>，但有做了一些修改，修改后的代码后续上传
 4. 配置
 
    在 `src\main\resources\application.yml` 中配置好 redis 以及音乐服务
