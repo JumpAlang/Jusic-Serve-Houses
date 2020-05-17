@@ -43,9 +43,9 @@ public class MusicController {
     @MessageMapping("/music/pick")
     public void pick(Music music, StompHeaderAccessor accessor) {
         // 点歌消息反馈
-        if(music.getName() != null){
-            music.setName(music.getName().replaceAll("\\s*", ""));
-        }
+//        if(music.getName() != null){
+//            music.setName(music.getName().replaceAll("\\s*", ""));
+//        }
         log.info("收到点歌请求: {},{}", music.getName(),music.getId());
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String nickName = sessionService.getNickName(sessionId);
