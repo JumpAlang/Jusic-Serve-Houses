@@ -95,10 +95,7 @@ Jusic：[Jusic 点歌台](http://www.alang.run/syncmusic)
 
 ## 相关项目
 
-kasuganosoras：[SyncMusic](https://github.com/kasuganosoras/SyncMusic)
-
-ZeroDream：[Akkariin 点歌台](https://music.tql.ink)
-
+hanhuoer [JusicServe](https://github.com/hanhuoer/Jusic-serve)
 
 
 ## 更新日志
