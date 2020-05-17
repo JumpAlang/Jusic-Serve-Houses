@@ -11,7 +11,7 @@
 
 后端: 本项目
 
-前端: [Jusic-ui](https://github.com/hanhuoer/Jusic-ui)
+前端: [Jusic-ui](https://github.com/JumpAlang/Jusic-ui)
 
 ## 安装
 
