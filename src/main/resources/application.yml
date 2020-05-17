@@ -9,8 +9,8 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: 18759478272@139.com
-    password: 54288Wlj
+    username: xx@139.com
+    password: xx
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -35,10 +35,10 @@ jusic:
   rtry-count: 1
   vote-rate: 0.3
   default-music-file: 'http://www.alang.run/default-list.txt' #classpath:music/default-list.txt classpath:music/default-list.txt
-  music-serve-domain: 'http://120.24.243.237:8888'
-  music-serve-domain_qq: 'http://120.24.243.237:3300'
-  music-serve-domain_mg: 'http://120.24.243.237:3400'#'http://localhost:3400'#
-  mail-send-from: '18759478272@139.com'
-  mail-send-to: '1040927107@qq.com'
-  serverJUrl: 'https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send'
+  music-serve-domain: 'http://127.0.0.1:8888'
+  music-serve-domain_qq: 'http://127.0.0.1:3300'
+  music-serve-domain_mg: 'http://127.0.0.1:3400'#'http://localhost:3400'#
+  mail-send-from: 'xx@139.com'
+  mail-send-to: 'xx@qq.com'
+  serverJUrl: 'https://sc.ftqq.com/xx.send'
 
