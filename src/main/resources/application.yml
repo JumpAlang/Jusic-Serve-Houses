@@ -9,36 +9,36 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: xx@139.com
-    password: xxx
+    username: 18759478272@139.com
+    password: 54288Wlj
     test-connection: false
     port: 465
     default-encoding: UTF-8
     properties:
-     mail:
-      imap:
-        ssl:
-          socketFactory:
-            fallback: false
-      smtp:
-        auth: true
-        starttls:
-          enable: true
-          required: true
-        ssl:
-          enable: true
-          socketFactory:
-            class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
+      mail:
+        imap:
+          ssl:
+            socketFactory:
+              fallback: false
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: true
+            socketFactory:
+              class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
 
 jusic:
   music-expire-time: 1200000
   rtry-count: 1
   vote-rate: 0.3
-  default-music-file: classpath:music/default-list.txt
-  music-serve-domain: 'http://localhost:8888'
-  music-serve-domain_qq: 'http://localhost:3300'
-  music-serve-domain_mg: 'http://localhost:3400'#'http://localhost:3400'#
-  mail-send-from: 'xxx@139.com'
-  mail-send-to: 'xx@qq.com'
-  serverJUrl: 'https://sc.ftqq.com/xx.send'
+  default-music-file: 'http://www.alang.run/default-list.txt' #classpath:music/default-list.txt classpath:music/default-list.txt
+  music-serve-domain: 'http://120.24.243.237:8888'
+  music-serve-domain_qq: 'http://120.24.243.237:3300'
+  music-serve-domain_mg: 'http://120.24.243.237:3400'#'http://localhost:3400'#
+  mail-send-from: '18759478272@139.com'
+  mail-send-to: '1040927107@qq.com'
+  serverJUrl: 'https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send'
 
