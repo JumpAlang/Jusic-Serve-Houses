@@ -79,7 +79,7 @@
 
 ## 在线预览
 
-Jusic：[Jusic 点歌台](http://www.alang.run/)
+Jusic：[Jusic 点歌台](http://www.alang.run/syncmusic)
 
 
 
