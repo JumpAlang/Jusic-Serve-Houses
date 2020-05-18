@@ -29,7 +29,7 @@ import java.util.ArrayList;
 public class MusicTopJob {
     @Autowired
     private JusicProperties jusicProperties;
-    private static String tokenPath = "D:\\JAVA\\IdeaWorkspaces\\Jusic-serve\\src\\main\\resources\\music\\default-list.txt";// "/usr/local/nginx/html/default-list.txt";
+    private static String tokenPath = "D:\\JAVA\\IdeaWorkspaces\\Jusic-serve\\src\\main\\resources\\music\\default-list.txt";//"/usr/local/nginx/html/default-list.txt";
 
     private static final String topUrl = "https://music.163.com/discover/toplist?id=3778678";
 

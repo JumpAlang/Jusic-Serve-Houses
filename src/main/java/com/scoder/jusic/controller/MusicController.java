@@ -73,6 +73,8 @@ public class MusicController {
             }else{
                 pick = musicService.getMGMusic(music.getName());
             }
+        }else if("lz".equals(music.getSource())){
+            pick = musicService.getLZMusic(Integer.valueOf(music.getId()));
         }else{
             pick = musicService.getMusic(music.getId() == null?music.getName():music.getId());
         }

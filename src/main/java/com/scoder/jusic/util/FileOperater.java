@@ -5,32 +5,62 @@ package com.scoder.jusic.util;
  * @create 2020-01-12 15:35
  */
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
 
 public class FileOperater {
 
 
-    public static String getfileinfo(String tokenPath) {
-        String rstr = "";
+    public static String getfileinfoByClassPath(String classPath){
+        ClassPathResource resource = new ClassPathResource(classPath);
+        String content = null;
+        content = commonReadFile(resource);
 
+        return content;
+    }
+
+    public static String commonReadFile(File file){
+        String fileStr = "";
         try {
-            FileSystemResource resource = new FileSystemResource(tokenPath);
-            BufferedReader br = new BufferedReader(new FileReader(resource.getFile()));
-            String str = null;
+
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String str = "";
             while ((str = br.readLine()) != null) {
-                rstr += str;
+                fileStr += str;
             }
             br.close();
         } catch (IOException e) {
             //todo loginfo
+            e.printStackTrace();
+            fileStr = "";
         }
-        return rstr;
+        return fileStr;
+    }
+
+    public static String commonReadFile(Resource resource){
+        String fileStr = "";
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()));
+            String str = "";
+            while ((str = br.readLine()) != null) {
+                fileStr += str;
+            }
+            br.close();
+        } catch (IOException e) {
+            //todo loginfo
+            e.printStackTrace();
+            fileStr = "";
+        }
+        return fileStr;
+    }
+
+    public static String getfileinfo(String tokenPath) {
+        FileSystemResource resource = new FileSystemResource(tokenPath);
+        return commonReadFile(resource.getFile());
     }
 
     public static void writefileinfo(String t,String tokenPath) throws IOException {

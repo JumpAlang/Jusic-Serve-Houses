@@ -11,6 +11,7 @@ import com.scoder.jusic.model.Music;
 import com.scoder.jusic.model.MusicComparator;
 import com.scoder.jusic.repository.*;
 import com.scoder.jusic.service.MusicService;
+import com.scoder.jusic.util.FileOperater;
 import com.scoder.jusic.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,7 @@ public class MusicServiceImpl implements MusicService {
     @Autowired
     private MusicBlackRepository musicBlackRepository;
 
-
+    private static final String lizhijson = "D:\\JAVA\\IdeaWorkspaces\\Jusic-serve\\src\\main\\resources\\lizhimusic.json";//"/usr/local/nginx/html/lizhimusic.json";//
     /**
      * 把音乐放进点歌列表
      */
@@ -84,7 +85,7 @@ public class MusicServiceImpl implements MusicService {
 
         result = musicPlayingRepository.pickToPlaying();
         // 防止选歌的时间超过音乐链接的有效时长
-        if (result.getPickTime() + jusicProperties.getMusicExpireTime() <= System.currentTimeMillis()) {
+        if (!"lz".equals(result.getSource()) && result.getPickTime() + jusicProperties.getMusicExpireTime() <= System.currentTimeMillis()) {
             String musicUrl;
             if("qq".equals(result.getSource())){
                 musicUrl = this.getQQMusicUrl(result.getId());
@@ -293,6 +294,43 @@ public class MusicServiceImpl implements MusicService {
             }
         }
 
+        return music;
+    }
+
+
+    @Override
+    public Music getLZMusic(Integer index) {
+        Music music = null;
+        String listStr = FileOperater.getfileinfo(lizhijson);
+        if(listStr == null || "".equals(listStr)) {
+            return null;
+        }
+        JSONArray musicList = JSONArray.parseArray(listStr);
+        JSONObject data = musicList.getJSONObject(index-1);
+        music = new Music();
+        music.setSource("lz");
+        String id = data.getString("id");
+        music.setId(id);
+        String lyrics = "";
+        music.setLyric(lyrics);
+        String name = data.getString("name");
+        music.setName(name);
+        String singerNames = data.getString("artist");
+        music.setArtist(singerNames);
+        String url = data.getString("url");
+        music.setUrl(url);
+        long duration = data.getDouble("duration").longValue();
+        music.setDuration(duration);
+        Album album = new Album();
+        JSONObject albumJSON = data.getJSONObject("album");
+        Integer albumid = albumJSON.getInteger("id");
+        album.setId(albumid);
+        String albumname = albumJSON.getString("name");
+        album.setName(albumname);
+        album.setArtist(singerNames);
+        album.setPictureUrl(data.getString("picture_url"));
+        music.setAlbum(album);
+        music.setPictureUrl(data.getString("picture_url"));
         return music;
     }
 
@@ -745,6 +783,8 @@ public class MusicServiceImpl implements MusicService {
             return searchQQ(music,hulkPage);
         }else if(music.getSource().equals("mg")){
             return searchMG(music,hulkPage);
+        }else if(music.getSource().equals("lz")){
+            return searchLZ(music,hulkPage);
         }
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomain())
@@ -833,6 +873,55 @@ public class MusicServiceImpl implements MusicService {
             }
         } catch (Exception e) {
             log.error("音乐搜索接口异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+        }
+        return hulkPage;
+    }
+
+    private JSONArray getCurrentPageList(int pageNo,int pageSize,JSONArray data){
+        int size = data.size();
+        int pages = (size+pageSize-1)/pageSize;
+        if(pageNo > pages){
+            return new JSONArray();
+        }else{
+            JSONArray pagedArray = new JSONArray();
+            for(int i = (pageNo-1)*pageSize; i < (pageNo==pages?size:pageNo*pageSize); i++) {
+                pagedArray.add(data.getJSONObject(i));
+            }
+            return pagedArray;
+        }
+    }
+
+
+    private HulkPage searchLZ(Music music,HulkPage hulkPage) {
+        String listStr = FileOperater.getfileinfo(lizhijson);
+        if(listStr == null || "".equals(listStr)) {
+            hulkPage.setTotalSize(0);
+            hulkPage.setData(new Object[]{});
+            return hulkPage;
+        }
+        JSONArray data = JSONArray.parseArray(listStr);
+        int size = data.size();
+        if(music.getName() == null || "".equals(music.getName())) {
+            List list = JSONObject.parseObject(JSONObject.toJSONString(getCurrentPageList(hulkPage.getPageIndex(),hulkPage.getPageSize(),data)), List.class);
+            hulkPage.setData(list);
+            hulkPage.setTotalSize(size);
+            return hulkPage;
+        }
+        JSONArray buildJSONArray = new JSONArray();
+        for(int i = 0; i < size; i++) {
+            JSONObject jsonObject = data.getJSONObject(i);
+            if (jsonObject.getString("artist").indexOf(music.getName()) != -1 || jsonObject.getString("name").indexOf(music.getName()) != -1 || jsonObject.getJSONObject("album").getString("name").indexOf(music.getName()) != -1) {
+                buildJSONArray.add(jsonObject);
+            }
+        }
+        if(buildJSONArray.size() > 0){
+            List list = JSONObject.parseObject(JSONObject.toJSONString(getCurrentPageList(hulkPage.getPageIndex(),hulkPage.getPageSize(),buildJSONArray)), List.class);
+            hulkPage.setTotalSize(buildJSONArray.size());
+            hulkPage.setData(list);
+        }else{
+            hulkPage.setTotalSize(0);
+            hulkPage.setData(new Object[]{});
+            return hulkPage;
         }
         return hulkPage;
     }
