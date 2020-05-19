@@ -1,4 +1,4 @@
-package com.scoder.jusic.service.imp;
+package com.scoder.jusic.job;
 
 /**
  * @author alang
@@ -18,6 +18,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -29,9 +30,8 @@ import java.util.ArrayList;
 public class MusicTopJob {
     @Autowired
     private JusicProperties jusicProperties;
-    private static String tokenPath = "/usr/local/nginx/html/default-list.txt";//"D:\\JAVA\\IdeaWorkspaces\\Jusic-serve\\src\\main\\resources\\music\\default-list.txt";//
-
-    private static final String topUrl = "https://music.163.com/discover/toplist?id=3778678";
+    @Autowired
+    private  ResourceLoader resourceLoader;
 
 //    public static void main(String[] args) {
 //        getData(topUrl);
@@ -40,14 +40,14 @@ public class MusicTopJob {
     //表示每隔3小时
     @Scheduled(fixedRate = 10800000)
     public void getMusicTopJob(){
-        JusicProperties.setDefaultListByJob(getData(jusicProperties));
+        JusicProperties.setDefaultListByJob(getData());
     }
 
-    public static ArrayList<String> getMusicTop(JusicProperties jusicProperties){
-        return getData(jusicProperties);
+    public ArrayList<String> getMusicTop(){
+        return getData();
     }
 
-    private static class TopMusic{
+    private class TopMusic{
         private ArrayList<String> topMusicList;
         private String topMusicStrings;
 
@@ -76,12 +76,12 @@ public class MusicTopJob {
         }
     }
 
-    private static TopMusic getTopMusicWy(String topUrl){
+    private TopMusic getTopMusicWy(){
         ArrayList<String> topList = new ArrayList<>();
         String musicIds = "";
         Document doc = null;
         try {
-            doc = Jsoup.connect(topUrl).userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
+            doc = Jsoup.connect(jusicProperties.getWyTopUrl()).userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3")
                     .header("Accept-Encoding", "gzip, deflate, br")
                     .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
@@ -107,7 +107,7 @@ public class MusicTopJob {
         }
         return new TopMusic(topList,musicIds);
     }
-    private static TopMusic getTopMusicQQ(JusicProperties jusicProperties) {
+    private TopMusic getTopMusicQQ() {
         HttpResponse<String> response = null;
         String musicIds = "";
         ArrayList<String> topList = new ArrayList<>();
@@ -144,9 +144,9 @@ public class MusicTopJob {
 
         return new TopMusic(topList,musicIds);
     }
-    public static ArrayList<String> getData(JusicProperties jusicProperties) {
-        TopMusic topMusicWy = getTopMusicWy(topUrl);
-        TopMusic topMusicQq = getTopMusicQQ(jusicProperties);
+    public ArrayList<String> getData() {
+        TopMusic topMusicWy = getTopMusicWy();
+        TopMusic topMusicQq = getTopMusicQQ();
         String allMusicIdsStr = "";
         ArrayList<String> allMusicIdsList = new ArrayList<>();
         if (topMusicWy.getTopMusicStrings() != "") {
@@ -159,7 +159,7 @@ public class MusicTopJob {
         }
         if(allMusicIdsStr != ""){
             try {
-                FileOperater.writefileinfo(allMusicIdsStr, tokenPath);
+                FileOperater.writefileinfo(allMusicIdsStr, resourceLoader.getResource(jusicProperties.getDefaultMusicFile()));
             } catch (IOException e) {
                 log.error("写入热门歌曲id失败，IOException:[{}]",e.getMessage());
             }

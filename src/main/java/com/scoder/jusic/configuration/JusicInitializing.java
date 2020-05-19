@@ -1,9 +1,10 @@
 package com.scoder.jusic.configuration;
 
 import com.scoder.jusic.repository.*;
-import com.scoder.jusic.service.imp.MusicTopJob;
+import com.scoder.jusic.job.MusicTopJob;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,10 @@ public class JusicInitializing implements InitializingBean {
     private final MusicVoteRepository musicVoteRepository;
     private final SessionBlackRepository sessionBlackRepository;
 
+    @Autowired
+    private MusicTopJob musicTopJob;
+
+
     public JusicInitializing(ConfigRepository configRepository, SessionRepository sessionRepository, MusicDefaultRepository musicDefaultRepository, MusicPlayingRepository musicPlayingRepository, MusicPickRepository musicPickRepository, MusicVoteRepository musicVoteRepository, JusicProperties jusicProperties, ResourceLoader resourceLoader, SessionBlackRepository sessionBlackRepository) {
         this.configRepository = configRepository;
         this.sessionRepository = sessionRepository;
@@ -55,7 +60,7 @@ public class JusicInitializing implements InitializingBean {
      */
     private void initDefaultMusicId() throws IOException {
         try{
-            ArrayList<String> musicList = MusicTopJob.getMusicTop(jusicProperties);
+            ArrayList<String> musicList = musicTopJob.getMusicTop();
             if(musicList == null || musicList.size() == 0){
                 InputStream inputStream = resourceLoader.getResource(jusicProperties.getDefaultMusicFile()).getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));

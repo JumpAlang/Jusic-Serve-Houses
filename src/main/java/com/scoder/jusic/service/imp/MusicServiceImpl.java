@@ -15,8 +15,10 @@ import com.scoder.jusic.util.FileOperater;
 import com.scoder.jusic.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
 
@@ -42,7 +44,8 @@ public class MusicServiceImpl implements MusicService {
     @Autowired
     private MusicBlackRepository musicBlackRepository;
 
-    private static final String lizhijson = "/usr/local/nginx/html/lizhimusic.json";//"D:\\JAVA\\IdeaWorkspaces\\Jusic-serve\\src\\main\\resources\\lizhimusic.json";////
+    @Autowired
+    private ResourceLoader resourceLoader;
     /**
      * 把音乐放进点歌列表
      */
@@ -301,7 +304,12 @@ public class MusicServiceImpl implements MusicService {
     @Override
     public Music getLZMusic(Integer index) {
         Music music = null;
-        String listStr = FileOperater.getfileinfo(lizhijson);
+        String listStr = null;
+        try {
+            listStr = FileOperater.commonReadFile(resourceLoader.getResource(jusicProperties.getMusicJson()));
+        } catch (IOException e) {
+            log.error("读取文件失败，message:[{}]",e.getMessage());
+        }
         if(listStr == null || "".equals(listStr)) {
             return null;
         }
@@ -893,7 +901,12 @@ public class MusicServiceImpl implements MusicService {
 
 
     private HulkPage searchLZ(Music music,HulkPage hulkPage) {
-        String listStr = FileOperater.getfileinfo(lizhijson);
+        String listStr = null;
+        try {
+            listStr = FileOperater.commonReadFile(resourceLoader.getResource(jusicProperties.getMusicJson()));
+        } catch (IOException e) {
+            log.error("读取文件失败，message:[{}]",e.getMessage());
+        }
         if(listStr == null || "".equals(listStr)) {
             hulkPage.setTotalSize(0);
             hulkPage.setData(new Object[]{});

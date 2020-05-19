@@ -58,11 +58,20 @@ public class JusicProperties {
     /**
      * root 密码
      */
-    private String roleRootPassword = "542885";
+    private String roleRootPassword = "123456";
     /**
      * admin 密码
      */
-    private String roleAdminPassword = "542885";
+    private String roleAdminPassword = "123456";
+
+    /**
+     * 网易热门歌曲url
+     */
+    private String wyTopUrl = "https://music.163.com/discover/toplist?id=3778678";
+    /**
+     * json格式歌曲列表（for禁歌）
+     */
+    private String musicJson = "D:\\JAVA\\IdeaWorkspaces\\Jusic-serve\\src\\main\\resources\\lizhimusic.json";
     /**
      * 音乐服务
      */

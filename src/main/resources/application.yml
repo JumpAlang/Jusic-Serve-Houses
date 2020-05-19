@@ -29,16 +29,19 @@ spring:
             enable: true
             socketFactory:
               class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
-
 jusic:
   music-expire-time: 1200000
   rtry-count: 1
   vote-rate: 0.3
-  default-music-file: 'http://www.alang.run/default-list.txt' #classpath:music/default-list.txt classpath:music/default-list.txt
-  music-serve-domain: 'http://127.0.0.1:8888'
-  music-serve-domain_qq: 'http://127.0.0.1:3300'
-  music-serve-domain_mg: 'http://127.0.0.1:3400'#'http://localhost:3400'#
+  default-music-file: 'classpath:music/default-list.txt'#'file:/usr/local/nginx/html/default-list.txt' # #
+  wy-top-url: 'https://music.163.com/discover/toplist?id=3778678'
+  music-json: 'classpath:lizhimusic.json'#'file:/usr/local/nginx/html/lizhimusic.json' #json格式歌曲列表（for禁歌） # #
+  music-serve-domain: 'http://localhost:8888'
+  music-serve-domain-qq: 'http://localhost:3300'
+  music-serve-domain-mg: 'http://localhost:3400'#'http://localhost:3400'#
   mail-send-from: 'xx@139.com'
   mail-send-to: 'xx@qq.com'
   serverJUrl: 'https://sc.ftqq.com/xx.send'
+
+
 

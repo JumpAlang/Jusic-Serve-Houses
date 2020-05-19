@@ -15,7 +15,7 @@ import java.io.*;
 public class FileOperater {
 
 
-    public static String getfileinfoByClassPath(String classPath){
+    public static String getfileinfoByClassPath(String classPath) throws IOException {
         ClassPathResource resource = new ClassPathResource(classPath);
         String content = null;
         content = commonReadFile(resource);
@@ -23,42 +23,29 @@ public class FileOperater {
         return content;
     }
 
-    public static String commonReadFile(File file){
+    public static String commonReadFile(File file) throws IOException {
         String fileStr = "";
-        try {
-
             BufferedReader br = new BufferedReader(new FileReader(file));
             String str = "";
             while ((str = br.readLine()) != null) {
                 fileStr += str;
             }
             br.close();
-        } catch (IOException e) {
-            //todo loginfo
-            e.printStackTrace();
-            fileStr = "";
-        }
         return fileStr;
     }
 
-    public static String commonReadFile(Resource resource){
+    public static String commonReadFile(Resource resource) throws IOException {
         String fileStr = "";
-        try {
             BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()));
             String str = "";
             while ((str = br.readLine()) != null) {
                 fileStr += str;
             }
             br.close();
-        } catch (IOException e) {
-            //todo loginfo
-            e.printStackTrace();
-            fileStr = "";
-        }
         return fileStr;
     }
 
-    public static String getfileinfo(String tokenPath) {
+    public static String getfileinfo(String tokenPath) throws IOException {
         FileSystemResource resource = new FileSystemResource(tokenPath);
         return commonReadFile(resource.getFile());
     }
@@ -68,5 +55,11 @@ public class FileOperater {
             FileWriter fileWriter = (new FileWriter(resource.getFile()));
             fileWriter.write(t);
             fileWriter.close();
+    }
+
+    public static void writefileinfo(String t,Resource resource) throws IOException {
+        FileWriter fileWriter = (new FileWriter(resource.getFile()));
+        fileWriter.write(t);
+        fileWriter.close();
     }
 }
