@@ -408,7 +408,7 @@ public class MusicController {
     @MessageMapping("/music/search")
     public void search(Music music, HulkPage hulkPage, StompHeaderAccessor accessor) {
         String sessionId = accessor.getHeader("simpSessionId").toString();
-        if (Objects.isNull(music) || Objects.isNull(music.getName())) {
+        if ((Objects.isNull(music) || Objects.isNull(music.getName())) && !"lz".equals(music.getName())) {//李志的歌不判断搜索词空
             log.info("session: {} 尝试搜索音乐, 但关键字为空", sessionId);
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "请输入要搜索的关键字"));
         }

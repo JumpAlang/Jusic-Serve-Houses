@@ -42,7 +42,7 @@ public class MusicServiceImpl implements MusicService {
     @Autowired
     private MusicBlackRepository musicBlackRepository;
 
-    private static final String lizhijson = "D:\\JAVA\\IdeaWorkspaces\\Jusic-serve\\src\\main\\resources\\lizhimusic.json";//"/usr/local/nginx/html/lizhimusic.json";//
+    private static final String lizhijson = "/usr/local/nginx/html/lizhimusic.json";//"D:\\JAVA\\IdeaWorkspaces\\Jusic-serve\\src\\main\\resources\\lizhimusic.json";////
     /**
      * 把音乐放进点歌列表
      */
