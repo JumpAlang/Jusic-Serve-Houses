@@ -50,11 +50,11 @@ public class MusicServiceImpl implements MusicService {
      * 把音乐放进点歌列表
      */
     @Override
-    public Music toPick(String sessionId, Music music) {
+    public Music toPick(String sessionId, Music music,String houseId) {
         music.setSessionId(sessionId);
         music.setPickTime(System.currentTimeMillis());
-        music.setNickName(sessionRepository.getSession(sessionId).getNickName());
-        musicPickRepository.leftPush(music);
+        music.setNickName(sessionRepository.getSession(sessionId,houseId).getNickName());
+        musicPickRepository.leftPush(music,houseId);
         log.info("点歌成功, 音乐: {}, 已放入点歌列表", music.getName());
         return music;
     }
@@ -65,9 +65,9 @@ public class MusicServiceImpl implements MusicService {
      * @return -
      */
     @Override
-    public Music musicSwitch() {
+    public Music musicSwitch(String houseId) {
         Music result = null;
-        if (musicPickRepository.size() < 1) {
+        if (musicPickRepository.size(houseId) < 1) {
             String keyword = musicDefaultRepository.randomMember();
             log.info("选歌列表为空, 已从默认列表中随机选择一首: {}", keyword);
             if(keyword.endsWith("___qq")){
@@ -83,10 +83,10 @@ public class MusicServiceImpl implements MusicService {
             }
             result.setPickTime(System.currentTimeMillis());
             result.setNickName("system");
-            musicPickRepository.leftPush(result);
+            musicPickRepository.leftPush(result,houseId);
         }
 
-        result = musicPlayingRepository.pickToPlaying();
+        result = musicPlayingRepository.pickToPlaying(houseId);
         // 防止选歌的时间超过音乐链接的有效时长
         if (!"lz".equals(result.getSource()) && result.getPickTime() + jusicProperties.getMusicExpireTime() <= System.currentTimeMillis()) {
             String musicUrl;
@@ -105,7 +105,7 @@ public class MusicServiceImpl implements MusicService {
             }
         }
 
-        musicPlayingRepository.keepTheOne();
+        musicPlayingRepository.keepTheOne(houseId);
 
         return result;
     }
@@ -116,10 +116,10 @@ public class MusicServiceImpl implements MusicService {
      * @return linked list
      */
     @Override
-    public LinkedList<Music> getPickList() {
+    public LinkedList<Music> getPickList(String houseId) {
         LinkedList<Music> result = new LinkedList<>();
-        List<Music> pickMusicList = musicPickRepository.getPickMusicList();
-        Music playing = musicPlayingRepository.getPlaying();
+        List<Music> pickMusicList = musicPickRepository.getPickMusicList(houseId);
+        Music playing = musicPlayingRepository.getPlaying(houseId);
         Collections.reverse(pickMusicList);
         result.add(playing);
         result.addAll(pickMusicList);
@@ -132,19 +132,19 @@ public class MusicServiceImpl implements MusicService {
     }
 
     @Override
-    public Music getPlaying() {
-        Music playing = musicPlayingRepository.getPlaying();
+    public Music getPlaying(String houseId) {
+        Music playing = musicPlayingRepository.getPlaying(houseId);
         return playing;
     }
 
     @Override
-    public LinkedList<Music> getSortedPickList(List<Music> musicList) {
+    public LinkedList<Music> getSortedPickList(List<Music> musicList,String houseId) {
         LinkedList<Music> result = new LinkedList<>();
         List<Music> pickMusicList = musicList;//musicPickRepository.getPickMusicList();
         Collections.sort(pickMusicList,new MusicComparator());
-        musicPickRepository.reset();
-        musicPickRepository.rightPushAll(pickMusicList.toArray());
-        Music playing = musicPlayingRepository.getPlaying();
+        musicPickRepository.reset(houseId);
+        musicPickRepository.rightPushAll(houseId,pickMusicList.toArray());
+        Music playing = musicPlayingRepository.getPlaying(houseId);
         Collections.reverse(pickMusicList);
         result.add(playing);
         result.addAll(pickMusicList);
@@ -156,14 +156,14 @@ public class MusicServiceImpl implements MusicService {
         return result;
     }
 
-    public List<Music> getPickListNoPlaying() {
-        return musicPickRepository.getPickMusicList();
+    public List<Music> getPickListNoPlaying(String houseId) {
+        return musicPickRepository.getPickMusicList(houseId);
     }
 
     @Override
-    public Long modifyPickOrder(LinkedList<Music> musicList) {
-        musicPickRepository.reset();
-        return musicPickRepository.leftPushAll(musicList);
+    public Long modifyPickOrder(LinkedList<Music> musicList,String houseId) {
+        musicPickRepository.reset(houseId);
+        return musicPickRepository.leftPushAll(houseId,musicList);
     }
 
     /**
@@ -172,8 +172,8 @@ public class MusicServiceImpl implements MusicService {
      * @return 失败 = 0, 成功 >= 1
      */
     @Override
-    public Long vote(String sessionId) {
-        return musicVoteRepository.add(sessionId);
+    public Long vote(String sessionId,String houseId) {
+        return musicVoteRepository.add(sessionId,houseId);
     }
 
     /**
@@ -182,8 +182,8 @@ public class MusicServiceImpl implements MusicService {
      * @return 参与投票人数
      */
     @Override
-    public Long getVoteCount() {
-        return musicVoteRepository.size();
+    public Long getVoteCount(String houseId) {
+        return musicVoteRepository.size(houseId);
     }
 
     /**
@@ -703,8 +703,8 @@ public class MusicServiceImpl implements MusicService {
     }
 
     @Override
-    public boolean deletePickMusic(Music music) {
-        List<Music> pickMusicList = musicPickRepository.getPickMusicList();
+    public boolean deletePickMusic(Music music,String houseId) {
+        List<Music> pickMusicList = musicPickRepository.getPickMusicList(houseId);
         boolean isDeleted = false;
         for (int i = 0; i < pickMusicList.size(); i++) {
             if(music.getSessionId() != null){
@@ -722,18 +722,18 @@ public class MusicServiceImpl implements MusicService {
             }
         }
         if(isDeleted){
-            musicPickRepository.reset();
+            musicPickRepository.reset(houseId);
             if(pickMusicList != null && pickMusicList.size() != 0){
-                musicPickRepository.rightPushAll(pickMusicList.toArray());
+                musicPickRepository.rightPushAll(houseId,pickMusicList.toArray());
             }
         }
        return  isDeleted;
     }
 
     @Override
-    public void topPickMusic(Music music) {
+    public void topPickMusic(Music music,String houseId) {
         List<Music> newPickMusicList = new LinkedList<>();
-        List<Music> pickMusicList = musicPickRepository.getPickMusicList();
+        List<Music> pickMusicList = musicPickRepository.getPickMusicList(houseId);
         for (int i = 0; i < pickMusicList.size(); i++) {
             if (music.getId().equals(pickMusicList.get(i).getId())) {
                 Music music2 = pickMusicList.get(i);
@@ -744,39 +744,39 @@ public class MusicServiceImpl implements MusicService {
             }
         }
         pickMusicList.addAll(newPickMusicList);
-        musicPickRepository.reset();
-        musicPickRepository.rightPushAll(pickMusicList.toArray());
+        musicPickRepository.reset(houseId);
+        musicPickRepository.rightPushAll(houseId,pickMusicList.toArray());
     }
 
     @Override
-    public Long black(String id) {
-        return musicBlackRepository.add(id);
+    public Long black(String id,String houseId) {
+        return musicBlackRepository.add(id,houseId);
     }
 
     @Override
-    public Long unblack(String id) {
-        return musicBlackRepository.remove(id);
+    public Long unblack(String id,String houseId) {
+        return musicBlackRepository.remove(id,houseId);
     }
 
     @Override
-    public boolean isBlack(String id) {
-        return musicBlackRepository.isMember(id);
+    public boolean isBlack(String id,String houseId) {
+        return musicBlackRepository.isMember(id,houseId);
     }
 
     @Override
-    public boolean isPicked(String id) {
-        List<Music> pickMusicList = musicPickRepository.getPickMusicList();
+    public boolean isPicked(String id,String houseId) {
+        List<Music> pickMusicList = musicPickRepository.getPickMusicList(houseId);
         for (Music music : pickMusicList) {
             if (music.getId().equals(id)) {
                 return true;
             }
         }
-        Music playing = musicPlayingRepository.getPlaying();
+        Music playing = musicPlayingRepository.getPlaying(houseId);
         return playing.getId().equals(id);
     }
 
-    public Object[] getMusicById(String id) {
-        List<Music> pickMusicList = musicPickRepository.getPickMusicList();
+    public Object[] getMusicById(String id,String houseId) {
+        List<Music> pickMusicList = musicPickRepository.getPickMusicList(houseId);
         for (Music music : pickMusicList) {
             if (music.getId().equals(id)) {
                 return new Object[]{music,pickMusicList};
@@ -1009,14 +1009,14 @@ public class MusicServiceImpl implements MusicService {
     }
 
     @Override
-    public boolean clearPlayList() {
-        musicPickRepository.reset();
+    public boolean clearPlayList(String houseId) {
+        musicPickRepository.reset(houseId);
         return true;
     }
 
     @Override
-    public String showBlackMusic() {
-        Set blackList = musicBlackRepository.showBlackList();
+    public String showBlackMusic(String houseId) {
+        Set blackList = musicBlackRepository.showBlackList(houseId);
         if(blackList != null && blackList.size() > 0){
            return String.join(",",blackList);
         }

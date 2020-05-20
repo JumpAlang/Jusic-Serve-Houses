@@ -12,7 +12,7 @@ public interface MusicVoteRepository {
      *
      * @return -
      */
-    Long destroy();
+    Long destroy(String houseId);
 
     /**
      * add to set
@@ -20,24 +20,24 @@ public interface MusicVoteRepository {
      * @param value value
      * @return -
      */
-    Long add(Object... value);
+    Long add(String houseId,Object... value);
 
     /**
      * size
      *
      * @return -
      */
-    Long size();
+    Long size(String houseId);
 
     /**
      * 清空 set
      */
-    void reset();
+    void reset(String houseId);
 
     /**
      * members
      *
      * @return -
      */
-    Set members();
+    Set members(String houseId);
 }

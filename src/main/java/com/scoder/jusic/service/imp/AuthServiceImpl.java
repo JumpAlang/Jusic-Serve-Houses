@@ -24,20 +24,20 @@ public class AuthServiceImpl implements AuthService {
     private ConfigRepository configRepository;
 
     @Override
-    public boolean authRoot(String sessionId, String password) {
+    public boolean authRoot(String sessionId, String password,String houseId) {
         if (null == password) {
             return false;
         }
-        String rootPassword = configRepository.getRootPassword();
+        String rootPassword = configRepository.getRootPassword(houseId);
         if (null == rootPassword) {
             rootPassword = jusicProperties.getRoleRootPassword();
-            configRepository.initRootPassword();
+            configRepository.initRootPassword(houseId);
         }
         if (password.equals(rootPassword)) {
             // update role
-            User user = sessionRepository.getSession(sessionId);
+            User user = sessionRepository.getSession(sessionId,houseId);
             user.setRole("root");
-            sessionRepository.setSession(user);
+            sessionRepository.setSession(user,houseId);
 
             return true;
         }
@@ -45,20 +45,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean authAdmin(String sessionId, String password) {
+    public boolean authAdmin(String sessionId, String password,String houseId) {
         if (null == password) {
             return false;
         }
-        String adminPassword = configRepository.getAdminPassword();
+        String adminPassword = configRepository.getAdminPassword(houseId);
         if (null == adminPassword) {
             adminPassword = jusicProperties.getRoleRootPassword();
-            configRepository.initAdminPassword();
+            configRepository.initAdminPassword(houseId);
         }
         if (password.equals(adminPassword)) {
             // update role
-            User user = sessionRepository.getSession(sessionId);
+            User user = sessionRepository.getSession(sessionId,houseId);
             user.setRole("admin");
-            sessionRepository.setSession(user);
+            sessionRepository.setSession(user,houseId);
 
             return true;
         }

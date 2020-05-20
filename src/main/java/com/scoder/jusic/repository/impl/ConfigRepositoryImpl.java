@@ -24,138 +24,138 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public Long destroy() {
+    public Long destroy(String houseId) {
         Set keys = redisTemplate.opsForHash()
-                .keys(redisKeys.getConfigHash());
+                    .keys(redisKeys.getConfigHash()+houseId);
         return keys.size() > 0 ? redisTemplate.opsForHash()
-                .delete(redisKeys.getConfigHash(), keys.toArray()) : 0;
+                    .delete(redisKeys.getConfigHash()+houseId, keys.toArray()) : 0;
     }
 
     @Override
-    public void initialize() {
-        this.put(redisKeys.getRedisRoleRoot(), jusicProperties.getRoleRootPassword());
-        this.put(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword());
-        this.put(redisKeys.getVoteSkipRate(), jusicProperties.getVoteRate());
+    public void initialize(String houseId) {
+        this.put(redisKeys.getRedisRoleRoot(), jusicProperties.getRoleRootPassword(),houseId);
+        this.put(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword(),houseId);
+        this.put(redisKeys.getVoteSkipRate(), jusicProperties.getVoteRate(),houseId);
     }
 
     @Override
-    public Object get(Object hashKey) {
+    public Object get(Object hashKey,String houseId) {
         return redisTemplate.opsForHash()
-                .get(redisKeys.getConfigHash(), hashKey);
+                .get(redisKeys.getConfigHash()+houseId, hashKey);
     }
 
     @Override
-    public void put(Object hashKey, Object value) {
+    public void put(Object hashKey, Object value,String houseId) {
         redisTemplate.opsForHash()
-                .put(redisKeys.getConfigHash(), hashKey, value);
+                .put(redisKeys.getConfigHash()+houseId, hashKey, value);
     }
 
     @Override
-    public void putAll(Map<String, Object> map) {
+    public void putAll(Map<String, Object> map,String houseId) {
         redisTemplate.opsForHash()
-                .putAll(redisKeys.getConfigHash(), map);
+                .putAll(redisKeys.getConfigHash()+houseId, map);
     }
 
     @Override
-    public String getPassword(String role) {
-        return (String) this.get(role);
+    public String getPassword(String role,String houseId) {
+        return (String) this.get(role,houseId);
     }
 
     @Override
-    public void setPassword(String role, String password) {
-        this.put(role, password);
+    public void setPassword(String role, String password,String houseId) {
+        this.put(role, password,houseId);
     }
 
     @Override
-    public void initRootPassword() {
-        this.setPassword(redisKeys.getRedisRoleRoot(), jusicProperties.getRoleRootPassword());
+    public void initRootPassword(String houseId) {
+        this.setPassword(redisKeys.getRedisRoleRoot(), jusicProperties.getRoleRootPassword(),houseId);
     }
 
     @Override
-    public void initAdminPassword() {
-        this.setPassword(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword());
+    public void initAdminPassword(String houseId) {
+        this.setPassword(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword(),houseId);
     }
 
     @Override
-    public String getRootPassword() {
-        return this.getPassword(redisKeys.getRedisRoleRoot());
+    public String getRootPassword(String houseId) {
+        return this.getPassword(redisKeys.getRedisRoleRoot(),houseId);
     }
 
     @Override
-    public String getAdminPassword() {
-        return this.getPassword(redisKeys.getRedisRoleAdmin());
+    public String getAdminPassword(String houseId) {
+        return this.getPassword(redisKeys.getRedisRoleAdmin(),houseId);
     }
 
     @Override
-    public Long getLastMusicDuration() {
-        return (Long) this.get(redisKeys.getLastMusicDuration());
+    public Long getLastMusicDuration(String houseId) {
+        return (Long) this.get(redisKeys.getLastMusicDuration(),houseId);
     }
 
     @Override
-    public void setLastMusicDuration(Long duration) {
-        this.put(redisKeys.getLastMusicDuration(), duration);
+    public void setLastMusicDuration(Long duration,String houseId) {
+        this.put(redisKeys.getLastMusicDuration(), duration,houseId);
     }
 
     @Override
-    public Long getLastMusicPushTime() {
-        return (Long) this.get(redisKeys.getLastMusicPushTime());
+    public Long getLastMusicPushTime(String houseId) {
+        return (Long) this.get(redisKeys.getLastMusicPushTime(),houseId);
     }
 
     @Override
-    public void setLastMusicPushTime(Long pushTime) {
-        this.put(redisKeys.getLastMusicPushTime(), pushTime);
+    public void setLastMusicPushTime(Long pushTime,String houseId) {
+        this.put(redisKeys.getLastMusicPushTime(), pushTime,houseId);
     }
 
     @Override
-    public void setLastMusicPushTimeAndDuration(Long pushTime, Long duration) {
+    public void setLastMusicPushTimeAndDuration(Long pushTime, Long duration,String houseId) {
         Map<String, Object> map = new HashMap<>(2);
         map.put(redisKeys.getLastMusicPushTime(), pushTime);
         map.put(redisKeys.getLastMusicDuration(), duration);
-        this.putAll(map);
+        this.putAll(map,houseId);
     }
 
     @Override
-    public Boolean getPushSwitch() {
-        return (Boolean) this.get(redisKeys.getSwitchMusicPush());
+    public Boolean getPushSwitch(String houseId) {
+        return (Boolean) this.get(redisKeys.getSwitchMusicPush(),houseId);
     }
 
     @Override
-    public void setPushSwitch(boolean pushSwitch) {
-        this.put(redisKeys.getSwitchMusicPush(), pushSwitch);
+    public void setPushSwitch(boolean pushSwitch,String houseId) {
+        this.put(redisKeys.getSwitchMusicPush(), pushSwitch,houseId);
     }
 
     @Override
-    public Float getVoteRate() {
-        return (float) this.get(redisKeys.getVoteSkipRate());
+    public Float getVoteRate(String houseId) {
+        return (float) this.get(redisKeys.getVoteSkipRate(),houseId);
     }
 
     @Override
-    public Boolean getEnableSwitch() {
-        return (Boolean) this.get(redisKeys.getSwitchMusicEnable());
+    public Boolean getEnableSwitch(String houseId) {
+        return (Boolean) this.get(redisKeys.getSwitchMusicEnable(),houseId);
     }
 
     @Override
-    public void setEnableSwitch(boolean enableSwitch) {
-        this.put(redisKeys.getSwitchMusicEnable(), enableSwitch);
+    public void setEnableSwitch(boolean enableSwitch,String houseId) {
+        this.put(redisKeys.getSwitchMusicEnable(), enableSwitch,houseId);
     }
 
     @Override
-    public Boolean getEnableSearch() {
-        return (Boolean) this.get(redisKeys.getSearchMusicEnable());
+    public Boolean getEnableSearch(String houseId) {
+        return (Boolean) this.get(redisKeys.getSearchMusicEnable(),houseId);
     }
 
     @Override
-    public void setEnableSearch(boolean enableSearch) {
-        this.put(redisKeys.getSearchMusicEnable(), enableSearch);
+    public void setEnableSearch(boolean enableSearch,String houseId) {
+        this.put(redisKeys.getSearchMusicEnable(), enableSearch,houseId);
     }
 
     @Override
-    public Boolean getGoodModel() {
-        return (Boolean) this.get(redisKeys.getGoodModel());
+    public Boolean getGoodModel(String houseId) {
+        return (Boolean) this.get(redisKeys.getGoodModel(),houseId);
     }
 
     @Override
-    public void setGoodModel(boolean goodModel) {
-        this.put(redisKeys.getGoodModel(), goodModel);
+    public void setGoodModel(boolean goodModel,String houseId) {
+        this.put(redisKeys.getGoodModel(), goodModel,houseId);
     }
 }

@@ -12,12 +12,13 @@ public interface ConfigRepository {
      *
      * @return -
      */
-    Long destroy();
+    Long destroy(String houseId);
+
 
     /**
      * initialize
      */
-    void initialize();
+    void initialize(String houseId);
 
     /**
      * get
@@ -25,7 +26,7 @@ public interface ConfigRepository {
      * @param hashKey hash key
      * @return -
      */
-    Object get(Object hashKey);
+    Object get(Object hashKey,String houseId);
 
     /**
      * put
@@ -33,14 +34,14 @@ public interface ConfigRepository {
      * @param hashKey hash key
      * @param value   value
      */
-    void put(Object hashKey, Object value);
+    void put(Object hashKey, Object value,String houseId);
 
     /**
      * put all
      *
      * @param map map, k->v
      */
-    void putAll(Map<String, Object> map);
+    void putAll(Map<String, Object> map,String houseId);
 
     /**
      * get password
@@ -48,7 +49,7 @@ public interface ConfigRepository {
      * @param role role: root | admin
      * @return password
      */
-    String getPassword(String role);
+    String getPassword(String role,String houseId);
 
     /**
      * set password
@@ -56,59 +57,59 @@ public interface ConfigRepository {
      * @param role     role: root | admin
      * @param password password
      */
-    void setPassword(String role, String password);
+    void setPassword(String role, String password,String houseId);
 
     /**
      * init root's password
      */
-    void initRootPassword();
+    void initRootPassword(String houseId);
 
     /**
      * init admin's password
      */
-    void initAdminPassword();
+    void initAdminPassword(String houseId);
 
     /**
      * get root password
      *
      * @return password
      */
-    String getRootPassword();
+    String getRootPassword(String houseId);
 
     /**
      * get admin password
      *
      * @return password
      */
-    String getAdminPassword();
+    String getAdminPassword(String houseId);
 
     /**
      * get last music duration
      *
      * @return millisecond
      */
-    Long getLastMusicDuration();
+    Long getLastMusicDuration(String houseId);
 
     /**
      * set last music duration
      *
      * @param duration duration (millisecond)
      */
-    void setLastMusicDuration(Long duration);
+    void setLastMusicDuration(Long duration,String houseId);
 
     /**
      * get last music push time.
      *
      * @return push time (millisecond)
      */
-    Long getLastMusicPushTime();
+    Long getLastMusicPushTime(String houseId);
 
     /**
      * set last music push time.
      *
      * @param pushTime push time (millisecond)
      */
-    void setLastMusicPushTime(Long pushTime);
+    void setLastMusicPushTime(Long pushTime,String houseId);
 
     /**
      * set last music push time and duration.
@@ -116,35 +117,35 @@ public interface ConfigRepository {
      * @param pushTime last music push time （millisecond）
      * @param duration last music duration （millisecond）
      */
-    void setLastMusicPushTimeAndDuration(Long pushTime, Long duration);
+    void setLastMusicPushTimeAndDuration(Long pushTime, Long duration,String houseId);
 
     /**
      * get push switch.
      *
      * @return boolean
      */
-    Boolean getPushSwitch();
+    Boolean getPushSwitch(String houseId);
 
     /**
      * set push switch
      *
      * @param pushSwitch push switch
      */
-    void setPushSwitch(boolean pushSwitch);
+    void setPushSwitch(boolean pushSwitch,String houseId);
 
     /**
      * get vote rate
      *
      * @return -
      */
-    Float getVoteRate();
+    Float getVoteRate(String houseId);
 
-    Boolean getEnableSwitch();
-    void setEnableSwitch(boolean enableSwitch);
+    Boolean getEnableSwitch(String houseId);
+    void setEnableSwitch(boolean enableSwitch,String houseId);
 
-    Boolean getEnableSearch();
-    void setEnableSearch(boolean enableSearch);
+    Boolean getEnableSearch(String houseId);
+    void setEnableSearch(boolean enableSearch,String houseId);
 
-    Boolean getGoodModel();
-    void setGoodModel(boolean goodModel);
+    Boolean getGoodModel(String houseId);
+    void setGoodModel(boolean goodModel,String houseId);
 }

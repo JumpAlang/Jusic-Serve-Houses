@@ -15,7 +15,7 @@ public interface SessionService {
      * @param sessionId session id
      * @param name      name
      */
-    void settingName(String sessionId, String name);
+    void settingName(String sessionId, String name,String houseId);
 
     /**
      * get role by session
@@ -23,28 +23,28 @@ public interface SessionService {
      * @param sessionId session id
      * @return role: root | admin |default
      */
-    String getRole(String sessionId);
+    String getRole(String sessionId,String houseId);
 
     /**
      * put session.
      *
      * @param session the client session
      */
-    void putSession(WebSocketSession session);
+    void putSession(WebSocketSession session,String houseId);
 
     /**
      * clear session.
      *
      * @param session the client session
      */
-    void clearSession(WebSocketSession session);
+    void clearSession(WebSocketSession session,String houseId);
 
     /**
      * send message.
      *
      * @param payload payload
      */
-    void send(Object payload);
+    void send(Object payload,String houseId);
 
     /**
      * send message.
@@ -52,7 +52,7 @@ public interface SessionService {
      * @param messageType first
      * @param payload     payload
      */
-    void send(MessageType messageType, Object payload);
+    void send(MessageType messageType, Object payload,String houseId);
 
     /**
      * send message.
@@ -60,7 +60,7 @@ public interface SessionService {
      * @param sessionId session id
      * @param payload   payload
      */
-    void send(String sessionId, Object payload);
+    void send(String sessionId, Object payload,String houseId);
 
     /**
      * send message.
@@ -77,7 +77,7 @@ public interface SessionService {
      * @param messageType message type
      * @param payload     payload
      */
-    void send(String sessionId, MessageType messageType, Object payload);
+    void send(String sessionId, MessageType messageType, Object payload,String houseId);
 
     /**
      * send message.
@@ -94,7 +94,7 @@ public interface SessionService {
      * @param sessionId the client session
      * @return nick name
      */
-    String getNickName(String sessionId);
+    String getNickName(String sessionId,String houseId);
 
     /**
      * 最后发言时间
@@ -102,7 +102,7 @@ public interface SessionService {
      * @param user user
      * @param time time
      */
-    void setLastMessageTime(User user, Long time);
+    void setLastMessageTime(User user, Long time,String houseId);
 
     /**
      * get user
@@ -110,16 +110,16 @@ public interface SessionService {
      * @param sessionId session id
      * @return -
      */
-    User getUser(String sessionId);
+    User getUser(String sessionId,String houseId);
 
     /**
      * black
      *
      * @param user session id
      */
-    void black(User user);
+    void black(User user,String houseId);
 
-    String showBlackUser();
+    String showBlackUser(String houseId);
 
 
     /**
@@ -128,20 +128,20 @@ public interface SessionService {
      * @param sessionId the client session id
      * @return black user
      */
-    User getBlack(String sessionId);
+    User getBlack(String sessionId,String houseId);
 
     /**
      * unblack
      *
      * @param sessionId the client session id
      */
-    void unblack(String sessionId);
+    void unblack(String sessionId,String houseId);
 
     /**
      * size
      *
      * @return long
      */
-    Long size();
+    Long size(String houseId);
 
 }

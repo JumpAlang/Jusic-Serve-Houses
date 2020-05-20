@@ -12,7 +12,7 @@ public interface MusicPickRepository {
     /**
      * destroy
      */
-    void destroy();
+    void destroy(String houseId);
 
     /**
      * left push
@@ -20,7 +20,7 @@ public interface MusicPickRepository {
      * @param pick music
      * @return 0 or 1
      */
-    Long leftPush(Music pick);
+    Long leftPush(Music pick,String houseId);
 
     /**
      * left push all.
@@ -28,7 +28,7 @@ public interface MusicPickRepository {
      * @param value value
      * @return -
      */
-    Long leftPushAll(Object... value);
+    Long leftPushAll(String houseId,Object... value);
 
     /**
      * right push all
@@ -36,25 +36,25 @@ public interface MusicPickRepository {
      * @param value value
      * @return -
      */
-    Long rightPushAll(Object... value);
+    Long rightPushAll(String houseId,Object... value);
 
     /**
      * get size
      *
      * @return -
      */
-    Long size();
+    Long size(String houseId);
 
     /**
      * clear the pick list.
      */
-    void reset();
+    void reset(String houseId);
 
     /**
      * get all pick music.
      *
      * @return LinkedList
      */
-    List<Music> getPickMusicList();
+    List<Music> getPickMusicList(String houseId);
 
 }

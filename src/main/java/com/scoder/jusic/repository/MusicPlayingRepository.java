@@ -10,7 +10,7 @@ public interface MusicPlayingRepository {
     /**
      * destroy
      */
-    void destroy();
+    void destroy(String houseId);
 
     /**
      * left push
@@ -18,25 +18,25 @@ public interface MusicPlayingRepository {
      * @param pick music
      * @return 0 or 1
      */
-    Long leftPush(Music pick);
+    Long leftPush(Music pick,String houseId);
 
     /**
      * from pick list to playing list.
      *
      * @return {@link Music}
      */
-    Music pickToPlaying();
+    Music pickToPlaying(String houseId);
 
     /**
      * 清理播放列表，除了 index = 0
      */
-    void keepTheOne();
+    void keepTheOne(String houseId);
 
     /**
      * get playing.
      *
      * @return {@link Music}
      */
-    Music getPlaying();
+    Music getPlaying(String houseId);
 
 }

@@ -12,7 +12,7 @@ public interface AuthService {
      * @param password password
      * @return 成功返回 true，失败返回 false
      */
-    boolean authRoot(String sessionId, String password);
+    boolean authRoot(String sessionId, String password,String houseId);
 
     /**
      * admin 认证
@@ -21,7 +21,7 @@ public interface AuthService {
      * @param password password
      * @return 成功返回 true，失败返回 false
      */
-    boolean authAdmin(String sessionId, String password);
+    boolean authAdmin(String sessionId, String password,String houseId);
 
 
 }

@@ -13,7 +13,7 @@ public interface MusicBlackRepository {
      * @param id music id
      * @return boolean
      */
-    boolean isMember(String id);
+    boolean isMember(String id,String houseId);
 
     /**
      * add value
@@ -21,7 +21,7 @@ public interface MusicBlackRepository {
      * @param value value
      * @return long
      */
-    Long add(String value);
+    Long add(String value,String houseId);
 
     /**
      * remove
@@ -29,7 +29,7 @@ public interface MusicBlackRepository {
      * @param id music id
      * @return -
      */
-    Long remove(String id);
+    Long remove(String id,String houseId);
 
-    Set showBlackList();
+    Set showBlackList(String houseId);
 }

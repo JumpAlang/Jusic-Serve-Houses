@@ -23,35 +23,35 @@ public class SessionBlackRepositoryImpl implements SessionBlackRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public Long destroy() {
+    public Long destroy(String houseId) {
         Set keys = redisTemplate.opsForHash()
-                .keys(redisKeys.getSessionBlackHash());
+                .keys(redisKeys.getSessionBlackHash()+houseId);
         return keys.size() > 0 ? redisTemplate.opsForHash()
-                .delete(redisKeys.getSessionBlackHash(), keys.toArray()) : 0;
+                .delete(redisKeys.getSessionBlackHash()+houseId, keys.toArray()) : 0;
     }
 
     @Override
-    public User getSession(String sessionId) {
+    public User getSession(String sessionId,String houseId) {
         return (User) redisTemplate.opsForHash()
-                .get(redisKeys.getSessionBlackHash(), sessionId);
+                .get(redisKeys.getSessionBlackHash()+houseId, sessionId);
     }
 
     @Override
-    public void setSession(User user) {
+    public void setSession(User user,String houseId) {
         redisTemplate.opsForHash()
-                .put(redisKeys.getSessionBlackHash(), user.getSessionId(), user);
+                .put(redisKeys.getSessionBlackHash()+houseId, user.getSessionId(), user);
     }
 
     @Override
-    public Long removeSession(String sessionId) {
+    public Long removeSession(String sessionId,String houseId) {
         return redisTemplate.opsForHash()
-                .delete(redisKeys.getSessionBlackHash(), sessionId);
+                .delete(redisKeys.getSessionBlackHash()+houseId, sessionId);
     }
 
     @Override
-    public Set showBlackList() {
+    public Set showBlackList(String houseId) {
         Set keys = redisTemplate.opsForHash()
-                .keys(redisKeys.getSessionBlackHash());
+                .keys(redisKeys.getSessionBlackHash()+houseId);
         return keys;
     }
 

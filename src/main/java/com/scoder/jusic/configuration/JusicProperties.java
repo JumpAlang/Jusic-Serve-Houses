@@ -6,10 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -21,10 +18,49 @@ import java.util.concurrent.ConcurrentHashMap;
 @ToString
 public class JusicProperties {
 
+    private class SessionContainer{
+        private Map<String, ConcurrentHashMap<String,WebSocketSession>> sessionContainer = new HashMap<>();
+
+        public ConcurrentHashMap<String,WebSocketSession> getHouseSession(String houseId){
+            if(sessionContainer.containsKey(houseId)){
+                ConcurrentHashMap<String,WebSocketSession> houseSession = sessionContainer.get(houseId);
+                if(houseSession == null){
+                    houseSession = new ConcurrentHashMap<String,WebSocketSession>();
+                    sessionContainer.put(houseId,houseSession);
+                }
+                return houseSession;
+            }else{
+                ConcurrentHashMap<String,WebSocketSession> houseSession = new ConcurrentHashMap<String,WebSocketSession>();
+                sessionContainer.put(houseId,houseSession);
+                return houseSession;
+            }
+        }
+
+//        public void put(String sessionId,WebSocketSession session,String houseId){
+//                if(sessionContainer.containsKey(houseId)){
+//                    ConcurrentHashMap<String,WebSocketSession> houseSession = sessionContainer.get(houseId);
+//                    if(houseSession == null){
+//                        houseSession = new ConcurrentHashMap<String,WebSocketSession>();
+//                    }
+//                    houseSession.put(sessionId,session);
+//                    sessionContainer.put(houseId,houseSession);
+//                }else{
+//                    ConcurrentHashMap<String,WebSocketSession> houseSession = new ConcurrentHashMap<String,WebSocketSession>();
+//                    houseSession.put(sessionId,session);
+//                    sessionContainer.put(houseId,houseSession);
+//                }
+//        }
+//        public WebSocketSession get(String sessionId,String houseId){
+//            return sessionContainer.get(houseId);
+//        }
+    }
     /**
      * 自定义容器，用来装载 session
      */
-    private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final SessionContainer sessions = new SessionContainer();
+    public ConcurrentHashMap<String,WebSocketSession> getSessions(String houseId){
+        return sessions.getHouseSession(houseId);
+    }
     /**
      * 音乐到期时间，每首音乐的链接都会有一个失效时间
      */
@@ -58,7 +94,7 @@ public class JusicProperties {
     /**
      * root 密码
      */
-    private String roleRootPassword = "123456";
+    private String roleRootPassword = "542885";
     /**
      * admin 密码
      */
@@ -172,31 +208,31 @@ public class JusicProperties {
         }
 
         public String getSessionHash() {
-            return this.sessionHash + "_" + jusicEnvironment.getServerPort();
+            return this.sessionHash + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getSessionBlackHash() {
-            return this.sessionBlackHash + "_" + jusicEnvironment.getServerPort();
+            return this.sessionBlackHash + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getDefaultSet() {
-            return this.defaultSet + "_" + jusicEnvironment.getServerPort();
+            return this.defaultSet + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getPickList() {
-            return this.pickList + "_" + jusicEnvironment.getServerPort();
+            return this.pickList + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getPlayingList() {
-            return this.playingList + "_" + jusicEnvironment.getServerPort();
+            return this.playingList + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getBlackSet() {
-            return blackSet + "_" + jusicEnvironment.getServerPort();
+            return blackSet + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getSkipSet() {
-            return this.skipSet + "_" + jusicEnvironment.getServerPort();
+            return this.skipSet + "_" + jusicEnvironment.getServerPort()+"_";
         }
     }
 

@@ -17,37 +17,37 @@ public class ConfigServiceImpl implements ConfigService {
     private ConfigRepository configRepository;
 
     @Override
-    public void setPushSwitch(boolean pushSwitch) {
-        configRepository.setPushSwitch(pushSwitch);
+    public void setPushSwitch(boolean pushSwitch,String houseId) {
+        configRepository.setPushSwitch(pushSwitch,houseId);
     }
 
     @Override
-    public void setEnableSwitch(boolean enableSwitch) {
-        configRepository.setEnableSwitch(enableSwitch);
+    public void setEnableSwitch(boolean enableSwitch,String houseId) {
+        configRepository.setEnableSwitch(enableSwitch,houseId);
     }
 
     @Override
-    public void setEnableSearch(boolean enableSearch) {
-        configRepository.setEnableSearch(enableSearch);
+    public void setEnableSearch(boolean enableSearch,String houseId) {
+        configRepository.setEnableSearch(enableSearch,houseId);
     }
 
     @Override
-    public Boolean getEnableSearch() {
-        return configRepository.getEnableSearch();
+    public Boolean getEnableSearch(String houseId) {
+        return configRepository.getEnableSearch(houseId);
     }
 
     @Override
-    public Boolean getEnableSwitch() {
-        return configRepository.getEnableSwitch();
+    public Boolean getEnableSwitch(String houseId) {
+        return configRepository.getEnableSwitch(houseId);
     }
 
     @Override
-    public Boolean getGoodModel() {
-        return configRepository.getGoodModel();
+    public Boolean getGoodModel(String houseId) {
+        return configRepository.getGoodModel(houseId);
     }
 
     @Override
-    public void setGoodModel(boolean goodModel) {
-        configRepository.setGoodModel(goodModel);
+    public void setGoodModel(boolean goodModel,String houseId) {
+        configRepository.setGoodModel(goodModel,houseId);
     }
 }

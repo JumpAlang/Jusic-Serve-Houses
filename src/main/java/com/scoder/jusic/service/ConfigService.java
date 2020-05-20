@@ -10,18 +10,18 @@ public interface ConfigService {
      *
      * @param pushSwitch boolean
      */
-    void setPushSwitch(boolean pushSwitch);
+    void setPushSwitch(boolean pushSwitch,String houseId);
 
-    void setEnableSwitch(boolean enableSwitch);
+    void setEnableSwitch(boolean enableSwitch,String houseId);
 
-    void setEnableSearch(boolean enableSearch);
+    void setEnableSearch(boolean enableSearch,String houseId);
 
-    Boolean getEnableSearch();
+    Boolean getEnableSearch(String houseId);
 
-    Boolean getEnableSwitch();
+    Boolean getEnableSwitch(String houseId);
 
 
-    Boolean getGoodModel();
-    void setGoodModel(boolean goodModel);
+    Boolean getGoodModel(String houseId);
+    void setGoodModel(boolean goodModel,String houseId);
 
 }

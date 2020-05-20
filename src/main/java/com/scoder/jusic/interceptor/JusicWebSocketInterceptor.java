@@ -1,15 +1,10 @@
 package com.scoder.jusic.interceptor;
 
-import com.scoder.jusic.common.message.Response;
-import com.scoder.jusic.model.MessageType;
-import com.scoder.jusic.model.User;
 import com.scoder.jusic.service.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,13 +17,13 @@ public class JusicWebSocketInterceptor implements ChannelInterceptor {
     private SessionService sessionService;
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        String sessionId = accessor.getHeader("simpSessionId").toString();
-        User black = sessionService.getBlack(sessionId);
-        if (null != black && black.getSessionId().equals(sessionId)) {
-            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你已被管理员拉黑"));
-            return null;
-        }
+//        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+//        String sessionId = accessor.getHeader("simpSessionId").toString();
+//        User black = sessionService.getBlack(sessionId);
+//        if (null != black && black.getSessionId().equals(sessionId)) {
+//            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你已被管理员拉黑"));
+//            return null;
+//        }
 //        System.out.println("presend"+message);
         return message;
     }

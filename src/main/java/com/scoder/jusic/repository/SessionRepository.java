@@ -12,7 +12,7 @@ public interface SessionRepository {
      *
      * @return long
      */
-    Long destroy();
+    Long destroy(String houseId);
 
     /**
      * get session
@@ -20,21 +20,21 @@ public interface SessionRepository {
      * @param sessionId session id
      * @return User {@link User}
      */
-    User getSession(String sessionId);
+    User getSession(String sessionId,String houseId);
 
     /**
      * set session
      *
      * @param user User {@link User}
      */
-    void setSession(User user);
+    void setSession(User user,String houseId);
 
     /**
      * size
      *
      * @return size
      */
-    Long size();
+    Long size(String houseId);
 
     /**
      * remove session.
@@ -42,6 +42,6 @@ public interface SessionRepository {
      * @param sessionId session id
      * @return -
      */
-    Long removeSession(String sessionId);
+    Long removeSession(String sessionId,String houseId);
 
 }

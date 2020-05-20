@@ -19,34 +19,34 @@ public interface MusicService {
      * @param request   music info
      * @return music info
      */
-    Music toPick(String sessionId, Music request);
+    Music toPick(String sessionId, Music request,String houseId);
 
     /**
      * 切歌
      *
      * @return 将要播放的音乐
      */
-    Music musicSwitch();
+    Music musicSwitch(String houseId);
 
     /**
      * get pick list
      *
      * @return linked list
      */
-    LinkedList<Music> getPickList();
+    LinkedList<Music> getPickList(String houseId);
 
-    List<Music> getPickListNoPlaying();
+    List<Music> getPickListNoPlaying(String houseId);
 
-    LinkedList<Music> getSortedPickList(List<Music> musicList);
+    LinkedList<Music> getSortedPickList(List<Music> musicList,String houseId);
 
-    Music getPlaying();
+    Music getPlaying(String houseId);
     /**
      * 修改点歌列表顺序
      *
      * @param musicList -
      * @return -
      */
-    Long modifyPickOrder(LinkedList<Music> musicList);
+    Long modifyPickOrder(LinkedList<Music> musicList,String houseId);
 
     /**
      * 投票
@@ -54,14 +54,14 @@ public interface MusicService {
      * @param sessionId session id
      * @return 0：投票失败，已经参与过。1：投票成功
      */
-    Long vote(String sessionId);
+    Long vote(String sessionId,String houseId);
 
     /**
      * 从集合中获取参与投票的人数
      *
      * @return 参与投票的人数
      */
-    Long getVoteCount();
+    Long getVoteCount(String houseId);
 
     /**
      * get music
@@ -98,13 +98,13 @@ public interface MusicService {
      *
      * @param music music
      */
-    boolean deletePickMusic(Music music);
+    boolean deletePickMusic(Music music,String houseId);
     /**
      * top pick music
      *
      * @param music -
      */
-    void topPickMusic(Music music);
+    void topPickMusic(Music music,String houseId);
 
     /**
      * black
@@ -112,7 +112,7 @@ public interface MusicService {
      * @param id music id
      * @return -
      */
-    Long black(String id);
+    Long black(String id,String houseId);
 
     /**
      * un black
@@ -120,7 +120,7 @@ public interface MusicService {
      * @param id music id
      * @return -
      */
-    Long unblack(String id);
+    Long unblack(String id,String houseId);
 
     /**
      * is black?
@@ -128,7 +128,7 @@ public interface MusicService {
      * @param id music id
      * @return -
      */
-    boolean isBlack(String id);
+    boolean isBlack(String id,String houseId);
 
     /**
      * is picked ?
@@ -136,9 +136,9 @@ public interface MusicService {
      * @param id music id
      * @return
      */
-    boolean isPicked(String id);
+    boolean isPicked(String id,String houseId);
 
-    Object[] getMusicById(String id);
+    Object[] getMusicById(String id,String houseId);
 
         /**
          * search music
@@ -148,8 +148,8 @@ public interface MusicService {
          */
     Page<List<Music>> search(Music music, HulkPage hulkPage);
 
-    boolean clearPlayList();
+    boolean clearPlayList(String houseId);
 
-    String showBlackMusic();
+    String showBlackMusic(String houseId);
 
 }

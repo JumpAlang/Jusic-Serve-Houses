@@ -22,26 +22,26 @@ public class MusicBlackRepositoryImpl implements MusicBlackRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public boolean isMember(String id) {
+    public boolean isMember(String id,String houseId) {
         return redisTemplate.opsForSet()
-                .isMember(redisKeys.getBlackSet(), id);
+                .isMember(redisKeys.getBlackSet()+houseId, id);
     }
 
     @Override
-    public Long add(String value) {
+    public Long add(String value,String houseId) {
         return redisTemplate.opsForSet()
-                .add(redisKeys.getBlackSet(), value);
+                .add(redisKeys.getBlackSet()+houseId, value);
     }
 
     @Override
-    public Long remove(String id) {
+    public Long remove(String id,String houseId) {
         return redisTemplate.opsForSet()
-                .remove(redisKeys.getBlackSet(), id);
+                .remove(redisKeys.getBlackSet()+houseId, id);
     }
 
     @Override
-    public Set showBlackList() {
-        Set blackList = redisTemplate.opsForSet().members(redisKeys.getBlackSet());
+    public Set showBlackList(String houseId) {
+        Set blackList = redisTemplate.opsForSet().members(redisKeys.getBlackSet()+houseId);
         return blackList;
     }
 }

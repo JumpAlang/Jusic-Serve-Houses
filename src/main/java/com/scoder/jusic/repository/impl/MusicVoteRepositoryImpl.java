@@ -24,37 +24,37 @@ public class MusicVoteRepositoryImpl implements MusicVoteRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public Long destroy() {
-        Set members = this.members();
+    public Long destroy(String houseId) {
+        Set members = this.members(houseId);
         return members != null && members.size() > 0 ? redisTemplate.opsForSet()
-                .remove(redisKeys.getSkipSet(), members.toArray()) : 0;
+                .remove(redisKeys.getSkipSet()+houseId, members.toArray()) : 0;
     }
 
     @Override
-    public Long add(Object... value) {
+    public Long add(String houseId,Object... value) {
         return redisTemplate.opsForSet()
-                .add(redisKeys.getSkipSet(), value);
+                .add(redisKeys.getSkipSet()+houseId, value);
     }
 
     @Override
-    public Long size() {
+    public Long size(String houseId) {
         return redisTemplate.opsForSet()
-                .size(redisKeys.getSkipSet());
+                .size(redisKeys.getSkipSet()+houseId);
     }
 
     @Override
-    public void reset() {
-        Set members = this.members();
+    public void reset(String houseId) {
+        Set members = this.members(houseId);
         if (null != members && members.size() > 0) {
             redisTemplate.opsForSet()
-                    .remove(redisKeys.getSkipSet(), members.toArray());
+                    .remove(redisKeys.getSkipSet()+houseId, members.toArray());
         }
     }
 
     @Override
-    public Set members() {
+    public Set members(String houseId) {
         return redisTemplate.opsForSet()
-                .members(redisKeys.getSkipSet());
+                .members(redisKeys.getSkipSet()+houseId);
     }
 
 }

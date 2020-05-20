@@ -21,32 +21,32 @@ public class MusicPlayingRepositoryImpl implements MusicPlayingRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public void destroy() {
-        redisTemplate.opsForList().trim(redisKeys.getPlayingList(), 1, 0);
+    public void destroy(String houseId) {
+        redisTemplate.opsForList().trim(redisKeys.getPlayingList()+houseId, 1, 0);
     }
 
     @Override
-    public Long leftPush(Music pick) {
+    public Long leftPush(Music pick,String houseId) {
         return redisTemplate.opsForList()
-                .leftPush(redisKeys.getPlayingList(), pick);
+                .leftPush(redisKeys.getPlayingList()+houseId, pick);
     }
 
     @Override
-    public Music pickToPlaying() {
+    public Music pickToPlaying(String houseId) {
         return (Music) redisTemplate.opsForList()
-                .rightPopAndLeftPush(redisKeys.getPickList(), redisKeys.getPlayingList());
+                .rightPopAndLeftPush(redisKeys.getPickList()+houseId, redisKeys.getPlayingList()+houseId);
     }
 
     @Override
-    public void keepTheOne() {
+    public void keepTheOne(String houseId) {
         redisTemplate.opsForList()
-                .trim(redisKeys.getPlayingList(), 0, 0);
+                .trim(redisKeys.getPlayingList()+houseId, 0, 0);
     }
 
     @Override
-    public Music getPlaying() {
+    public Music getPlaying(String houseId) {
         return (Music) redisTemplate.opsForList()
-                .index(redisKeys.getPlayingList(), 0);
+                .index(redisKeys.getPlayingList()+houseId, 0);
     }
 
 }

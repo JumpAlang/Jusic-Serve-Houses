@@ -34,21 +34,21 @@ public class SessionServiceImpl implements SessionService {
     private SessionBlackRepository sessionBlackRepository;
 
     @Override
-    public void settingName(String sessionId, String name) {
+    public void settingName(String sessionId, String name,String houseId) {
         if (null == name) {
 
         } else {
             log.info("setting name: {}", name);
-            User user = sessionRepository.getSession(sessionId);
+            User user = sessionRepository.getSession(sessionId,houseId);
             user.setName(name);
             user.setNickName(user.getName() + "(" + StringUtils.desensitizeIPV4(user.getRemoteAddress()) + ")");
-            sessionRepository.setSession(user);
+            sessionRepository.setSession(user,houseId);
         }
     }
 
     @Override
-    public String getRole(String sessionId) {
-        User session = sessionRepository.getSession(sessionId);
+    public String getRole(String sessionId,String houseId) {
+        User session = sessionRepository.getSession(sessionId,houseId);
         if(session != null){
             return session.getRole();
         }else{
@@ -57,8 +57,8 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public void putSession(WebSocketSession session) {
-        jusicProperties.getSessions().put(session.getId(), session);
+    public void putSession(WebSocketSession session,String houseId) {
+        jusicProperties.getSessions(houseId).put(session.getId(), session);
         User user = User.builder()
                 .sessionId(session.getId())
                 .name("")
@@ -66,24 +66,24 @@ public class SessionServiceImpl implements SessionService {
                 .remoteAddress(session.getAttributes().get("remoteAddress").toString())
                 .role("default")
                 .build();
-        sessionRepository.setSession(user);
+        sessionRepository.setSession(user,houseId);
     }
 
     @Override
-    public void clearSession(WebSocketSession session) {
+    public void clearSession(WebSocketSession session,String houseId) {
         log.info("Clear Session: {}", session.getId());
-        jusicProperties.getSessions().remove(session.getId());
-        sessionRepository.removeSession(session.getId());
+        jusicProperties.getSessions(houseId).remove(session.getId());
+        sessionRepository.removeSession(session.getId(),houseId);
     }
 
     @Override
-    public void send(Object payload) {
-        this.send(MessageType.NOTICE, payload);
+    public void send(Object payload,String houseId) {
+        this.send(MessageType.NOTICE, payload,houseId);
     }
 
     @Override
-    public void send(MessageType messageType, Object payload) {
-        Map<String, WebSocketSession> sessions = jusicProperties.getSessions();
+    public void send(MessageType messageType, Object payload,String houseId) {
+        Map<String, WebSocketSession> sessions = jusicProperties.getSessions(houseId);
         sessions.forEach((key, session) -> {
             if (session.isOpen()) {
                 this.send(session, messageType, payload);
@@ -92,13 +92,13 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public void send(String sessionId, Object payload) {
-        this.send(sessionId, MessageType.NOTICE, payload);
+    public void send(String sessionId, Object payload,String houseId) {
+        this.send(sessionId, MessageType.NOTICE, payload,houseId);
     }
 
     @Override
-    public void send(String sessionId, MessageType messageType, Object payload) {
-        Map<String, WebSocketSession> sessions = jusicProperties.getSessions();
+    public void send(String sessionId, MessageType messageType, Object payload,String houseId) {
+        Map<String, WebSocketSession> sessions = jusicProperties.getSessions(houseId);
         WebSocketSession session = sessions.get(sessionId);
         if(session != null){
             this.send(session, messageType, payload);
@@ -123,8 +123,8 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public String getNickName(String sessionId) {
-        User session = sessionRepository.getSession(sessionId);
+    public String getNickName(String sessionId,String houseId) {
+        User session = sessionRepository.getSession(sessionId,houseId);
         if(session != null){
             return session.getNickName();
         }else{
@@ -133,24 +133,24 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public void setLastMessageTime(User user, Long time) {
+    public void setLastMessageTime(User user, Long time,String houseId) {
         user.setLastMessageTime(time);
-        sessionRepository.setSession(user);
+        sessionRepository.setSession(user,houseId);
     }
 
     @Override
-    public User getUser(String sessionId) {
-        return sessionRepository.getSession(sessionId);
+    public User getUser(String sessionId,String houseId) {
+        return sessionRepository.getSession(sessionId,houseId);
     }
 
     @Override
-    public void black(User user) {
-        sessionBlackRepository.setSession(user);
+    public void black(User user,String houseId) {
+        sessionBlackRepository.setSession(user,houseId);
     }
 
     @Override
-    public String showBlackUser() {
-        Set blackList = sessionBlackRepository.showBlackList();
+    public String showBlackUser(String houseId) {
+        Set blackList = sessionBlackRepository.showBlackList(houseId);
         if(blackList != null && blackList.size() > 0) {
             return String.join(",", blackList);
         }
@@ -160,18 +160,18 @@ public class SessionServiceImpl implements SessionService {
 
 
     @Override
-    public User getBlack(String sessionId) {
-        return sessionBlackRepository.getSession(sessionId);
+    public User getBlack(String sessionId,String houseId) {
+        return sessionBlackRepository.getSession(sessionId,houseId);
     }
 
     @Override
-    public void unblack(String sessionId) {
-        sessionBlackRepository.removeSession(sessionId);
+    public void unblack(String sessionId,String houseId) {
+        sessionBlackRepository.removeSession(sessionId,houseId);
     }
 
     @Override
-    public Long size() {
-        return sessionRepository.size();
+    public Long size(String houseId) {
+        return sessionRepository.size(houseId);
     }
 
     /**
