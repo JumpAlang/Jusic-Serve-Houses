@@ -12,7 +12,7 @@ public interface SessionRepository {
      *
      * @return long
      */
-    Long destroy(String houseId);
+    Boolean destroy(String houseId);
 
     /**
      * get session

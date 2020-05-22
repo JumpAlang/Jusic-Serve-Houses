@@ -17,6 +17,7 @@ public class User implements Serializable {
 
     private static final long serialVersionUID = -5508341219684417455L;
 
+    private String houseId;
     /**
      * WebSocketServerSockJsSession 中的 session id
      */

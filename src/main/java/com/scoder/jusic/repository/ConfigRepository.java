@@ -12,7 +12,7 @@ public interface ConfigRepository {
      *
      * @return -
      */
-    Long destroy(String houseId);
+    Boolean destroy(String houseId);
 
 
     /**
@@ -139,6 +139,7 @@ public interface ConfigRepository {
      * @return -
      */
     Float getVoteRate(String houseId);
+    void setVoteRate(Float voteRate,String houseId);
 
     Boolean getEnableSwitch(String houseId);
     void setEnableSwitch(boolean enableSwitch,String houseId);
@@ -148,4 +149,8 @@ public interface ConfigRepository {
 
     Boolean getGoodModel(String houseId);
     void setGoodModel(boolean goodModel,String houseId);
+
+    void setAdminPassword(String password, String houseId);
+    void setRootPassword(String password, String houseId);
+
 }

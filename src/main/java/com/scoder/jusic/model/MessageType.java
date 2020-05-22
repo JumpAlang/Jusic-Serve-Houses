@@ -21,7 +21,10 @@ public enum MessageType {
     SEARCH_PICTURE("SEARCH_PICTURE"),
     PAUSE("PAUSE"),
     VOLUMN("VOLUMN"),
-    GOODMODEL("GOODMODEL");
+    GOODMODEL("GOODMODEL"),
+    ADD_HOUSE("ADD_HOUSE"),
+    SEARCH_HOUSE("SEARCH_HOUSE"),
+    ENTER_HOUSE("ENTER_HOUSE");
 
     MessageType(String type) {
         this.type = type;

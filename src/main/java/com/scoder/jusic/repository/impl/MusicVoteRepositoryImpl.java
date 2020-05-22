@@ -17,17 +17,16 @@ import java.util.Set;
 public class MusicVoteRepositoryImpl implements MusicVoteRepository {
 
     @Autowired
-    private JusicProperties jusicProperties;
-    @Autowired
     private JusicProperties.RedisKeys redisKeys;
     @Autowired
     private RedisTemplate redisTemplate;
 
     @Override
-    public Long destroy(String houseId) {
-        Set members = this.members(houseId);
-        return members != null && members.size() > 0 ? redisTemplate.opsForSet()
-                .remove(redisKeys.getSkipSet()+houseId, members.toArray()) : 0;
+    public Boolean destroy(String houseId) {
+//        Set members = this.members(houseId);
+//        return members != null && members.size() > 0 ? redisTemplate.opsForSet()
+//                .remove(redisKeys.getSkipSet()+houseId, members.toArray()) : 0;
+        return redisTemplate.delete(redisKeys.getSkipSet()+houseId);
     }
 
     @Override

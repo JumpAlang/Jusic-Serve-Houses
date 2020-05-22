@@ -10,7 +10,7 @@ public interface MusicPlayingRepository {
     /**
      * destroy
      */
-    void destroy(String houseId);
+    Boolean destroy(String houseId);
 
     /**
      * left push

@@ -32,6 +32,11 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
+    public void setVoteRate(Float voteRate, String houseId) {
+        configRepository.setVoteRate(voteRate,houseId);
+    }
+
+    @Override
     public Boolean getEnableSearch(String houseId) {
         return configRepository.getEnableSearch(houseId);
     }

@@ -11,6 +11,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,13 +21,16 @@ import java.util.List;
  * @create 2020-05-11 0:22
  */
 public class TestQQMusic {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnsupportedEncodingException {
 //        search("周杰伦");
 //        searchQQ("周杰伦");
 //        1436709403
 //        getMusic("1436709403");
 //        getQQMusicUrl("0039MnYb0qxYhV");
-        setCookie();
+//        setCookie();;
+        String a="\\xac\\xed\\x00\\x05t\\x00\\x1b";//"\\xe4\\xb8\\x80\\xe8\\xb5\\xb7\\xe5\\x90\\xac\\xe6\\xad\\x8c\\xe5\\x90\\xa7";
+        String ab = a.replaceAll("\\\\x", "%");
+        System.out.println(URLDecoder.decode(ab, "UTF-8"));
     }
 
 

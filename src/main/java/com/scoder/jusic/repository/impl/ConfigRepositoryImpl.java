@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author H
@@ -24,11 +23,12 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public Long destroy(String houseId) {
-        Set keys = redisTemplate.opsForHash()
-                    .keys(redisKeys.getConfigHash()+houseId);
-        return keys.size() > 0 ? redisTemplate.opsForHash()
-                    .delete(redisKeys.getConfigHash()+houseId, keys.toArray()) : 0;
+    public Boolean destroy(String houseId) {
+        return redisTemplate.delete(redisKeys.getConfigHash()+houseId);
+//        Set keys = redisTemplate.opsForHash()
+//                    .keys(redisKeys.getConfigHash()+houseId);
+//        return keys.size() > 0 ? redisTemplate.opsForHash()
+//                    .delete(redisKeys.getConfigHash()+houseId, keys.toArray()) : 0;
     }
 
     @Override
@@ -66,6 +66,13 @@ public class ConfigRepositoryImpl implements ConfigRepository {
         this.put(role, password,houseId);
     }
 
+    public void setAdminPassword(String password, String houseId){
+        this.put(redisKeys.getRedisRoleAdmin(),password,houseId);
+    }
+
+    public void setRootPassword(String password, String houseId){
+        this.put(redisKeys.getRedisRoleRoot(),password,houseId);
+    }
     @Override
     public void initRootPassword(String houseId) {
         this.setPassword(redisKeys.getRedisRoleRoot(), jusicProperties.getRoleRootPassword(),houseId);
@@ -126,7 +133,14 @@ public class ConfigRepositoryImpl implements ConfigRepository {
 
     @Override
     public Float getVoteRate(String houseId) {
-        return (float) this.get(redisKeys.getVoteSkipRate(),houseId);
+        Object  voteRateObj = this.get(redisKeys.getVoteSkipRate(),houseId);
+        return (Float)voteRateObj;
+//        return (float) this.get(redisKeys.getVoteSkipRate(),houseId);
+    }
+
+    @Override
+    public void setVoteRate(Float voteRate,String houseId) {
+        this.put(redisKeys.getVoteSkipRate(), voteRate,houseId);
     }
 
     @Override

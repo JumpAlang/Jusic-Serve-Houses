@@ -43,6 +43,8 @@ public class MusicServiceImpl implements MusicService {
     private SessionRepository sessionRepository;
     @Autowired
     private MusicBlackRepository musicBlackRepository;
+    @Autowired
+    private ConfigRepository configRepository;
 
     @Autowired
     private ResourceLoader resourceLoader;
@@ -75,7 +77,7 @@ public class MusicServiceImpl implements MusicService {
             }else{
                 result = this.getMusic(keyword);
             }
-            while(result.getUrl() == null){
+            while(result == null || result.getUrl() == null){
                 log.info("该歌曲url为空:{}", keyword);
                 keyword = musicDefaultRepository.randomMember();
                 log.info("选歌列表为空, 已从默认列表中随机选择一首: {}", keyword);
@@ -173,7 +175,7 @@ public class MusicServiceImpl implements MusicService {
      */
     @Override
     public Long vote(String sessionId,String houseId) {
-        return musicVoteRepository.add(sessionId,houseId);
+        return musicVoteRepository.add(houseId,sessionId);
     }
 
     /**

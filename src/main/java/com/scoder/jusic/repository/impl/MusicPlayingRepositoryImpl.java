@@ -21,8 +21,9 @@ public class MusicPlayingRepositoryImpl implements MusicPlayingRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public void destroy(String houseId) {
-        redisTemplate.opsForList().trim(redisKeys.getPlayingList()+houseId, 1, 0);
+    public Boolean destroy(String houseId) {
+//        redisTemplate.opsForList().trim(redisKeys.getPlayingList()+houseId, 1, 0);
+        return redisTemplate.delete(redisKeys.getPlayingList()+houseId);
     }
 
     @Override

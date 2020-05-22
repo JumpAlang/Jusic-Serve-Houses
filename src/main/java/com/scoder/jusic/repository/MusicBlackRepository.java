@@ -7,6 +7,7 @@ import java.util.Set;
  */
 public interface MusicBlackRepository {
 
+    Boolean destroy(String houseId);
     /**
      * is member ?
      *

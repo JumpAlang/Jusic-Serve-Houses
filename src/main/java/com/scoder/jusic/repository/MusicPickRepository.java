@@ -12,7 +12,7 @@ public interface MusicPickRepository {
     /**
      * destroy
      */
-    void destroy(String houseId);
+    Boolean destroy(String houseId);
 
     /**
      * left push

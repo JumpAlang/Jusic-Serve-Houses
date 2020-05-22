@@ -23,11 +23,12 @@ public class SessionBlackRepositoryImpl implements SessionBlackRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public Long destroy(String houseId) {
-        Set keys = redisTemplate.opsForHash()
-                .keys(redisKeys.getSessionBlackHash()+houseId);
-        return keys.size() > 0 ? redisTemplate.opsForHash()
-                .delete(redisKeys.getSessionBlackHash()+houseId, keys.toArray()) : 0;
+    public Boolean destroy(String houseId) {
+//        Set keys = redisTemplate.opsForHash()
+//                .keys(redisKeys.getSessionBlackHash()+houseId);
+//        return keys.size() > 0 ? redisTemplate.opsForHash()
+//                .delete(redisKeys.getSessionBlackHash()+houseId, keys.toArray()) : 0;
+        return redisTemplate.delete(redisKeys.getSessionBlackHash()+houseId);
     }
 
     @Override

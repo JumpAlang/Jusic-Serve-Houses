@@ -33,15 +33,17 @@ public class AuthServiceImpl implements AuthService {
             rootPassword = jusicProperties.getRoleRootPassword();
             configRepository.initRootPassword(houseId);
         }
+        User user = sessionRepository.getSession(sessionId,houseId);
         if (password.equals(rootPassword)) {
             // update role
-            User user = sessionRepository.getSession(sessionId,houseId);
             user.setRole("root");
             sessionRepository.setSession(user,houseId);
-
             return true;
+        }else{
+            user.setRole("default");
+            sessionRepository.setSession(user,houseId);
+            return false;
         }
-        return false;
     }
 
     @Override
@@ -54,15 +56,27 @@ public class AuthServiceImpl implements AuthService {
             adminPassword = jusicProperties.getRoleRootPassword();
             configRepository.initAdminPassword(houseId);
         }
+        User user = sessionRepository.getSession(sessionId,houseId);
         if (password.equals(adminPassword)) {
             // update role
-            User user = sessionRepository.getSession(sessionId,houseId);
             user.setRole("admin");
             sessionRepository.setSession(user,houseId);
-
             return true;
+        }else{
+            user.setRole("default");
+            sessionRepository.setSession(user,houseId);
+            return false;
         }
-        return false;
+    }
+
+    @Override
+    public void setAdminPassword(String password, String houseId) {
+        configRepository.setAdminPassword(password,houseId);
+    }
+
+    @Override
+    public void setRootPassword(String password,String houseId) {
+        configRepository.setRootPassword(password,houseId);;
     }
 
 }

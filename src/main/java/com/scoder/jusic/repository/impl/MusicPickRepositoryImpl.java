@@ -23,9 +23,10 @@ public class MusicPickRepositoryImpl implements MusicPickRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public void destroy(String houseId) {
-        redisTemplate.opsForList()
-                .trim(redisKeys.getPickList()+houseId, 1, 0);
+    public Boolean destroy(String houseId) {
+        return redisTemplate.delete(redisKeys.getPickList()+houseId);
+//        redisTemplate.opsForList()
+//                .trim(redisKeys.getPickList()+houseId, 1, 0);
     }
 
     @Override

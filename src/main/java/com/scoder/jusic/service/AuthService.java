@@ -23,5 +23,7 @@ public interface AuthService {
      */
     boolean authAdmin(String sessionId, String password,String houseId);
 
+    void setAdminPassword(String password,String houseId);
 
+    void setRootPassword(String password,String houseId);
 }

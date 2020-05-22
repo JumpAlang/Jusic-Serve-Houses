@@ -77,6 +77,16 @@ public class StringUtils {
         return result;
     }
 
+    public static String getSessionId(String id){
+        String regEx="@[a-zA-Z0-9]{8}";
+        Pattern p= Pattern.compile(regEx);
+        Matcher m=p.matcher(id);
+        if (m.find()) {
+            return m.group().substring(1);
+        }else{
+            return null;
+        }
+    }
     public static Long getLyricsDuration(String lyrics){
         if(lyrics != null && !"".equals(lyrics)){
             int startPos = lyrics.lastIndexOf("[");
@@ -103,7 +113,8 @@ public class StringUtils {
         return sumMillisecond;
     }
     public static void main(String[] args) throws UnsupportedEncodingException {
-        System.out.println(lyricStrToMillisSecond("04:07.93"));
+        String a = "dsdfsfs夺@njhiivhg，@3jhiivhg非机动车顶起顶起";
+        System.out.println(getSessionId(a));
     }
 
 }

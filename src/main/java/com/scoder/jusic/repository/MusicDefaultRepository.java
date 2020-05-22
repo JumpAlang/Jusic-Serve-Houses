@@ -10,7 +10,7 @@ public interface MusicDefaultRepository {
      *
      * @return -
      */
-    Long destroy();
+    Boolean destroy();
 
     /**
      * initialize

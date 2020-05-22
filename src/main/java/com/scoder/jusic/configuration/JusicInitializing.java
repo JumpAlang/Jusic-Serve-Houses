@@ -30,12 +30,13 @@ public class JusicInitializing implements InitializingBean {
     private final MusicPickRepository musicPickRepository;
     private final MusicVoteRepository musicVoteRepository;
     private final SessionBlackRepository sessionBlackRepository;
+    private final MusicBlackRepository musicBlackRepository;
 
     @Autowired
     private MusicTopJob musicTopJob;
 
 
-    public JusicInitializing(ConfigRepository configRepository, SessionRepository sessionRepository, MusicDefaultRepository musicDefaultRepository, MusicPlayingRepository musicPlayingRepository, MusicPickRepository musicPickRepository, MusicVoteRepository musicVoteRepository, JusicProperties jusicProperties, ResourceLoader resourceLoader, SessionBlackRepository sessionBlackRepository) {
+    public JusicInitializing(ConfigRepository configRepository, SessionRepository sessionRepository, MusicDefaultRepository musicDefaultRepository, MusicPlayingRepository musicPlayingRepository, MusicPickRepository musicPickRepository, MusicVoteRepository musicVoteRepository, JusicProperties jusicProperties, ResourceLoader resourceLoader, SessionBlackRepository sessionBlackRepository,MusicBlackRepository musicBlackRepository) {
         this.configRepository = configRepository;
         this.sessionRepository = sessionRepository;
         this.musicDefaultRepository = musicDefaultRepository;
@@ -45,6 +46,7 @@ public class JusicInitializing implements InitializingBean {
         this.jusicProperties = jusicProperties;
         this.resourceLoader = resourceLoader;
         this.sessionBlackRepository = sessionBlackRepository;
+        this.musicBlackRepository = musicBlackRepository;
     }
 
     @Override
@@ -86,7 +88,7 @@ public class JusicInitializing implements InitializingBean {
     private void initialize() throws IOException {
         log.info("初始化工作开始");
         this.initDefaultMusicId();
-        configRepository.initialize();
+        configRepository.initialize(JusicProperties.HOUSE_DEFAULT_ID);
         musicDefaultRepository.initialize();
         log.info("初始化工作完成");
     }
@@ -100,13 +102,14 @@ public class JusicInitializing implements InitializingBean {
      */
     private void clearSurvive() {
         log.info("清理工作开始");
-        sessionRepository.destroy();
-        sessionBlackRepository.destroy();
-        configRepository.destroy();
+        sessionRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
+        sessionBlackRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
+        configRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
         musicDefaultRepository.destroy();
-        musicPlayingRepository.destroy();
-        musicPickRepository.destroy();
-        musicVoteRepository.destroy();
+        musicPlayingRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
+        musicPickRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
+        musicVoteRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
+        musicBlackRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
         log.info("清理工作完成");
     }
 }

@@ -15,6 +15,7 @@ public interface ConfigService {
     void setEnableSwitch(boolean enableSwitch,String houseId);
 
     void setEnableSearch(boolean enableSearch,String houseId);
+    void setVoteRate(Float voteRate,String houseId);
 
     Boolean getEnableSearch(String houseId);
 

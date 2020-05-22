@@ -16,8 +16,10 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author H
@@ -57,16 +59,17 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public void putSession(WebSocketSession session,String houseId) {
+    public User putSession(WebSocketSession session,String houseId) {
         jusicProperties.getSessions(houseId).put(session.getId(), session);
         User user = User.builder()
                 .sessionId(session.getId())
                 .name("")
                 .nickName("")
                 .remoteAddress(session.getAttributes().get("remoteAddress").toString())
-                .role("default")
+                .role(session.getId().equals(houseId)?"admin":"default").houseId(session.getAttributes().get("houseId").toString())
                 .build();
         sessionRepository.setSession(user,houseId);
+        return user;
     }
 
     @Override
@@ -74,6 +77,11 @@ public class SessionServiceImpl implements SessionService {
         log.info("Clear Session: {}", session.getId());
         jusicProperties.getSessions(houseId).remove(session.getId());
         sessionRepository.removeSession(session.getId(),houseId);
+    }
+    public WebSocketSession clearSession(String sessionId,String houseId) {
+        log.info("Clear Session: {}", sessionId);
+        sessionRepository.removeSession(sessionId,houseId);
+        return  jusicProperties.getSessions(houseId).remove(sessionId);
     }
 
     @Override
@@ -89,6 +97,22 @@ public class SessionServiceImpl implements SessionService {
                 this.send(session, messageType, payload);
             }
         });
+    }
+
+    @Override
+    public void send(MessageType messageType, Object payload) {
+        JusicProperties.SessionContainer sessions = jusicProperties.getSessions();
+        Map<String,ConcurrentHashMap<String,WebSocketSession>> housesSession = sessions.get();
+        Set<String> houseIdSet = housesSession.keySet();
+        Iterator<String> iterator = houseIdSet.iterator();
+        while(iterator.hasNext()){
+            ConcurrentHashMap<String,WebSocketSession> houseSession = housesSession.get(iterator.next());
+            houseSession.forEach((key, session) -> {
+                if (session.isOpen()) {
+                    this.send(session, messageType, payload);
+                }
+            });
+        }
     }
 
     @Override
@@ -115,7 +139,9 @@ public class SessionServiceImpl implements SessionService {
         TextMessage textMessage = new TextMessage(this.getPayload(messageType.type(), payload));
         try {
             synchronized (session) {
-                session.sendMessage(textMessage);
+                if (session.isOpen()) {
+                    session.sendMessage(textMessage);
+                }
             }
         } catch (IOException e) {
             log.error("send exception.");

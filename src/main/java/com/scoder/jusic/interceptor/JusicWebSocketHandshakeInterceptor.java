@@ -1,9 +1,11 @@
 package com.scoder.jusic.interceptor;
 
+import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.util.IPUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
@@ -22,6 +24,11 @@ public class JusicWebSocketHandshakeInterceptor implements HandshakeInterceptor 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         attributes.put("remoteAddress", IPUtils.getRemoteAddress(request));
+        String houseId = ((ServletServerHttpRequest) request).getServletRequest().getParameter("houseId");
+        if(houseId == null || houseId == ""){
+            houseId = JusicProperties.HOUSE_DEFAULT_ID;
+        }
+        attributes.put("houseId",houseId);
         return true;
     }
 

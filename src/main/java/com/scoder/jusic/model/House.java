@@ -50,4 +50,18 @@ public class House implements Serializable {
      */
     private Boolean enableStatus;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        House house = (House) o;
+
+        return id.equals(house.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

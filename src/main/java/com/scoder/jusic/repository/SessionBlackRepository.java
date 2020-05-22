@@ -14,7 +14,7 @@ public interface SessionBlackRepository {
      *
      * @return long
      */
-    Long destroy(String houseId);
+    Boolean destroy(String houseId);
 
     /**
      * get session

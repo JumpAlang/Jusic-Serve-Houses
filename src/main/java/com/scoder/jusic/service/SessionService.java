@@ -30,7 +30,7 @@ public interface SessionService {
      *
      * @param session the client session
      */
-    void putSession(WebSocketSession session,String houseId);
+    User putSession(WebSocketSession session,String houseId);
 
     /**
      * clear session.
@@ -38,6 +38,8 @@ public interface SessionService {
      * @param session the client session
      */
     void clearSession(WebSocketSession session,String houseId);
+
+    WebSocketSession clearSession(String sessionId,String houseId);
 
     /**
      * send message.
@@ -53,6 +55,9 @@ public interface SessionService {
      * @param payload     payload
      */
     void send(MessageType messageType, Object payload,String houseId);
+
+    void send(MessageType messageType, Object payload);
+
 
     /**
      * send message.

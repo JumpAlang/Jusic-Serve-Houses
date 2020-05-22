@@ -27,19 +27,20 @@ public class MailController {
     @MessageMapping("/mail/send")
     public void send(Chat chat, StompHeaderAccessor stompHeaderAccessor) {
         String sessionId = stompHeaderAccessor.getHeader("simpSessionId").toString();
-        User user = sessionService.getUser(sessionId);
-        User black = sessionService.getBlack(sessionId);
+        String houseId = (String)stompHeaderAccessor.getSessionAttributes().get("houseId");
+        User user = sessionService.getUser(sessionId,houseId);
+        User black = sessionService.getBlack(sessionId,houseId);
         long currentTime = System.currentTimeMillis();
         if (null != black && black.getSessionId().equals(sessionId)) {
-            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你已被拉黑"));
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你已被拉黑"),houseId);
         } else if (null != user.getLastMessageTime() && currentTime - user.getLastMessageTime() < 2000) {
-            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "发言时间间隔太短"));
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "发言时间间隔太短"),houseId);
         } else {
             chat.setSessionId(user.getSessionId());
             chat.setNickName(user.getNickName());
             chat.setContent("@管理员 " + chat.getContent());
-            sessionService.send(MessageType.CHAT, Response.success(chat, "@管理员"));
-            sessionService.setLastMessageTime(user, System.currentTimeMillis());
+            sessionService.send(MessageType.CHAT, Response.success(chat, "@管理员"),houseId);
+            sessionService.setLastMessageTime(user, System.currentTimeMillis(),houseId);
 
             StringBuilder content = new StringBuilder()
                     .append(user)
@@ -50,14 +51,14 @@ public class MailController {
                 boolean result = mailService.sendSimpleMail("music.scoder.club@管理员[" + user.getRemoteAddress() + "]", content.toString());
                 if (result) {
                     log.info("session id: {}, @管理员, 邮件发送成功", sessionId);
-                    sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "@管理员 成功"));
+                    sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "@管理员 成功"),houseId);
                 } else {
                     log.info("session id: {}, @管理员, 邮件发送失败", sessionId);
-                    sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "@管理员 失败"));
+                    sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "@管理员 失败"),houseId);
                 }
             }else{
                 log.info("session id: {}, @管理员, Server酱发送成功", sessionId);
-                sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "@管理员 成功"));
+                sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "@管理员 成功"),houseId);
             }
         }
     }

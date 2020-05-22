@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.Set;
-
 /**
  * @author H
  */
@@ -23,11 +21,12 @@ public class SessionRepositoryImpl implements SessionRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public Long destroy(String houseId) {
-        Set keys = redisTemplate.opsForHash()
-                .keys(redisKeys.getSessionHash()+houseId);
-        return keys.size() > 0 ? redisTemplate.opsForHash()
-                .delete(redisKeys.getSessionHash()+houseId, keys.toArray()) : 0;
+    public Boolean destroy(String houseId) {
+//        Set keys = redisTemplate.opsForHash()
+//                .keys(redisKeys.getSessionHash()+houseId);
+//        return keys.size() > 0 ? redisTemplate.opsForHash()
+//                .delete(redisKeys.getSessionHash()+houseId, keys.toArray()) : 0;
+        return redisTemplate.delete(redisKeys.getSessionHash()+houseId);
     }
 
     @Override

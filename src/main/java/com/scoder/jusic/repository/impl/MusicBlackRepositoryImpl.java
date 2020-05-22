@@ -22,6 +22,11 @@ public class MusicBlackRepositoryImpl implements MusicBlackRepository {
     private RedisTemplate redisTemplate;
 
     @Override
+    public Boolean destroy(String houseId) {
+        return redisTemplate.delete(redisKeys.getBlackSet()+houseId);
+    }
+
+    @Override
     public boolean isMember(String id,String houseId) {
         return redisTemplate.opsForSet()
                 .isMember(redisKeys.getBlackSet()+houseId, id);

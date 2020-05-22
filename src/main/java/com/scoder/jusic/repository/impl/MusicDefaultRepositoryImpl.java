@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.Set;
-
 /**
  * @author H
  */
@@ -22,11 +20,12 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public Long destroy() {
-        Set members = redisTemplate.opsForSet()
-                .members(redisKeys.getDefaultSet());
-        return members != null && members.size() > 0 ? redisTemplate.opsForSet()
-                .remove(redisKeys.getDefaultSet(), members.toArray()) : 0;
+    public Boolean destroy() {
+        return redisTemplate.delete(redisKeys.getDefaultSet());
+//        Set members = redisTemplate.opsForSet()
+//                .members(redisKeys.getDefaultSet());
+//        return members != null && members.size() > 0 ? redisTemplate.opsForSet()
+//                .remove(redisKeys.getDefaultSet(), members.toArray()) : 0;
     }
 
     @Override

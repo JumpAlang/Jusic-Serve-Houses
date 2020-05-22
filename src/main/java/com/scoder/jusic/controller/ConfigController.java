@@ -24,13 +24,13 @@ public class ConfigController {
     public void settingName(Setting setting, StompHeaderAccessor accessor) {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String name = setting.getName();
-
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
         if (name == null || "".equals(name)) {
-            sessionService.send(sessionId, MessageType.SETTING_NAME, Response.failure((Object) null, "昵称设置失败"));
+            sessionService.send(sessionId, MessageType.SETTING_NAME, Response.failure((Object) null, "昵称设置失败"),houseId);
         } else {
             log.info("设置用户名: {}", name);
-            sessionService.settingName(sessionId, name);
-            sessionService.send(sessionId, MessageType.SETTING_NAME, Response.success(setting, "昵称设置成功"));
+            sessionService.settingName(sessionId, name,houseId);
+            sessionService.send(sessionId, MessageType.SETTING_NAME, Response.success(setting, "昵称设置成功"),houseId);
         }
     }
 

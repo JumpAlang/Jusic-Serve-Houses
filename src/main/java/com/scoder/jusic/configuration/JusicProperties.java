@@ -18,9 +18,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @ToString
 public class JusicProperties {
 
-    private class SessionContainer{
-        private Map<String, ConcurrentHashMap<String,WebSocketSession>> sessionContainer = new HashMap<>();
+    public class SessionContainer{
+        private Map<String, ConcurrentHashMap<String,WebSocketSession>> sessionContainer = new ConcurrentHashMap<>();
 
+        public void remove(String houseId){
+            sessionContainer.remove(houseId);
+        }
         public ConcurrentHashMap<String,WebSocketSession> getHouseSession(String houseId){
             if(sessionContainer.containsKey(houseId)){
                 ConcurrentHashMap<String,WebSocketSession> houseSession = sessionContainer.get(houseId);
@@ -50,9 +53,9 @@ public class JusicProperties {
 //                    sessionContainer.put(houseId,houseSession);
 //                }
 //        }
-//        public WebSocketSession get(String sessionId,String houseId){
-//            return sessionContainer.get(houseId);
-//        }
+        public Map<String, ConcurrentHashMap<String,WebSocketSession>> get(){
+            return sessionContainer;
+        }
     }
     /**
      * 自定义容器，用来装载 session
@@ -60,6 +63,12 @@ public class JusicProperties {
     private final SessionContainer sessions = new SessionContainer();
     public ConcurrentHashMap<String,WebSocketSession> getSessions(String houseId){
         return sessions.getHouseSession(houseId);
+    }
+    public SessionContainer getSession(){
+        return sessions;
+    }
+    public void removeSessions(String houseId){
+        sessions.remove(houseId);
     }
     /**
      * 音乐到期时间，每首音乐的链接都会有一个失效时间
@@ -125,6 +134,12 @@ public class JusicProperties {
     private String mailSendTo = "1040927107@qq.com";
 
     private String serverJUrl = "https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send";
+    private Integer houseSize = 10;
+
+    public static final String HOUSE_DEFAULT_ID = "DEFAULT";
+    public static final String HOUSE_DEFAULT_NAME = "一起听歌吧";
+    public static final String HOUSE_DEFAULT_DESC = "永远年轻！永远热泪盈眶！";
+
     /**
      * redis keys
      */
@@ -204,7 +219,7 @@ public class JusicProperties {
         }
 
         public String getConfigHash() {
-            return this.configHash + "_" + jusicEnvironment.getServerPort();
+            return this.configHash + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getSessionHash() {

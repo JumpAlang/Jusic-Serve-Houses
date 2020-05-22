@@ -1,7 +1,9 @@
 package com.scoder.jusic.handler;
 
 import com.scoder.jusic.common.message.Response;
+import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.configuration.JusicProperties;
+import com.scoder.jusic.model.House;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.Music;
 import com.scoder.jusic.model.Online;
@@ -35,24 +37,32 @@ public class JusicWebSocketHandlerAsync {
     private MusicService musicService;
     @Autowired
     private ConfigService configService;
+    @Autowired
+    private HouseContainer houseContainer;
 
     @Async
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        sessionService.putSession(session);
-        int size = musicBar.getSessions().size();
+        String houseId = (String)session.getAttributes().get("houseId");
+        House house = houseContainer.get(houseId);
+        if(!houseId.equals(house.getId())){
+            houseId = house.getId();
+            session.getAttributes().put("houseId",houseId);
+        }
+        sessionService.putSession(session,houseId);
+        int size = musicBar.getSessions(houseId).size();
         log.info("Connection established: {}, ip: {}, and now online: {}", session.getId(), session.getAttributes().get("remoteAddress").toString(), size);
         Thread.sleep(500);
         sessionService.send(session, MessageType.NOTICE, Response.success((Object) null, "连接到服务器成功！"));
         // 1. send online
         Online online = new Online();
         online.setCount(size);
-        sessionService.send(MessageType.ONLINE, Response.success(online));
+        sessionService.send(MessageType.ONLINE, Response.success(online),houseId);
         // 2. send playing
-        Music playing = musicPlayingRepository.getPlaying();
+        Music playing = musicPlayingRepository.getPlaying(houseId);
         sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
         // 3. send pick list
-        LinkedList<Music> pickList = musicService.getPickList();
-        if(configService.getGoodModel() != null && configService.getGoodModel()) {
+        LinkedList<Music> pickList = musicService.getPickList(houseId);
+        if(configService.getGoodModel(houseId) != null && configService.getGoodModel(houseId)) {
             sessionService.send(session, MessageType.PICK, Response.success(pickList, "goodlist"));
         }else{
             sessionService.send(session, MessageType.PICK, Response.success(pickList, "播放列表"));
@@ -62,12 +72,19 @@ public class JusicWebSocketHandlerAsync {
 
     @Async
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-        sessionService.clearSession(session);
-        int size = musicBar.getSessions().size();
+        String houseId = (String)session.getAttributes().get("houseId");
+        sessionService.clearSession(session,houseId);
+        int size = musicBar.getSessions(houseId).size();
         log.info("Connection closed: {}, and now online: {}", session.getId(), size);
         Online online = new Online();
         online.setCount(size);
-        sessionService.send(MessageType.ONLINE, Response.success(online, null));
+        if(size != 0){
+            sessionService.send(MessageType.ONLINE, Response.success(online, null),houseId);
+        }else{
+            if(!JusicProperties.HOUSE_DEFAULT_ID.equals(houseId)){
+                houseContainer.destroy(houseId);
+            }
+        }
     }
 
 }

@@ -12,7 +12,7 @@ public interface MusicVoteRepository {
      *
      * @return -
      */
-    Long destroy(String houseId);
+    Boolean destroy(String houseId);
 
     /**
      * add to set
