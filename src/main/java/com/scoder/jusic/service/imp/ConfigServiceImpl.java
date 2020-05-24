@@ -32,6 +32,10 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
+    public Float getVoteRate(String houseId) {
+        return configRepository.getVoteRate(houseId);
+    }
+    @Override
     public void setVoteRate(Float voteRate, String houseId) {
         configRepository.setVoteRate(voteRate,houseId);
     }

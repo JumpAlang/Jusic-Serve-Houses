@@ -67,19 +67,19 @@ public class HouseContainer {
     }
 
     public void add(House house){
+//        try{
+//            sessionRepository.destroy(house.getId());
+//            configRepository.destroy(house.getId());
+//            musicPlayingRepository.destroy(house.getId());
+//            musicPickRepository.destroy(house.getId());
+//            musicVoteRepository.destroy(house.getId());
+//            musicBlackRepository.destroy(house.getId());
+//            sessionBlackRepository.destroy(house.getId());
+//        }catch (Exception e){
+//            log.error("houseId:{},houseNamw:{},message:[{}]",house.getId(),house.getName(),e.getMessage());
+//        }
         configRepository.initialize(house.getId());
         houses.add(house);
-        try{
-            sessionRepository.destroy(house.getId());
-            configRepository.destroy(house.getId());
-            musicPlayingRepository.destroy(house.getId());
-            musicPickRepository.destroy(house.getId());
-            musicVoteRepository.destroy(house.getId());
-            musicBlackRepository.destroy(house.getId());
-            sessionBlackRepository.destroy(house.getId());
-        }catch (Exception e){
-            log.error("houseId:{},houseNamw:{},message:[{}]",house.getId(),house.getName(),e.getMessage());
-        }
     }
 
     public void destroy(String id){

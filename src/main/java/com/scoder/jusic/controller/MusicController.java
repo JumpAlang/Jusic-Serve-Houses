@@ -207,16 +207,18 @@ public class MusicController {
             vote = musicService.vote(sessionId,houseId);
             voteCount = musicService.getVoteCount(houseId);
             if (vote == 0) {
-                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "你已经投过票了"),houseId);
+                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "你已经投过票了,当前状态："+voteCount + "/" + size),houseId);
                 log.info("你已经投过票了");
+            }else{
+                sessionService.send(MessageType.NOTICE, Response.success((Object) null, voteCount + "/" + size + " 投票成功"),houseId);
             }
-            sessionService.send(MessageType.NOTICE, Response.success((Object) null, voteCount + "/" + size + " 投票成功"),houseId);
         }
         log.info("投票成功");
-        if (voteCount == 1 && vote != 0 && voteCount < size * jusicProperties.getVoteRate()) {
+        Float voteRate = configService.getVoteRate(houseId);
+        if (voteCount == 1 && vote != 0 && voteCount < size * voteRate) {
             sessionService.send(MessageType.NOTICE, Response.success((Object) null, "有人希望切歌, 如果支持请发送“投票切歌”"),houseId);
             log.info("有人希望切歌, 如果支持请发送“投票切歌”");
-        }
+    }
     }
 
     /**
