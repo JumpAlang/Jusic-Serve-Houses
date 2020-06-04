@@ -53,14 +53,15 @@ public class JusicWebSocketHandlerAsync {
         log.info("Connection established: {}, ip: {}, and now online: {}", session.getId(), session.getAttributes().get("remoteAddress").toString(), size);
         Thread.sleep(500);
         sessionService.send(session, MessageType.NOTICE, Response.success((Object) null, "连接到服务器成功！"));
+        // 2. send playing
+        Music playing = musicPlayingRepository.getPlaying(houseId);
+        sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
+
         // 1. send online
         Online online = new Online();
         online.setCount(size);
         sessionService.send(MessageType.ONLINE, Response.success(online),houseId);
-        // 2. send playing
-        Music playing = musicPlayingRepository.getPlaying(houseId);
-        sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
-        // 3. send pick list
+       // 3. send pick list
         LinkedList<Music> pickList = musicService.getPickList(houseId);
         if(configService.getGoodModel(houseId) != null && configService.getGoodModel(houseId)) {
             sessionService.send(session, MessageType.PICK, Response.success(pickList, "goodlist"));

@@ -76,7 +76,7 @@ public class HouseContainer {
 //            musicBlackRepository.destroy(house.getId());
 //            sessionBlackRepository.destroy(house.getId());
 //        }catch (Exception e){
-//            log.error("houseId:{},houseNamw:{},message:[{}]",house.getId(),house.getName(),e.getMessage());
+//            log.error("houseId:{},houseName:{},message:[{}]",house.getId(),house.getName(),e.getMessage());
 //        }
         configRepository.initialize(house.getId());
         houses.add(house);

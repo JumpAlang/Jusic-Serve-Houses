@@ -11,7 +11,9 @@ import com.scoder.jusic.service.SessionService;
 import com.scoder.jusic.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
@@ -34,6 +36,19 @@ public class ChatController {
         add("root");
         add("admin");
     }};
+
+    @MessageMapping("/chat/notice/{msg}")
+    @SendTo("/topic/chat")
+    public Response notice(@DestinationVariable String msg, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!roles.get(0).equals(role)) {
+            return Response.failure((Object) null, "你没有权限");
+        }
+
+        return Response.success(msg, "通知成功");
+    }
 
     @MessageMapping("/chat")
     public void chat(Chat chat, StompHeaderAccessor accessor) {

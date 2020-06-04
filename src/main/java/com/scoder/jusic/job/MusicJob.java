@@ -70,6 +70,7 @@ public class MusicJob {
 
                     configRepository.setLastMusicPushTimeAndDuration(pushTime, duration,house.getId());
                     music.setPushTime(pushTime);
+                    sessionService.send(MessageType.MUSIC, Response.success(music, "正在播放"),house.getId());
                     musicPlayingRepository.leftPush(music,house.getId());
                     musicPlayingRepository.keepTheOne(house.getId());
                     log.info("已保存推送时间和音乐时长"+house.getName());
@@ -77,13 +78,18 @@ public class MusicJob {
                     log.info("已关闭音乐推送开关"+house.getName());
                     musicVoteRepository.reset(house.getId());
                     log.info("已重置投票");
-                    sessionService.send(MessageType.MUSIC, Response.success(music, "正在播放"),house.getId());
                     log.info("已向所有客户端推送音乐, 音乐: {}, 时长: {}, 推送时间: {}, 链接: {}", music.getName(), duration, pushTime, music.getUrl());
                     LinkedList<Music> result = musicService.getPickList(house.getId());
                     sessionService.send(MessageType.PICK, Response.success(result, "播放列表"),house.getId());
                     log.info("已向客户端推送播放列表, 共 {} 首, 列表: {}", result.size(), result);
                 }
             }catch(Exception e){
+                try{
+                    configRepository.destroy(house.getId());
+                    musicPlayingRepository.destroy(house.getId());
+                }catch(Exception e2){
+                    log.error("定时任务销毁config及playing异常[{}]",e2.getMessage());
+                }
                 log.error("houseName:{},houseId:{},message:[{}]",house.getName(),house.getId(),e.getMessage());
             }
 
@@ -114,10 +120,15 @@ public class MusicJob {
     private boolean isPlayingOver(String houseId) {
         Long lastMusicDuration = configRepository.getLastMusicDuration(houseId);
         Long lastMusicPushTime = configRepository.getLastMusicPushTime(houseId);
-        if (null != lastMusicDuration && null != lastMusicPushTime) {
-            return (lastMusicPushTime + lastMusicDuration) - System.currentTimeMillis() <= 0;
+        if(null == lastMusicDuration || null == lastMusicPushTime){
+            return true;
         }
-        return false;
+//        if (null != lastMusicDuration && null != lastMusicPushTime) {
+//            return (lastMusicPushTime + lastMusicDuration) - System.currentTimeMillis() <= 0;
+//        }
+
+//        return false;
+        return (lastMusicPushTime + lastMusicDuration) - System.currentTimeMillis() <= 0;
     }
 
     private boolean isPlayingNull(String houseId) {

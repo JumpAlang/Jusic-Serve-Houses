@@ -33,9 +33,9 @@ jusic:
   music-expire-time: 1200000
   retry-count: 1
   vote-rate: 0.3
-  default-music-file: 'classpath:music/default-list.txt' #'file:/usr/local/nginx/html/default-list.txt' #
+  default-music-file: 'file:/usr/local/nginx/html/default-list.txt' # ## #'classpath:music/default-list.txt'
   wy-top-url: 'https://music.163.com/discover/toplist?id=3778678'
-  music-json: 'classpath:lizhimusic.json' #'file:/usr/local/nginx/html/lizhimusic.json' #json格式歌曲列表（for禁歌） #
+  music-json: 'file:/usr/local/nginx/html/lizhimusic.json'#'classpath:lizhimusic.json'#json格式歌曲列表（for禁歌） # #
   music-serve-domain: 'http://120.24.243.237:8888'
   music-serve-domain-qq: 'http://120.24.243.237:3300'
   music-serve-domain-mg: 'http://120.24.243.237:3400'#'http://localhost:3400'#

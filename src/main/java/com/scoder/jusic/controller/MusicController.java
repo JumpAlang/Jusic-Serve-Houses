@@ -77,7 +77,12 @@ public class MusicController {
         }else if("lz".equals(music.getSource())){
             pick = musicService.getLZMusic(Integer.valueOf(music.getId()));
         }else{
-            pick = musicService.getMusic(music.getId() == null?music.getName():music.getId());
+            if(music.getId() != null){
+                pick = musicService.getWYMusicById(music.getId());
+            }else{
+                pick = musicService.getWYMusic(music.getName());
+            }
+//            pick = musicService.getMusic(music.getId() == null?music.getName():music.getId());
         }
         boolean isNull = null == pick || null == pick.getUrl() ||(null == pick.getId() && null == pick.getUrl() && null == pick.getDuration());
         if (isNull) {

@@ -72,8 +72,11 @@ public interface MusicService {
     Music getMusic(String keyword);
 
     Music getQQMusic(String keyword);
+    Music getWYMusic(String keyword);
 
     Music getLZMusic(Integer index);
+
+    Music getWYMusicById(String id);
 
     Music getQQMusicById(String id);
 

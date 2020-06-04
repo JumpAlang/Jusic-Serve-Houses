@@ -109,6 +109,8 @@ public class HouseController {
         sessionService.send(oldSession,
                 MessageType.AUTH_ADMIN,
                  Response.success((Object) null, "创建房间成功"));
+        //设置默认为点赞模式
+        sessionService.send(MessageType.GOODMODEL, Response.success("GOOD", "goodlist"),sessionId);
 
         // 5.设置要离开的房间总人数
         int oldHouseCount = jusicProperties.getSessions(houseId).size();

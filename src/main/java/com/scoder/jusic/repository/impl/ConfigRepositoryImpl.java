@@ -36,6 +36,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
         this.put(redisKeys.getRedisRoleRoot(), jusicProperties.getRoleRootPassword(),houseId);
         this.put(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword(),houseId);
         this.put(redisKeys.getVoteSkipRate(), jusicProperties.getVoteRate(),houseId);
+        this.put(redisKeys.getGoodModel(),jusicProperties.getGoodModel(),houseId);
     }
 
     @Override

@@ -69,6 +69,14 @@ public class StringUtils {
         return result;
     }
 
+    public static boolean isWYMusicId(String id){
+        String regEx="^[0-9]{6,}$";
+        Pattern p= Pattern.compile(regEx);
+        Matcher m=p.matcher(id);
+        boolean result=m.find();
+        return result;
+    }
+
     public static boolean isMGMusicId(String id){
         String regEx="^[a-zA-Z0-9]{11}$";
         Pattern p= Pattern.compile(regEx);

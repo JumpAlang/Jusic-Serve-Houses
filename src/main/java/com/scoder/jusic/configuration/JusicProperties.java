@@ -135,6 +135,7 @@ public class JusicProperties {
 
     private String serverJUrl = "https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send";
     private Integer houseSize = 10;
+    private Boolean goodModel = true;
 
     public static final String HOUSE_DEFAULT_ID = "DEFAULT";
     public static final String HOUSE_DEFAULT_NAME = "一起听歌吧";
