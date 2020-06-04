@@ -11,7 +11,6 @@ import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.service.SessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
@@ -53,6 +52,12 @@ public class HouseController {
                     Response.failure((Object) null, "房间名称不能为空"),houseId);
             return;
         }
+        if(house.getNeedPwd() != null && house.getNeedPwd() && (house.getPassword() == null || house.getPassword() == "")){
+            sessionService.send(sessionId,
+                    MessageType.ADD_HOUSE,
+                    Response.failure((Object) null, "房间密码不能为空"),houseId);
+            return;
+        }
         if(houseContainer.contains(sessionId)){
             sessionService.send(sessionId,
                     MessageType.ADD_HOUSE,
@@ -68,7 +73,6 @@ public class HouseController {
         house.setId(sessionId);
         house.setCreateTime(System.currentTimeMillis());
         house.setEnableStatus(true);
-        house.setPassword(sessionId);
         house.setSessionId(sessionId);
         house.setRemoteAddress((String)(accessor.getSessionAttributes().get("remoteAddress")));//IPUtils.getRemoteAddress(request);
         houseContainer.add(house);
@@ -124,41 +128,49 @@ public class HouseController {
                 MessageType.ADD_HOUSE,
                  Response.success((Object) null, "创建房间成功"));
     }
-    @MessageMapping("/house/enter/{enterHouseId}")
-    public void enterHouse(@DestinationVariable String enterHouseId, StompHeaderAccessor accessor) {
+    @MessageMapping("/house/enter")
+    public void enterHouse(House house, StompHeaderAccessor accessor) {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
-        if(houseId.equals(enterHouseId)){
+        if(houseId.equals(house.getId())){
             sessionService.send(sessionId,
                     MessageType.ENTER_HOUSE,
                     Response.success((Object) null, "进入房间成功"),houseId);
             return;
         }
-        if(!houseContainer.contains(enterHouseId)){
+        if(!houseContainer.contains(house.getId())){
             sessionService.send(sessionId,
                     MessageType.ENTER_HOUSE,
                     Response.failure((Object) null, "房间已经不存在"),houseId);
             return;
+        }else{
+            House matchHouse = houseContainer.get(house.getId());
+            if(matchHouse.getNeedPwd() &&  (!matchHouse.getPassword().equals(house.getPassword()) || matchHouse.getSessionId().equals(sessionId))){
+                sessionService.send(sessionId,
+                        MessageType.ENTER_HOUSE,
+                        Response.failure((Object) null, "请输入正确的房间密码"),houseId);
+                return;
+            }
         }
         WebSocketSession oldSession = sessionService.clearSession(sessionId,houseId);
-        oldSession.getAttributes().put("houseId",enterHouseId);
-        User user = sessionService.putSession(oldSession,enterHouseId);
+        oldSession.getAttributes().put("houseId",house.getId());
+        User user = sessionService.putSession(oldSession,house.getId());
         //通知当前要离开的房间总数变化，及推送最新房间歌单等
         // 1. send online
         Online online = new Online();
-        online.setCount(jusicProperties.getSessions(enterHouseId).size());
-        sessionService.send(MessageType.ONLINE, Response.success(online),enterHouseId);
+        online.setCount(jusicProperties.getSessions(house.getId()).size());
+        sessionService.send(MessageType.ONLINE, Response.success(online),house.getId());
         // 2. send playing
 //        try {
 //            Thread.sleep(1000);
 //        } catch (InterruptedException e) {
 //            log.error(e.getMessage());
 //        }
-        Music playing = musicPlayingRepository.getPlaying(enterHouseId);
+        Music playing = musicPlayingRepository.getPlaying(house.getId());
         sessionService.send(oldSession, MessageType.MUSIC, Response.success(playing, "正在播放"));
         // 3. send pick list
-        LinkedList<Music> pickList = musicService.getPickList(enterHouseId);
-        if(configService.getGoodModel(enterHouseId) != null && configService.getGoodModel(enterHouseId)) {
+        LinkedList<Music> pickList = musicService.getPickList(house.getId());
+        if(configService.getGoodModel(house.getId()) != null && configService.getGoodModel(house.getId())) {
             sessionService.send(oldSession, MessageType.PICK, Response.success(pickList, "goodlist"));
         }else{
             sessionService.send(oldSession, MessageType.PICK, Response.success(pickList, "播放列表"));
@@ -198,6 +210,7 @@ public class HouseController {
             houseSimple.setId(house.getId());
             houseSimple.setDesc(house.getDesc());
             houseSimple.setCreateTime(house.getCreateTime());
+            houseSimple.setNeedPwd(house.getNeedPwd());
             housesSimple.add(houseSimple);
         }
         String sessionId = accessor.getHeader("simpSessionId").toString();

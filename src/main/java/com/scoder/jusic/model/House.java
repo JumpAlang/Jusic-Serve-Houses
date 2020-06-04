@@ -50,6 +50,8 @@ public class House implements Serializable {
      */
     private Boolean enableStatus;
 
+    private Boolean needPwd = false;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -53,8 +53,9 @@ public class HouseContainer {
     public House get(String id){
         House house = new House();
         house.setId(id);
-        if(houses.contains(house)){
-            return house;
+        int indexOf = houses.indexOf(house);
+        if(indexOf != -1){
+            return houses.get(indexOf);
         }else{
             return houses.get(0);
         }
