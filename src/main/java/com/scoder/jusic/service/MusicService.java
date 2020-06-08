@@ -3,6 +3,7 @@ package com.scoder.jusic.service;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
 import com.scoder.jusic.model.Music;
+import com.scoder.jusic.model.SongList;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -155,4 +156,5 @@ public interface MusicService {
 
     String showBlackMusic(String houseId);
 
+    Page<List<SongList>> search(SongList songList, HulkPage hulkPage);
 }

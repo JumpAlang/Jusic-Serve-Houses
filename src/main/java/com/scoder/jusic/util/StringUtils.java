@@ -76,6 +76,20 @@ public class StringUtils {
         boolean result=m.find();
         return result;
     }
+    public static boolean isGDMusicId(String id){
+        String regEx="^\\*[0-9]+$";
+        Pattern p= Pattern.compile(regEx);
+        Matcher m=p.matcher(id);
+        boolean result=m.find();
+        return result;
+    }
+    public static boolean isUserId(String id){
+        String regEx="^[0-9]+$";
+        Pattern p= Pattern.compile(regEx);
+        Matcher m=p.matcher(id);
+        boolean result=m.find();
+        return result;
+    }
 
     public static boolean isMGMusicId(String id){
         String regEx="^[a-zA-Z0-9]{11}$";
@@ -123,6 +137,8 @@ public class StringUtils {
     public static void main(String[] args) throws UnsupportedEncodingException {
         String a = "dsdfsfs夺@njhiivhg，@3jhiivhg非机动车顶起顶起";
         System.out.println(getSessionId(a));
+        String b = "33";
+        System.out.println(isGDMusicId(b));
     }
 
 }

@@ -7,6 +7,7 @@ import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.Chat;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.Music;
+import com.scoder.jusic.model.SongList;
 import com.scoder.jusic.service.ConfigService;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.service.SessionService;
@@ -447,13 +448,27 @@ public class MusicController {
     public void search(Music music, HulkPage hulkPage, StompHeaderAccessor accessor) {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
-        if ((Objects.isNull(music) || Objects.isNull(music.getName())) && !"lz".equals(music.getName())) {//李志的歌不判断搜索词空
+        if ((music.getName() == null || music.getName() == "")&& !"lz".equals(music.getSource())) {//李志的歌不判断搜索词空
             log.info("session: {} 尝试搜索音乐, 但关键字为空", sessionId);
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "请输入要搜索的关键字"),houseId);
+            return;
         }
         Page<List<Music>> page = musicService.search(music, hulkPage);
         log.info("session: {} 尝试搜索音乐, 关键字: {}, 即将向该用户推送结果", accessor.getHeader("simpSessionId"), music.getName());
         sessionService.send(sessionId, MessageType.SEARCH, Response.success(page, "搜索结果"),houseId);
+    }
+
+    @MessageMapping("/music/searchsonglist")
+    public void searchsonglist(SongList songList, HulkPage hulkPage, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        if (("qq_user".equals(songList.getSource()) || "wy_user".equals(songList.getSource())) && (songList.getName() == null || songList.getName() == "")) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "请输入要搜索的用户帐号"),houseId);
+            return;
+        }
+        Page<List<SongList>> page = musicService.search(songList, hulkPage);
+        log.info("session: {} 尝试搜索歌单, 关键字: {},{}, 即将向该用户推送结果", accessor.getHeader("simpSessionId"), songList.getName(),songList.getSource());
+        sessionService.send(sessionId, MessageType.SEARCH_SONGLIST, Response.success(page, "搜索结果"),houseId);
     }
 
 }

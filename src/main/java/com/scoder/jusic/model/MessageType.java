@@ -18,6 +18,7 @@ public enum MessageType {
     PICK("PICK"),
     CHAT("CHAT"),
     SEARCH("SEARCH"),
+    SEARCH_SONGLIST("SEARCH_SONGLIST"),
     SEARCH_PICTURE("SEARCH_PICTURE"),
     PAUSE("PAUSE"),
     VOLUMN("VOLUMN"),
