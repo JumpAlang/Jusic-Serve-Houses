@@ -54,7 +54,7 @@ public class MailServiceImpl implements MailService {
                 return true;
             }
         }catch(Exception e){
-            log.info("发送至Server酱失败：{}",e.getLocalizedMessage());
+            log.error("发送至Server酱失败：{}",e.getLocalizedMessage());
         }
         return false;
 

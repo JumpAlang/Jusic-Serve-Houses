@@ -134,6 +134,17 @@ public class StringUtils {
         long sumMillisecond = minutes*60*1000+second*1000+millisecond;
         return sumMillisecond;
     }
+
+    public static String encodeString(String param){
+        if(param != null && param != ""){
+            return param.replaceAll("\\s+","%20").replaceAll("\\?","%3F").replaceAll("%","%25").
+                    replaceAll("#","%23").replaceAll("&","%26").replaceAll("=","%3D").
+                    replaceAll("/","%2F").replaceAll("\\+","%2B");
+        }else{
+            return param;
+        }
+    }
+
     public static void main(String[] args) throws UnsupportedEncodingException {
         String a = "dsdfsfs夺@njhiivhg，@3jhiivhg非机动车顶起顶起";
         System.out.println(getSessionId(a));

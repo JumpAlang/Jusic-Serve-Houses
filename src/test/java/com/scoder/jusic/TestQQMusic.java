@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,8 @@ public class TestQQMusic {
         String a="\\xac\\xed\\x00\\x05t\\x00\\x1b";//"\\xe4\\xb8\\x80\\xe8\\xb5\\xb7\\xe5\\x90\\xac\\xe6\\xad\\x8c\\xe5\\x90\\xa7";
         String ab = a.replaceAll("\\\\x", "%");
         System.out.println(URLDecoder.decode(ab, "UTF-8"));
+        String c = "love story";
+        System.out.println(URLEncoder.encode(c,"UTF-8"));
     }
 
 

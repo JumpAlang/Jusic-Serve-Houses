@@ -16,6 +16,7 @@ import java.util.ArrayList;
  */
 public class TestLiZhi {
     public static void main(String[] args) {
+
         ArrayList<String> topList = new ArrayList<>();
         String musicIds = "";
         Document doc = null;

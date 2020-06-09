@@ -273,7 +273,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(jusicProperties.getMusicServeDomainQq() + "/song/find?key=" + keyword)
+                response = Unirest.get(jusicProperties.getMusicServeDomainQq() + "/song/find?key="+StringUtils.encodeString(keyword))
                         .asString();
 
                 if (response.getStatus() != 200) {
@@ -337,8 +337,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/search?limit=1&offset=0&keywords=" + keyword)
-                        .asString();
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/search").queryString("limit",1).queryString("offset",0).queryString("keywords",keyword).asString();
 
                 if (response.getStatus() != 200) {
                     failCount++;
@@ -446,7 +445,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(jusicProperties.getMusicServeDomainMg() + "/song/find?keyword=" + keyword)
+                response = Unirest.post(jusicProperties.getMusicServeDomainMg() + "/song/find").queryString("keyword",keyword)
                         .asString();
 
                 if (response.getStatus() != 200) {
@@ -1117,13 +1116,12 @@ public class MusicServiceImpl implements MusicService {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomainQq())
                 .append("/search?key=")
-                .append(music.getName())
+                .append(StringUtils.encodeString(music.getName()))
                 .append("&pageNo=").append(hulkPage.getPageIndex())
                 .append("&pageSize=").append(hulkPage.getPageSize());
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
-                    .asString();
+            response = Unirest.get(url.toString()).asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("result") == 100) {
                 JSONArray data = responseJsonObject.getJSONObject("data").getJSONArray("list");
@@ -1251,13 +1249,10 @@ public class MusicServiceImpl implements MusicService {
     private HulkPage searchWY(Music music,HulkPage hulkPage) {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomain())
-                .append("/search?keywords=")
-                .append(music.getName())
-                .append("&offset=").append((hulkPage.getPageIndex()-1)*hulkPage.getPageSize())
-                .append("&limit=").append(hulkPage.getPageSize());
+                .append("/search");
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
+            response = Unirest.post(url.toString()).queryString("keywords",music.getName()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize())
                     .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {
@@ -1376,13 +1371,10 @@ public class MusicServiceImpl implements MusicService {
     private HulkPage searchWYGD(SongList songList, HulkPage hulkPage) {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomain())
-                .append("/search?type=1000&keywords=")
-                .append(songList.getName())
-                .append("&offset=").append((hulkPage.getPageIndex()-1)*hulkPage.getPageSize())
-                .append("&limit=").append(hulkPage.getPageSize());
+                .append("/search");
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
+            response = Unirest.post(url.toString()).queryString("type",1000).queryString("keywords",songList.getName()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize())
                     .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {
@@ -1523,13 +1515,12 @@ public class MusicServiceImpl implements MusicService {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomainQq())
                 .append("/search?t=2&key=")
-                .append(songList.getName())
+                .append(StringUtils.encodeString(songList.getName()))
                 .append("&pageNo=").append(hulkPage.getPageIndex())
                 .append("&pageSize=").append(hulkPage.getPageSize());
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
-                    .asString();
+            response = Unirest.get(url.toString()).asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("result") == 100) {
                 JSONArray data = responseJsonObject.getJSONObject("data").getJSONArray("list");
@@ -1719,13 +1710,10 @@ public class MusicServiceImpl implements MusicService {
     private HulkPage searchMG(Music music,HulkPage hulkPage) {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomainMg())
-                .append("/search?keyword=")
-                .append(music.getName())
-                .append("&pageNo=").append(hulkPage.getPageIndex())
-                .append("&pageSize=").append(hulkPage.getPageSize());
+                .append("/search");
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
+            response = Unirest.post(url.toString()).queryString("keyword",music.getName()).queryString("pageNo",hulkPage.getPageIndex()).queryString("pageSize",hulkPage.getPageSize())
                     .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("result") == 100) {
