@@ -44,32 +44,39 @@ public class JusicWebSocketHandlerAsync {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String houseId = (String)session.getAttributes().get("houseId");
         House house = houseContainer.get(houseId);
-        if(!houseId.equals(house.getId())){
-            houseId = house.getId();
+        if(house == null){
+            houseId = houseContainer.getHouses().get(0).getId();
             session.getAttributes().put("houseId",houseId);
         }
         sessionService.putSession(session,houseId);
         int size = musicBar.getSessions(houseId).size();
         log.info("Connection established: {}, ip: {}, and now online: {}", session.getId(), session.getAttributes().get("remoteAddress").toString(), size);
-        Thread.sleep(500);
+       Thread.sleep(500);//要睡一下，不然报错
         sessionService.send(session, MessageType.NOTICE, Response.success((Object) null, "连接到服务器成功！"));
-        // 2. send playing
-        Music playing = musicPlayingRepository.getPlaying(houseId);
-        sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
 
         // 1. send online
         Online online = new Online();
         online.setCount(size);
         sessionService.send(MessageType.ONLINE, Response.success(online),houseId);
-       // 3. send pick list
-        LinkedList<Music> pickList = musicService.getPickList(houseId);
-        if(configService.getGoodModel(houseId) != null && configService.getGoodModel(houseId)) {
-            sessionService.send(session, MessageType.PICK, Response.success(pickList, "goodlist"));
-        }else{
-            sessionService.send(session, MessageType.PICK, Response.success(pickList, "播放列表"));
+
+        Object connectType = session.getAttributes().get("connectType");
+
+        if(JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) || (connectType != null && !"".equals((String)connectType))){
+            // 2. send playing
+            Music playing = musicPlayingRepository.getPlaying(houseId);
+            sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
+
+            // 3. send pick list
+            LinkedList<Music> pickList = musicService.getPickList(houseId);
+            if(configService.getGoodModel(houseId) != null && configService.getGoodModel(houseId)) {
+                sessionService.send(session, MessageType.PICK, Response.success(pickList, "goodlist"));
+            }else{
+                sessionService.send(session, MessageType.PICK, Response.success(pickList, "播放列表"));
+            }
+            log.info("发现有客户端连接, 已向该客户端: {} 发送正在播放的音乐: {}, 以及播放列表, 共 {} 首", session.getId(), playing.getName(), pickList.size());
+
         }
-        log.info("发现有客户端连接, 已向该客户端: {} 发送正在播放的音乐: {}, 以及播放列表, 共 {} 首", session.getId(), playing.getName(), pickList.size());
-    }
+        }
 
     @Async
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {

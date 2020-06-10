@@ -70,13 +70,18 @@ public class HouseController {
                     Response.failure((Object) null, "暂时不能新增房间，待其他空房间被自动腾空方可创建。"),houseId);
             return;
         }
+        String ip = (String)(accessor.getSessionAttributes().get("remoteAddress"));
+        if(houseContainer.isBeyondIpHouse(ip,jusicProperties.getIpHouse())){
+            sessionService.send(sessionId,
+                    MessageType.ADD_HOUSE,
+                    Response.failure((Object) null, "该网络暂时不能新增房间，待其他空房间被自动腾空方可创建。"),houseId);
+            return;}
         house.setId(sessionId);
         house.setCreateTime(System.currentTimeMillis());
-        house.setEnableStatus(true);
+        house.setEnableStatus(false);
         house.setSessionId(sessionId);
-        house.setRemoteAddress((String)(accessor.getSessionAttributes().get("remoteAddress")));//IPUtils.getRemoteAddress(request);
+        house.setRemoteAddress(ip);//IPUtils.getRemoteAddress(request);
         houseContainer.add(house);
-        log.info("house添加成功"+house.getName());
         WebSocketSession oldSession = sessionService.clearSession(sessionId,houseId);
         oldSession.getAttributes().put("houseId",sessionId);
         sessionService.putSession(oldSession,sessionId);

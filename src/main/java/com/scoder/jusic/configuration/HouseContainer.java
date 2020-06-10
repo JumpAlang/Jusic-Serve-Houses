@@ -46,6 +46,18 @@ public class HouseContainer {
         return houses.size();
     }
 
+    public boolean isBeyondIpHouse(String ip,int limit){
+        int count = 0;
+        for(House house : houses){
+            if(house.getRemoteAddress().equals(ip)){
+                if(++count >= limit){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public CopyOnWriteArrayList<House> getHouses(){
         return this.houses;
     }
@@ -56,9 +68,8 @@ public class HouseContainer {
         int indexOf = houses.indexOf(house);
         if(indexOf != -1){
             return houses.get(indexOf);
-        }else{
-            return houses.get(0);
         }
+        return null;
     }
 
     public Boolean contains(String id){

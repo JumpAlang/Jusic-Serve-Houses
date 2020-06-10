@@ -100,7 +100,7 @@ public class StringUtils {
     }
 
     public static String getSessionId(String id){
-        String regEx="@[a-zA-Z0-9]{8}";
+        String regEx="@[a-zA-Z0-9]{8,}";
         Pattern p= Pattern.compile(regEx);
         Matcher m=p.matcher(id);
         if (m.find()) {
