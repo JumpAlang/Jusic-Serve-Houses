@@ -7,10 +7,7 @@ import com.mashape.unirest.http.Unirest;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
 import com.scoder.jusic.configuration.JusicProperties;
-import com.scoder.jusic.model.Album;
-import com.scoder.jusic.model.Music;
-import com.scoder.jusic.model.MusicComparator;
-import com.scoder.jusic.model.SongList;
+import com.scoder.jusic.model.*;
 import com.scoder.jusic.repository.*;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.util.FileOperater;
@@ -72,7 +69,12 @@ public class MusicServiceImpl implements MusicService {
     public Music musicSwitch(String houseId) {
         Music result = null;
         if (musicPickRepository.size(houseId) < 1) {
-            String keyword = musicDefaultRepository.randomMember();
+
+            String defaultPlayListHouse = houseId;
+            if(musicDefaultRepository.size(houseId) == 0){
+                defaultPlayListHouse = "";
+            }
+            String keyword = musicDefaultRepository.randomMember(defaultPlayListHouse);
             log.info("选歌列表为空, 已从默认列表中随机选择一首: {}", keyword);
             if(keyword.endsWith("___qq")){
                 result = this.getQQMusicById(keyword.substring(0,keyword.length()-5));
@@ -80,8 +82,12 @@ public class MusicServiceImpl implements MusicService {
                 result = this.getWYMusicById(keyword);
             }
             while(result == null || result.getUrl() == null){
+                musicDefaultRepository.remove(keyword,defaultPlayListHouse);
                 log.info("该歌曲url为空:{}", keyword);
-                keyword = musicDefaultRepository.randomMember();
+                if(musicDefaultRepository.size(houseId) == 0){
+                    defaultPlayListHouse = "";
+                }
+                keyword = musicDefaultRepository.randomMember(defaultPlayListHouse);
                 log.info("选歌列表为空, 已从默认列表中随机选择一首: {}", keyword);
                 if(keyword.endsWith("___qq")){
                     result = this.getQQMusicById(keyword.substring(0,keyword.length()-5));
@@ -1246,6 +1252,42 @@ public class MusicServiceImpl implements MusicService {
         return hulkPage;
     }
 
+    private String[] searchQQGD(String id) {
+        StringBuilder url = new StringBuilder()
+                .append(jusicProperties.getMusicServeDomainQq())
+                .append("/songlist?id=")
+                .append(id);
+        HttpResponse<String> response = null;
+        ArrayList<String> ids = new ArrayList<>();
+        try {
+            response = Unirest.get(url.toString())
+                    .asString();
+            JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
+            if (responseJsonObject.getInteger("result") == 100) {
+                JSONArray data = responseJsonObject.getJSONObject("data").getJSONArray("songlist");
+                int size = data.size();
+                if(size != 0) {
+                    for (int i = 0; i < size; i++) {
+                        JSONObject jsonObject = data.getJSONObject(i);
+                        String songmid = jsonObject.getString("songmid")+"___qq";
+                        ids.add(songmid);
+                    }
+                }else{
+                    return new String[]{};
+                }
+            } else {
+                log.info("音乐搜索接口异常, 请检查音乐服务");
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("音乐搜索接口异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+            return null;
+        }
+        String[] idsStr = new String[ids.size()];
+        ids.toArray(idsStr);
+        return idsStr;
+    }
+
     private HulkPage searchWY(Music music,HulkPage hulkPage) {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomain())
@@ -1361,10 +1403,43 @@ public class MusicServiceImpl implements MusicService {
         }
         return hulkPage;
     }
+    private String[] searchWYGD(String id) {
+        StringBuilder url = new StringBuilder()
+                .append(jusicProperties.getMusicServeDomain())
+                .append("/playlist/detail?id=")
+                .append(id);
+        HttpResponse<String> response = null;
+        ArrayList<String> ids = new ArrayList();
+        try {
+            response = Unirest.get(url.toString())
+                    .asString();
+            JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
+            if (responseJsonObject.getInteger("code") == 200) {
+                JSONArray data = responseJsonObject.getJSONObject("playlist").getJSONArray("trackIds");
+                if(data == null){
+                    return new String[]{};
+                }
+                int size = data.size();
+
+                for(int i = 0; i < size; i++) {
+                    JSONObject jsonObject = data.getJSONObject(i);
+                    ids.add(jsonObject.getString("id"));
+                }
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("音乐搜索接口异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+            return null;
+        }
+        String[] idsStr = new String[ids.size()];
+        ids.toArray(idsStr);
+        return idsStr;
+    }
 
     /**
-     * 网易歌单搜索
-     * @param songList
+
+     *     * 网易歌单搜索 @param songList
      * @param hulkPage
      * @return
      */
@@ -1774,6 +1849,36 @@ public class MusicServiceImpl implements MusicService {
         return hulkPage;
     }
 
+     /*     * 网易用户搜索 @param musicUser
+     * @param hulkPage
+     * @return
+             */
+    private HulkPage searchWYGD(MusicUser musicUser, HulkPage hulkPage) {
+        StringBuilder url = new StringBuilder()
+                .append(jusicProperties.getMusicServeDomain())
+                .append("/search");
+        HttpResponse<String> response = null;
+        try {
+            response = Unirest.post(url.toString()).queryString("type",1002).queryString("keywords",musicUser.getNickname()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize())
+                    .asString();
+            JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
+            if (responseJsonObject.getInteger("code") == 200) {
+                JSONArray data = responseJsonObject.getJSONObject("result").getJSONArray("userprofiles");
+                Integer count = responseJsonObject.getJSONObject("result").getInteger("userprofileCount");
+                List list = JSONObject.parseObject(JSONObject.toJSONString(data), List.class);
+                hulkPage.setData(list);
+                hulkPage.setTotalSize(count);
+            } else {
+                log.info("网易用户搜索接口异常, 请检查音乐服务");
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("网易用户搜索接口异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+        }
+        return hulkPage;
+    }
+
+
     @Override
     public boolean clearPlayList(String houseId) {
         musicPickRepository.reset(houseId);
@@ -1816,6 +1921,53 @@ public class MusicServiceImpl implements MusicService {
                 return this.searchWYGD(songList,hulkPage);
             }
         }
+    }
+
+    @Override
+    public Page<List<MusicUser>> search(MusicUser musicUser, HulkPage hulkPage) {
+        if("qq".equals(musicUser.getSource())){
+            return this.searchWYGD(musicUser,hulkPage);
+        }else{
+            return this.searchWYGD(musicUser,hulkPage);
+        }
+    }
+
+    @Override
+    public boolean clearDefaultPlayList(String houseId) {
+        musicDefaultRepository.destroy(houseId);
+        return true;
+    }
+
+    @Override
+    public Integer addDefaultPlayList(String houseId, String[] playlistIds, String source) {
+        if("wy".equals(source)){
+            Integer count = 0;
+            for(String id : playlistIds){
+                String[] list = this.searchWYGD(id);
+                if(list != null && list.length > 0){
+                    musicDefaultRepository.add(list,houseId);
+                    count += list.length;
+                }
+            }
+            return count;
+        }else if("qq".equals(source)){
+            Integer count = 0;
+            for(String id : playlistIds){
+                String[] list = this.searchQQGD(id);
+                if(list != null && list.length > 0){
+                    musicDefaultRepository.add(list,houseId);
+                    count += list.length;
+                }
+            }
+            return count;
+        }else{
+            return null;
+        }
+    }
+
+    @Override
+    public Long playlistSize(String houseId) {
+        return musicDefaultRepository.size(houseId);
     }
 
 }

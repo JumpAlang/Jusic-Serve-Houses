@@ -89,7 +89,7 @@ public class JusicInitializing implements InitializingBean {
         log.info("初始化工作开始");
         this.initDefaultMusicId();
         configRepository.initialize(JusicProperties.HOUSE_DEFAULT_ID);
-        musicDefaultRepository.initialize();
+        musicDefaultRepository.initialize("");
         log.info("初始化工作完成");
     }
 
@@ -105,7 +105,7 @@ public class JusicInitializing implements InitializingBean {
         sessionRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
         sessionBlackRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
         configRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
-        musicDefaultRepository.destroy();
+        musicDefaultRepository.destroy("");
         musicPlayingRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
         musicPickRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
         musicVoteRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);

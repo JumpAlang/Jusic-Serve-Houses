@@ -20,8 +20,8 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
     private RedisTemplate redisTemplate;
 
     @Override
-    public Boolean destroy() {
-        return redisTemplate.delete(redisKeys.getDefaultSet());
+    public Boolean destroy(String houseId) {
+        return redisTemplate.delete(redisKeys.getDefaultSet()+"_"+houseId);
 //        Set members = redisTemplate.opsForSet()
 //                .members(redisKeys.getDefaultSet());
 //        return members != null && members.size() > 0 ? redisTemplate.opsForSet()
@@ -29,9 +29,9 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
     }
 
     @Override
-    public Long initialize() {
+    public Long initialize(String houseId) {
         return redisTemplate.opsForSet()
-                .add(redisKeys.getDefaultSet(), JusicProperties.getDefaultListForRepository().toArray());
+                .add(redisKeys.getDefaultSet()+"_"+houseId, JusicProperties.getDefaultListForRepository().toArray());
     }
 
     /**
@@ -40,21 +40,27 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
      * @return long
      */
     @Override
-    public Long size() {
+    public Long size(String houseId) {
         return redisTemplate.opsForSet()
-                .size(redisKeys.getDefaultSet());
+                .size(redisKeys.getDefaultSet()+"_"+houseId);
     }
 
     @Override
-    public String randomMember() {
+    public String randomMember(String houseId) {
         String s = (String) redisTemplate.opsForSet()
-                .randomMember(redisKeys.getDefaultSet());
+                .randomMember(redisKeys.getDefaultSet()+"_"+houseId);
         return s;
     }
 
     @Override
-    public Long add(String[] value) {
+    public void remove(String id, String houseId) {
+        redisTemplate.opsForSet()
+                .remove(redisKeys.getDefaultSet()+"_"+houseId,id);
+    }
+
+    @Override
+    public Long add(String[] value,String houseId) {
         return redisTemplate.opsForSet()
-                .add(redisKeys.getDefaultSet(), value);
+                .add(redisKeys.getDefaultSet()+"_"+houseId, value);
     }
 }

@@ -4,13 +4,11 @@ import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
 import com.scoder.jusic.configuration.JusicProperties;
-import com.scoder.jusic.model.Chat;
-import com.scoder.jusic.model.MessageType;
-import com.scoder.jusic.model.Music;
-import com.scoder.jusic.model.SongList;
+import com.scoder.jusic.model.*;
 import com.scoder.jusic.service.ConfigService;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.service.SessionService;
+import com.scoder.jusic.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -266,6 +264,19 @@ public class MusicController {
 
         }
     }
+    @MessageMapping("/music/clearDefaultPlayList")
+    public void clearDefaultPlayerList(StompHeaderAccessor accessor){
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!roles.contains(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        }else{
+            musicService.clearDefaultPlayList(houseId);
+            LinkedList<Music> pickList = new LinkedList<>();
+            sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "清空列表成功"),houseId);
+        }
+    }
     /**
      * 删除播放列表的音乐
      *
@@ -332,7 +343,7 @@ public class MusicController {
                 sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "音乐拉黑成功"),houseId);
             } else {
                 log.info("session: {} 尝试拉黑音乐: {} 已成功, 重复拉黑", sessionId, music.getName());
-                sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "音乐重复拉黑"),houseId);
+                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "音乐重复拉黑"),houseId);
             }
         }
     }
@@ -424,7 +435,30 @@ public class MusicController {
                 sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "音乐漂白成功"),houseId);
             } else {
                 log.info("session: {} 尝试漂白音乐: {} 漂白异常, 可能不在黑名单中", sessionId, music.getName());
-                sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "音乐漂白异常, 可能不在黑名单中"),houseId);
+                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "音乐漂白异常, 可能不在黑名单中"),houseId);
+            }
+        }
+    }
+
+    @MessageMapping("/music/setDefaultPlaylist")
+    public void setDefaultPlaylist(SongList songList, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!roles.contains(role)) {
+            log.info("session: {} 尝试设置默认播放列表但没有权限, 已被阻止", sessionId);
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            if(songList.getId() == null || "".equals(songList.getId())){
+                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "歌单id不能为空"),houseId);
+            }else{
+                if(StringUtils.isPlayListIds(songList.getId())){
+                    String[] idsStr = StringUtils.splitPlayListIds(songList.getId());
+                    long count = musicService.addDefaultPlayList(houseId,idsStr,songList.getSource());
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "已添加"+count+"首歌至默认播放列表"),houseId);
+                }else{
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "多个歌单id以逗号或者空格隔开"),houseId);
+                }
             }
         }
     }
@@ -444,6 +478,19 @@ public class MusicController {
             }else{
                 sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "暂无拉黑列表"),houseId);
             }
+        }
+    }
+
+    @MessageMapping("/music/playlistSize")
+    public void playlistSize(StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!roles.contains(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            Long size = musicService.playlistSize(houseId);
+            sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "默认列表歌曲数"+size),houseId);
         }
     }
 
@@ -472,6 +519,19 @@ public class MusicController {
         Page<List<SongList>> page = musicService.search(songList, hulkPage);
         log.info("session: {} 尝试搜索歌单, 关键字: {},{}, 即将向该用户推送结果", accessor.getHeader("simpSessionId"), songList.getName(),songList.getSource());
         sessionService.send(sessionId, MessageType.SEARCH_SONGLIST, Response.success(page, "搜索结果"),houseId);
+    }
+
+    @MessageMapping("/music/searchuser")
+    public void searchuser(MusicUser musicUser, HulkPage hulkPage, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        if (musicUser.getNickname() == null || "".equals(musicUser.getNickname())) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "请输入要搜索的用户昵称"),houseId);
+            return;
+        }
+        Page<List<MusicUser>> page = musicService.search(musicUser, hulkPage);
+        log.info("session: {} 尝试搜索用户, 关键字: {},{}, 即将向该用户推送结果", accessor.getHeader("simpSessionId"), musicUser.getNickname(),musicUser.getSource());
+        sessionService.send(sessionId, MessageType.SEARCH_USER, Response.success(page, "搜索结果"),houseId);
     }
 
 }

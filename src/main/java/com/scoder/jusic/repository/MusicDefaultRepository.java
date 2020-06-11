@@ -10,28 +10,30 @@ public interface MusicDefaultRepository {
      *
      * @return -
      */
-    Boolean destroy();
+    Boolean destroy(String houseId);
 
     /**
      * initialize
      *
      * @return -
      */
-    Long initialize();
+    Long initialize(String houseId);
 
     /**
      * size
      *
      * @return -
      */
-    Long size();
+    Long size(String houseId);
 
     /**
      * get random member
      *
      * @return random member
      */
-    String randomMember();
+    String randomMember(String houseId);
+
+    void remove(String id,String houseId);
 
     /**
      * add value
@@ -39,6 +41,6 @@ public interface MusicDefaultRepository {
      * @param value ...value
      * @return long
      */
-    Long add(String[] value);
+    Long add(String[] value,String houseId);
 
 }

@@ -124,7 +124,7 @@ public class HouseController {
         // 5.设置要离开的房间总人数
         int oldHouseCount = jusicProperties.getSessions(houseId).size();
         online.setCount(oldHouseCount);
-        if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID)){
+        if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID) && !houseContainer.get(houseId).getEnableStatus()){
             houseContainer.destroy(houseId);
         }else{
             sessionService.send(MessageType.ONLINE, Response.success(online),houseId);
@@ -193,7 +193,7 @@ public class HouseController {
         // 5.设置要离开的房间总人数
         int oldHouseCount = jusicProperties.getSessions(houseId).size();
         online.setCount(oldHouseCount);
-        if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID)){
+        if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID) && !houseContainer.get(houseId).getEnableStatus()){
             houseContainer.destroy(houseId);
         }else{
             sessionService.send(MessageType.ONLINE, Response.success(online),houseId);

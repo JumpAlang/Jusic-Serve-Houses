@@ -61,22 +61,27 @@ public class JusicWebSocketHandlerAsync {
 
         Object connectType = session.getAttributes().get("connectType");
 
+        // 2. send playing
+        Music playing = musicPlayingRepository.getPlaying(houseId);
         if(JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) || (connectType != null && !"".equals((String)connectType))){
-            // 2. send playing
-            Music playing = musicPlayingRepository.getPlaying(houseId);
-            sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
 
-            // 3. send pick list
-            LinkedList<Music> pickList = musicService.getPickList(houseId);
-            if(configService.getGoodModel(houseId) != null && configService.getGoodModel(houseId)) {
-                sessionService.send(session, MessageType.PICK, Response.success(pickList, "goodlist"));
-            }else{
-                sessionService.send(session, MessageType.PICK, Response.success(pickList, "播放列表"));
+        }else{
+            while(playing  == null){
+                Thread.sleep(500);
+                playing = musicPlayingRepository.getPlaying(houseId);
             }
-            log.info("发现有客户端连接, 已向该客户端: {} 发送正在播放的音乐: {}, 以及播放列表, 共 {} 首", session.getId(), playing.getName(), pickList.size());
+        }
+        sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
+        // 3. send pick list
+        LinkedList<Music> pickList = musicService.getPickList(houseId);
+        if(configService.getGoodModel(houseId) != null && configService.getGoodModel(houseId)) {
+            sessionService.send(session, MessageType.PICK, Response.success(pickList, "goodlist"));
+        }else{
+            sessionService.send(session, MessageType.PICK, Response.success(pickList, "播放列表"));
+        }
+        log.info("发现有客户端连接, 已向该客户端: {} 发送正在播放的音乐: {}, 以及播放列表, 共 {} 首", session.getId(), playing.getName(), pickList.size());
 
-        }
-        }
+    }
 
     @Async
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
@@ -89,7 +94,7 @@ public class JusicWebSocketHandlerAsync {
         if(size != 0){
             sessionService.send(MessageType.ONLINE, Response.success(online, null),houseId);
         }else{
-            if(!JusicProperties.HOUSE_DEFAULT_ID.equals(houseId)){
+            if(!JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) && !houseContainer.get(houseId).getEnableStatus()){
                 houseContainer.destroy(houseId);
             }
         }

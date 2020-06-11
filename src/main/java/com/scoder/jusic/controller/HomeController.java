@@ -4,6 +4,7 @@ import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.House;
+import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.repository.ConfigRepository;
 import com.scoder.jusic.repository.MusicPlayingRepository;
 import com.scoder.jusic.service.ConfigService;
@@ -13,6 +14,9 @@ import com.scoder.jusic.util.IPUtils;
 import com.scoder.jusic.util.UUIDUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -106,6 +110,23 @@ public class HomeController {
             housesSimple.add(houseSimple);
         }
         return Response.success(housesSimple, "房间列表");
+    }
+
+    /**
+     * 房间留存与否
+     * @param accessor
+     */
+    @MessageMapping("/house/retain/{retain}")
+    public void houseRetain(@DestinationVariable boolean retain, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!"root".equals(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            houseContainer.get(houseId).setEnableStatus(retain);
+            sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "设置房间留存与否成功"),houseId);
+        }
     }
 
 }

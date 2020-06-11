@@ -1,6 +1,7 @@
 package com.scoder.jusic.util;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -99,6 +100,26 @@ public class StringUtils {
         return result;
     }
 
+    public static boolean isPlayListIds(String id){
+        String regEx="^[,\\s，]*\\d+([,\\s，]+\\d*[,\\s，]*)*$";
+        Pattern p= Pattern.compile(regEx);
+        Matcher m=p.matcher(id);
+        boolean result=m.find();
+        return result;
+    }
+
+    public static String[] splitPlayListIds(String id){
+        String regEx="[,\\s，]+";
+        String[] ids = id.split(regEx);
+        if("".equals(ids[0])){
+            String[] newIds = new String[ids.length-1];
+            System.arraycopy(ids,1,newIds,0,ids.length-1);
+            return newIds;
+        }else{
+            return ids;
+        }
+    }
+
     public static String getSessionId(String id){
         String regEx="@[a-zA-Z0-9]{8,}";
         Pattern p= Pattern.compile(regEx);
@@ -150,6 +171,13 @@ public class StringUtils {
         System.out.println(getSessionId(a));
         String b = "33";
         System.out.println(isGDMusicId(b));
+
+        String c = ",2,   333d333   ,3232,232 322 ，233，223， ,323,";
+        String d = "24381616";
+        System.out.println(isPlayListIds(c));
+        System.out.println(isPlayListIds(d));
+        System.out.println(Arrays.toString(splitPlayListIds(c)));
+        System.out.println(Arrays.toString(splitPlayListIds(d)));
     }
 
 }

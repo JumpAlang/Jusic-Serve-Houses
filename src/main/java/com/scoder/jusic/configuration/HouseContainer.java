@@ -96,7 +96,6 @@ public class HouseContainer {
 
     public void destroy(String id){
         try{
-            log.info("删除房间"+id);
             this.remove(id);
             jusicProperties.removeSessions(id);
             sessionRepository.destroy(id);
@@ -113,7 +112,7 @@ public class HouseContainer {
     }
 
     public void destroy(){
-        musicDefaultRepository.destroy();
+        musicDefaultRepository.destroy("");
         for(House house : houses){
             sessionRepository.destroy(house.getId());
             configRepository.destroy(house.getId());
@@ -122,6 +121,8 @@ public class HouseContainer {
             musicVoteRepository.destroy(house.getId());
             musicBlackRepository.destroy(house.getId());
             sessionBlackRepository.destroy(house.getId());
+            musicDefaultRepository.destroy(house.getId());
+
         }
     }
 
