@@ -86,7 +86,7 @@ public class HomeController {
            return Response.failure((Object) null, "房间已经不存在");
         }else{
             House matchHouse = houseContainer.get(house.getId());
-            if(matchHouse.getNeedPwd() &&  (!matchHouse.getPassword().equals(house.getPassword()) || matchHouse.getSessionId().equals(sessionId))){
+            if(matchHouse.getNeedPwd() &&  !matchHouse.getPassword().equals(house.getPassword())){// || !matchHouse.getSessionId().equals(sessionId)
              return Response.failure((Object) null, "请输入正确的房间密码");
             }
         }

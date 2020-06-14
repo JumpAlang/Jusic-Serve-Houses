@@ -117,7 +117,7 @@ public class HouseController {
         // 4.设置当前用户为管理员
         sessionService.send(oldSession,
                 MessageType.AUTH_ADMIN,
-                 Response.success((Object) null, "创建房间成功"));
+                 Response.success((Object) null, "您是本房间的主人"));
         //设置默认为点赞模式
         sessionService.send(MessageType.GOODMODEL, Response.success("GOOD", "goodlist"),sessionId);
 
@@ -131,7 +131,7 @@ public class HouseController {
         }
         sessionService.send(oldSession,
                 MessageType.ADD_HOUSE,
-                 Response.success((Object) null, "创建房间成功"));
+                 Response.success(sessionId, "创建房间成功"));
     }
     @MessageMapping("/house/enter")
     public void enterHouse(House house, StompHeaderAccessor accessor) {
@@ -150,7 +150,7 @@ public class HouseController {
             return;
         }else{
             House matchHouse = houseContainer.get(house.getId());
-            if(matchHouse.getNeedPwd() &&  (!matchHouse.getPassword().equals(house.getPassword()) || matchHouse.getSessionId().equals(sessionId))){
+            if(matchHouse.getNeedPwd() && !matchHouse.getPassword().equals(house.getPassword())){// !matchHouse.getSessionId().equals(sessionId)
                 sessionService.send(sessionId,
                         MessageType.ENTER_HOUSE,
                         Response.failure((Object) null, "请输入正确的房间密码"),houseId);
@@ -184,7 +184,7 @@ public class HouseController {
         if(user.getRole() == "admin"){
             sessionService.send(oldSession,
                     MessageType.AUTH_ADMIN,
-                    Response.success((Object) null, "切换房间成功且登录成功"));
+                    Response.success((Object) null, "欢迎主人"));
         }else{
             sessionService.send(oldSession,
                     MessageType.AUTH_ADMIN,
