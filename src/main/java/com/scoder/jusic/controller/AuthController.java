@@ -3,8 +3,10 @@ package com.scoder.jusic.controller;
 import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.model.Auth;
 import com.scoder.jusic.model.MessageType;
+import com.scoder.jusic.model.User;
 import com.scoder.jusic.service.AuthService;
 import com.scoder.jusic.service.SessionService;
+import com.scoder.jusic.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -85,6 +87,110 @@ public class AuthController {
         }else{
             authService.setRootPassword(password,houseId);
             sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "密码修改成功"),houseId);
+        }
+    }
+
+    @MessageMapping("/auth/setPicker/{userId}")
+    public void setPicker(@DestinationVariable String userId, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId, houseId);
+        if (!roles.contains(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            if(StringUtils.isSessionId(userId)){
+                User user = sessionService.getUser(userId,houseId);
+                if(user != null){
+                    if(user.getRole().indexOf("picker") == -1){
+                        user.setRole(user.getRole()+",picker");
+                        authService.updateUser(user,houseId);
+                    }
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "设置点歌人成功"),houseId);
+                }else{
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "用户不存在"),houseId);
+                }
+            }else{
+                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "请填写正确的用户id"),houseId);
+            }
+
+        }
+    }
+
+    @MessageMapping("/auth/setNoPicker/{userId}")
+    public void setNoPicker(@DestinationVariable String userId, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId, houseId);
+        if (!roles.contains(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            if(StringUtils.isSessionId(userId)){
+                User user = sessionService.getUser(userId,houseId);
+                if(user != null){
+                    if(user.getRole().indexOf("picker") != -1){
+                        user.setRole(user.getRole().replaceAll("picker",""));
+                        authService.updateUser(user,houseId);
+                    }
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "取消点歌人成功"),houseId);
+                }else{
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "用户不存在"),houseId);
+                }
+            }else{
+                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "请填写正确的用户id"),houseId);
+            }
+
+        }
+    }
+
+    @MessageMapping("/auth/setVoter/{userId}")
+    public void setVoter(@DestinationVariable String userId, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId, houseId);
+        if (!roles.contains(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            if(StringUtils.isSessionId(userId)){
+                User user = sessionService.getUser(userId,houseId);
+                if(user != null){
+                    if(user.getRole().indexOf("voter") == -1){
+                        user.setRole(user.getRole()+",voter");
+                        authService.updateUser(user,houseId);
+                    }
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "设置切歌人成功"),houseId);
+                }else{
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "用户不存在"),houseId);
+                }
+            }else{
+                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "请填写正确的用户id"),houseId);
+            }
+
+        }
+    }
+
+    @MessageMapping("/auth/setNoVoter/{userId}")
+    public void setNoVoter(@DestinationVariable String userId, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId, houseId);
+        if (!roles.contains(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            if(StringUtils.isSessionId(userId)){
+                User user = sessionService.getUser(userId,houseId);
+                if(user != null){
+                    if(user.getRole().indexOf("voter") != -1){
+                        user.setRole(user.getRole().replaceAll("voter",""));
+                        authService.updateUser(user,houseId);
+                    }
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "取消切歌人成功"),houseId);
+                }else{
+                    sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "用户不存在"),houseId);
+                }
+            }else{
+                sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "请填写正确的用户id"),houseId);
+            }
+
         }
     }
 

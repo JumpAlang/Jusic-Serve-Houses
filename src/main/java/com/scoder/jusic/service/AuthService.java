@@ -1,5 +1,7 @@
 package com.scoder.jusic.service;
 
+import com.scoder.jusic.model.User;
+
 /**
  * @author H
  */
@@ -26,4 +28,7 @@ public interface AuthService {
     void setAdminPassword(String password,String houseId);
 
     void setRootPassword(String password,String houseId);
+
+    void updateUser(User user, String houseId);
+
 }

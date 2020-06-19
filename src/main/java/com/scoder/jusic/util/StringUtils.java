@@ -120,6 +120,14 @@ public class StringUtils {
         }
     }
 
+    public static boolean isSessionId(String id){
+        String regEx="[a-zA-Z0-9]{8,}";
+        Pattern p= Pattern.compile(regEx);
+        Matcher m=p.matcher(id);
+        boolean result=m.find();
+        return result;
+    }
+
     public static String getSessionId(String id){
         String regEx="@[a-zA-Z0-9]{8,}";
         Pattern p= Pattern.compile(regEx);

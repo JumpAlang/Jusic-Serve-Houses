@@ -58,7 +58,7 @@ public class MusicController {
         chat.setSessionId(sessionId);
         sessionService.send(MessageType.CHAT, Response.success(chat),houseId);
 
-        if(configService.getEnableSearch(houseId) != null && !configService.getEnableSearch(houseId)){
+        if(configService.getEnableSearch(houseId) != null && !configService.getEnableSearch(houseId) && !roles.contains(sessionService.getRole(sessionId,houseId)) && sessionService.getRole(sessionId,houseId).indexOf("picker") == -1){
             sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "当前禁止点歌"),houseId);
             return;
         }
@@ -197,7 +197,7 @@ public class MusicController {
         chat.setContent("投票切歌");
         chat.setNickName(nickName);
         sessionService.send(MessageType.CHAT, Response.success(chat),houseId);
-        if(configService.getEnableSwitch(houseId) != null && !configService.getEnableSwitch(houseId)){
+        if(configService.getEnableSwitch(houseId) != null && !configService.getEnableSwitch(houseId) && !roles.contains(sessionService.getRole(sessionId,houseId)) && sessionService.getRole(sessionId,houseId).indexOf("voter") == -1){
             sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "禁止切歌"),houseId);
             return;
         }
@@ -347,6 +347,7 @@ public class MusicController {
             }
         }
     }
+
 
     /**
      * 禁止切歌

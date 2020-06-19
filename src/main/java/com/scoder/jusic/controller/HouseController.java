@@ -177,8 +177,11 @@ public class HouseController {
         LinkedList<Music> pickList = musicService.getPickList(house.getId());
         if(configService.getGoodModel(house.getId()) != null && configService.getGoodModel(house.getId())) {
             sessionService.send(oldSession, MessageType.PICK, Response.success(pickList, "goodlist"));
+            sessionService.send(oldSession,MessageType.GOODMODEL, Response.success("GOOD", "goodlist"));
         }else{
             sessionService.send(oldSession, MessageType.PICK, Response.success(pickList, "播放列表"));
+            sessionService.send(oldSession,MessageType.GOODMODEL, Response.success("EXITGOOD", "goodlist"));
+
         }
         // 4.设置当前用户角色
         if(user.getRole() == "admin"){

@@ -79,4 +79,8 @@ public class AuthServiceImpl implements AuthService {
         configRepository.setRootPassword(password,houseId);;
     }
 
+    @Override
+    public void updateUser(User user, String houseId) {
+        sessionRepository.setSession(user,houseId);
+    }
 }
