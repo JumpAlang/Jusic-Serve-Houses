@@ -18,10 +18,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -97,7 +94,6 @@ public class HomeController {
     @RequestMapping("/house/search")
     @ResponseBody
     public Response searchHouse(HttpServletRequest accessor) {
-        String sessionId = UUIDUtils.getUUID8Len(accessor.getSession().getId());
         CopyOnWriteArrayList<House> houses = houseContainer.getHouses();
         ArrayList<House> housesSimple = new ArrayList<>();
         for(House house : houses){
@@ -128,5 +124,12 @@ public class HomeController {
             sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "设置房间留存与否成功"),houseId);
         }
     }
+
+    @RequestMapping("/house/get")
+    @ResponseBody
+    public Response get(@RequestBody House house, StompHeaderAccessor accessor) {
+        return Response.success(houseContainer.get(house.getId()), "房间列表");
+    }
+
 
 }
