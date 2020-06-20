@@ -128,7 +128,18 @@ public class HomeController {
     @RequestMapping("/house/get")
     @ResponseBody
     public Response get(@RequestBody House house, StompHeaderAccessor accessor) {
-        return Response.success(houseContainer.get(house.getId()), "房间列表");
+        House housePrimitive = houseContainer.get(house.getId());
+        House houseSimple = new House();
+        if(housePrimitive != null){
+            houseSimple.setName(house.getName());
+            houseSimple.setId(house.getId());
+            houseSimple.setDesc(house.getDesc());
+            houseSimple.setCreateTime(house.getCreateTime());
+            houseSimple.setNeedPwd(house.getNeedPwd());
+            return Response.success(houseSimple, "房间详情");
+        }else{
+            return Response.failure(houseSimple, "房间已经不存在了。");
+        }
     }
 
 
