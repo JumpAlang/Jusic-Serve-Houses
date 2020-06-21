@@ -2,6 +2,8 @@ package com.scoder.jusic.repository;
 
 import com.scoder.jusic.model.User;
 
+import java.util.List;
+
 /**
  * @author H
  */
@@ -44,4 +46,6 @@ public interface SessionRepository {
      */
     Long removeSession(String sessionId,String houseId);
 
-}
+    List getSession(String houseId);
+
+    }

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.User;
+import com.scoder.jusic.repository.MusicVoteRepository;
 import com.scoder.jusic.repository.SessionBlackRepository;
 import com.scoder.jusic.repository.SessionRepository;
 import com.scoder.jusic.service.SessionService;
@@ -34,6 +35,8 @@ public class SessionServiceImpl implements SessionService {
     private SessionRepository sessionRepository;
     @Autowired
     private SessionBlackRepository sessionBlackRepository;
+    @Autowired
+    private MusicVoteRepository musicVoteRepository;
 
     @Override
     public void settingName(String sessionId, String name,String houseId) {
@@ -81,6 +84,7 @@ public class SessionServiceImpl implements SessionService {
     public WebSocketSession clearSession(String sessionId,String houseId) {
         log.info("Clear Session: {}", sessionId);
         sessionRepository.removeSession(sessionId,houseId);
+        musicVoteRepository.remove(sessionId,houseId);
         return  jusicProperties.getSessions(houseId).remove(sessionId);
     }
 

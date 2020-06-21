@@ -5,6 +5,8 @@ import com.scoder.jusic.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -23,9 +25,10 @@ public class HouseContainer {
     private final MusicBlackRepository musicBlackRepository;
     private final SessionBlackRepository sessionBlackRepository;
     private final JusicProperties jusicProperties;
+    private final HousesRespository housesRespository;
     private CopyOnWriteArrayList<House> houses = new CopyOnWriteArrayList<House>();
 
-    public HouseContainer(ConfigRepository configRepository, SessionRepository sessionRepository, MusicDefaultRepository musicDefaultRepository, MusicPlayingRepository musicPlayingRepository, MusicPickRepository musicPickRepository, MusicVoteRepository musicVoteRepository,MusicBlackRepository musicBlackRepository,SessionBlackRepository sessionBlackRepository,JusicProperties jusicProperties) {
+    public HouseContainer(ConfigRepository configRepository, SessionRepository sessionRepository, MusicDefaultRepository musicDefaultRepository, MusicPlayingRepository musicPlayingRepository, MusicPickRepository musicPickRepository, MusicVoteRepository musicVoteRepository,MusicBlackRepository musicBlackRepository,SessionBlackRepository sessionBlackRepository,JusicProperties jusicProperties,HousesRespository housesRespository) {
         this.configRepository = configRepository;
         this.sessionRepository = sessionRepository;
         this.musicDefaultRepository = musicDefaultRepository;
@@ -35,15 +38,20 @@ public class HouseContainer {
         this.musicBlackRepository = musicBlackRepository;
         this.sessionBlackRepository = sessionBlackRepository;
         this.jusicProperties = jusicProperties;
-        House house = new House();
-        house.setName(JusicProperties.HOUSE_DEFAULT_NAME);
-        house.setId(JusicProperties.HOUSE_DEFAULT_ID);
-        house.setDesc(JusicProperties.HOUSE_DEFAULT_DESC);
-        houses.add(house);
+        this.housesRespository = housesRespository;
+//        House house = new House();
+//        house.setName(JusicProperties.HOUSE_DEFAULT_NAME);
+//        house.setId(JusicProperties.HOUSE_DEFAULT_ID);
+//        house.setDesc(JusicProperties.HOUSE_DEFAULT_DESC);
+//        houses.add(house);
     }
 
     public int size(){
         return houses.size();
+    }
+
+    public void setHouses(CopyOnWriteArrayList<House> houses){
+        this.houses = houses;
     }
 
     public boolean isBeyondIpHouse(String ip,int limit){
@@ -105,7 +113,7 @@ public class HouseContainer {
             musicVoteRepository.destroy(id);
             musicBlackRepository.destroy(id);
             sessionBlackRepository.destroy(id);
-
+            musicDefaultRepository.destroy(id);
         }catch(Exception e){
             log.error("houseId{},message:[{}]",id,e.getMessage());
         }
@@ -113,23 +121,64 @@ public class HouseContainer {
 
     public void destroy(){
         musicDefaultRepository.destroy("");
-        for(House house : houses){
-            sessionRepository.destroy(house.getId());
-            configRepository.destroy(house.getId());
-            musicPlayingRepository.destroy(house.getId());
-            musicPickRepository.destroy(house.getId());
-            musicVoteRepository.destroy(house.getId());
-            musicBlackRepository.destroy(house.getId());
-            sessionBlackRepository.destroy(house.getId());
-            musicDefaultRepository.destroy(house.getId());
-
+        Iterator<House> iterator = houses.iterator();
+        while(iterator.hasNext()){
+            House house = iterator.next();
+            if(!JusicProperties.HOUSE_DEFAULT_ID.equals(house.getId()) && !house.getEnableStatus()){
+                sessionRepository.destroy(house.getId());
+                configRepository.destroy(house.getId());
+                musicPlayingRepository.destroy(house.getId());
+                musicPickRepository.destroy(house.getId());
+                musicVoteRepository.destroy(house.getId());
+                musicBlackRepository.destroy(house.getId());
+                sessionBlackRepository.destroy(house.getId());
+                musicDefaultRepository.destroy(house.getId());
+                iterator.remove();
+            }else{
+                sessionRepository.destroy(house.getId());
+                musicPlayingRepository.destroy(house.getId());
+                musicPickRepository.destroy(house.getId());
+                sessionBlackRepository.destroy(house.getId());
+                musicVoteRepository.destroy(house.getId());
+            }
         }
+        housesRespository.destroy(houses);
     }
 
     public boolean remove(String id){
         House house = new House();
         house.setId(id);
         return houses.remove(house);
+    }
+
+    /**
+     * 清理 session
+     * 清理 config
+     * 清理 default
+     * 清理 playing
+     * 清理 pick
+     */
+    public CopyOnWriteArrayList<House> clearSurvive() {
+        log.info("清理工作开始");
+        CopyOnWriteArrayList<House> housesRedis = (CopyOnWriteArrayList<House>) housesRespository.initialize();
+        musicDefaultRepository.destroy("");
+        for(House house : houses){
+            sessionRepository.destroy(house.getId());
+            sessionBlackRepository.destroy(house.getId());
+//            configRepository.destroy(house.getId());
+            musicPlayingRepository.destroy(house.getId());
+            musicPickRepository.destroy(house.getId());
+            musicVoteRepository.destroy(house.getId());
+//            musicBlackRepository.destroy(house.getId());
+        }
+        log.info("清理工作完成");
+        return housesRedis;
+    }
+
+    public void initialize(CopyOnWriteArrayList<House> houses) throws IOException {
+        configRepository.initialize(houses.get(0).getId());
+        musicDefaultRepository.initialize("");
+        this.setHouses(houses);
     }
 
 }

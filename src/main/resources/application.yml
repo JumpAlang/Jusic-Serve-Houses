@@ -1,6 +1,20 @@
 server:
   port: 8080
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+      sensitive: false
+  endpoints:
+    web:
+      exposure:
+        include: "shutdown"
 spring:
+  security:
+    user:
+      name: admin
+      password: 54288wlj
+
   redis:
     host: localhost
     port: 6379
@@ -44,6 +58,5 @@ jusic:
   serverJUrl: 'https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send'
   ip_house: 3
   house_size: 16
-
 
 

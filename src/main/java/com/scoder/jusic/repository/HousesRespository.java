@@ -1,0 +1,26 @@
+package com.scoder.jusic.repository;
+
+import com.scoder.jusic.model.House;
+
+import java.util.List;
+
+/**
+ * @author JumpAlang
+ * @create 2020-06-21 22:03
+ */
+public interface HousesRespository {
+
+    Boolean destroy(List<House> houses);
+
+    List<House> initialize();
+
+    Long rightPushAll(Object... value);
+
+    Long size();
+
+
+    void reset();
+
+
+    List<House> get();
+}

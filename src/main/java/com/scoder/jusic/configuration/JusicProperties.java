@@ -172,6 +172,8 @@ public class JusicProperties {
          * 点歌列表，存放 {@link com.scoder.jusic.model.Music} 对象
          */
         private String pickList = "jusic_pick";
+        private String houses = "jusic_houses";
+
         /**
          * 播放列表，存放 {@link com.scoder.jusic.model.Music} 对象
          */
@@ -238,6 +240,10 @@ public class JusicProperties {
 
         public String getPickList() {
             return this.pickList + "_" + jusicEnvironment.getServerPort()+"_";
+        }
+
+        public String getHouses() {
+            return this.houses + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getPlayingList() {

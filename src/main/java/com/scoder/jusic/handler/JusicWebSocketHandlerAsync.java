@@ -8,6 +8,7 @@ import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.Music;
 import com.scoder.jusic.model.Online;
 import com.scoder.jusic.repository.MusicPlayingRepository;
+import com.scoder.jusic.repository.MusicVoteRepository;
 import com.scoder.jusic.service.ConfigService;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.service.SessionService;
@@ -39,6 +40,8 @@ public class JusicWebSocketHandlerAsync {
     private ConfigService configService;
     @Autowired
     private HouseContainer houseContainer;
+    @Autowired
+    private MusicVoteRepository musicVoteRepository;
 
     @Async
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -92,6 +95,7 @@ public class JusicWebSocketHandlerAsync {
         Online online = new Online();
         online.setCount(size);
         if(size != 0){
+            musicVoteRepository.remove(session.getId(),houseId);
             sessionService.send(MessageType.ONLINE, Response.success(online, null),houseId);
         }else{
             if(!JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) && !houseContainer.get(houseId).getEnableStatus()){

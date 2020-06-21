@@ -1,7 +1,7 @@
 package com.scoder.jusic.configuration;
 
-import com.scoder.jusic.repository.*;
 import com.scoder.jusic.job.MusicTopJob;
+import com.scoder.jusic.model.House;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author H
@@ -23,36 +24,21 @@ public class JusicInitializing implements InitializingBean {
 
     private final JusicProperties jusicProperties;
     private final ResourceLoader resourceLoader;
-    private final ConfigRepository configRepository;
-    private final SessionRepository sessionRepository;
-    private final MusicDefaultRepository musicDefaultRepository;
-    private final MusicPlayingRepository musicPlayingRepository;
-    private final MusicPickRepository musicPickRepository;
-    private final MusicVoteRepository musicVoteRepository;
-    private final SessionBlackRepository sessionBlackRepository;
-    private final MusicBlackRepository musicBlackRepository;
+    private final HouseContainer houseContainer;
 
     @Autowired
     private MusicTopJob musicTopJob;
 
 
-    public JusicInitializing(ConfigRepository configRepository, SessionRepository sessionRepository, MusicDefaultRepository musicDefaultRepository, MusicPlayingRepository musicPlayingRepository, MusicPickRepository musicPickRepository, MusicVoteRepository musicVoteRepository, JusicProperties jusicProperties, ResourceLoader resourceLoader, SessionBlackRepository sessionBlackRepository,MusicBlackRepository musicBlackRepository) {
-        this.configRepository = configRepository;
-        this.sessionRepository = sessionRepository;
-        this.musicDefaultRepository = musicDefaultRepository;
-        this.musicPlayingRepository = musicPlayingRepository;
-        this.musicPickRepository = musicPickRepository;
-        this.musicVoteRepository = musicVoteRepository;
+    public JusicInitializing(JusicProperties jusicProperties, ResourceLoader resourceLoader,HouseContainer houseContainer) {
         this.jusicProperties = jusicProperties;
         this.resourceLoader = resourceLoader;
-        this.sessionBlackRepository = sessionBlackRepository;
-        this.musicBlackRepository = musicBlackRepository;
+        this.houseContainer = houseContainer;
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        clearSurvive();
-        initialize();
+        initialize(houseContainer.clearSurvive());
     }
 
     /**
@@ -85,31 +71,12 @@ public class JusicInitializing implements InitializingBean {
      * 初始化 config
      * 初始化 default
      */
-    private void initialize() throws IOException {
+    private void initialize(CopyOnWriteArrayList<House> houses) throws IOException {
         log.info("初始化工作开始");
         this.initDefaultMusicId();
-        configRepository.initialize(JusicProperties.HOUSE_DEFAULT_ID);
-        musicDefaultRepository.initialize("");
+        houseContainer.initialize(houses);
         log.info("初始化工作完成");
     }
 
-    /**
-     * 清理 session
-     * 清理 config
-     * 清理 default
-     * 清理 playing
-     * 清理 pick
-     */
-    private void clearSurvive() {
-        log.info("清理工作开始");
-        sessionRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
-        sessionBlackRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
-        configRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
-        musicDefaultRepository.destroy("");
-        musicPlayingRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
-        musicPickRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
-        musicVoteRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
-        musicBlackRepository.destroy(JusicProperties.HOUSE_DEFAULT_ID);
-        log.info("清理工作完成");
-    }
+
 }

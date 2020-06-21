@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * @author H
  */
@@ -33,6 +35,12 @@ public class SessionRepositoryImpl implements SessionRepository {
     public User getSession(String sessionId,String houseId) {
         return (User) redisTemplate.opsForHash()
                 .get(redisKeys.getSessionHash()+houseId, sessionId);
+    }
+
+    @Override
+    public List getSession(String houseId) {
+        return redisTemplate.opsForHash()
+                .values(redisKeys.getSessionHash()+houseId);
     }
 
     @Override

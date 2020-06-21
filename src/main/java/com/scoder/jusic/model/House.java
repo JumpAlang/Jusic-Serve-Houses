@@ -24,15 +24,15 @@ public class House implements Serializable {
     /**
      * 房间名称
      */
-    private String name = "default";
+    private String name;
     /**
      * 房间描述
      */
-    private String desc = "";
+    private String desc;
     /**
      * ip 地址
      */
-    private String remoteAddress = "";
+    private String remoteAddress;
 
     /**
      * 创建时间
@@ -43,14 +43,14 @@ public class House implements Serializable {
     /**
      * 房间密码
      */
-    private String password = "";
+    private String password;
 
     /**
      * 是否可用
      */
     private Boolean enableStatus;
 
-    private Boolean needPwd = false;
+    private Boolean needPwd;
 
     @Override
     public boolean equals(Object o) {

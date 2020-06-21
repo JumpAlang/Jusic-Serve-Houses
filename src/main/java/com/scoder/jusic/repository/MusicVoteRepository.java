@@ -40,4 +40,7 @@ public interface MusicVoteRepository {
      * @return -
      */
     Set members(String houseId);
-}
+
+    Long remove(String sessionId,String houseId);
+
+    }

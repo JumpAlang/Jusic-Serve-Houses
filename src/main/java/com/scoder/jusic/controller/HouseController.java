@@ -11,6 +11,7 @@ import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.service.SessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
@@ -114,6 +115,12 @@ public class HouseController {
         Online online = new Online();
         online.setCount(jusicProperties.getSessions(sessionId).size());
         sessionService.send(MessageType.ONLINE, Response.success(online),sessionId);
+
+        int oldHouseCount = jusicProperties.getSessions(houseId).size();
+        online.setCount(oldHouseCount);
+        if(oldHouseCount != 0){
+            sessionService.send(MessageType.ONLINE, Response.success(online),houseId);
+        }
         // 4.设置当前用户为管理员
         sessionService.send(oldSession,
                 MessageType.AUTH_ADMIN,
@@ -122,12 +129,8 @@ public class HouseController {
         sessionService.send(MessageType.GOODMODEL, Response.success("GOOD", "goodlist"),sessionId);
 
         // 5.设置要离开的房间总人数
-        int oldHouseCount = jusicProperties.getSessions(houseId).size();
-        online.setCount(oldHouseCount);
         if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID) && !houseContainer.get(houseId).getEnableStatus()){
             houseContainer.destroy(houseId);
-        }else{
-            sessionService.send(MessageType.ONLINE, Response.success(online),houseId);
         }
         sessionService.send(oldSession,
                 MessageType.ADD_HOUSE,
@@ -160,11 +163,18 @@ public class HouseController {
         WebSocketSession oldSession = sessionService.clearSession(sessionId,houseId);
         oldSession.getAttributes().put("houseId",house.getId());
         User user = sessionService.putSession(oldSession,house.getId());
-        //通知当前要离开的房间总数变化，及推送最新房间歌单等
+
         // 1. send online
         Online online = new Online();
         online.setCount(jusicProperties.getSessions(house.getId()).size());
         sessionService.send(MessageType.ONLINE, Response.success(online),house.getId());
+
+        //通知当前要离开的房间总数变化，及推送最新房间歌单等
+        int oldHouseCount = jusicProperties.getSessions(houseId).size();
+        online.setCount(oldHouseCount);
+        if(oldHouseCount != 0){
+            sessionService.send(MessageType.ONLINE, Response.success(online),houseId);
+        }
         // 2. send playing
 //        try {
 //            Thread.sleep(1000);
@@ -194,12 +204,8 @@ public class HouseController {
                     Response.failure((Object) null, "切换房间成功"));
         }
         // 5.设置要离开的房间总人数
-        int oldHouseCount = jusicProperties.getSessions(houseId).size();
-        online.setCount(oldHouseCount);
         if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID) && !houseContainer.get(houseId).getEnableStatus()){
             houseContainer.destroy(houseId);
-        }else{
-            sessionService.send(MessageType.ONLINE, Response.success(online),houseId);
         }
         sessionService.send(oldSession,
                 MessageType.ENTER_HOUSE,
@@ -225,4 +231,20 @@ public class HouseController {
         sessionService.send(sessionId, MessageType.SEARCH_HOUSE, Response.success(housesSimple, "房间列表"),houseId);
     }
 
+    /**
+     * 房间留存与否
+     * @param accessor
+     */
+    @MessageMapping("/house/retain/{retain}")
+    public void houseRetain(@DestinationVariable boolean retain, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!"root".equals(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            houseContainer.get(houseId).setEnableStatus(retain);
+            sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "设置房间留存与否成功"),houseId);
+        }
+    }
 }

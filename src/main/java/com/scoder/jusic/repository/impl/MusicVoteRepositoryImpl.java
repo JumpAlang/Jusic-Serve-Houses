@@ -56,4 +56,9 @@ public class MusicVoteRepositoryImpl implements MusicVoteRepository {
                 .members(redisKeys.getSkipSet()+houseId);
     }
 
+    @Override
+    public Long remove(String sessionId,String houseId) {
+        return redisTemplate.opsForSet()
+                .remove(redisKeys.getSkipSet()+houseId, sessionId);
+    }
 }
