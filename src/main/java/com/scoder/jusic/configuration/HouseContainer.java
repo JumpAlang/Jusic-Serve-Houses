@@ -137,7 +137,7 @@ public class HouseContainer {
             }else{
                 sessionRepository.destroy(house.getId());
                 musicPlayingRepository.destroy(house.getId());
-                musicPickRepository.destroy(house.getId());
+//                musicPickRepository.destroy(house.getId());
                 sessionBlackRepository.destroy(house.getId());
                 musicVoteRepository.destroy(house.getId());
             }
@@ -167,7 +167,7 @@ public class HouseContainer {
             sessionBlackRepository.destroy(house.getId());
 //            configRepository.destroy(house.getId());
             musicPlayingRepository.destroy(house.getId());
-            musicPickRepository.destroy(house.getId());
+//            musicPickRepository.destroy(house.getId());
             musicVoteRepository.destroy(house.getId());
 //            musicBlackRepository.destroy(house.getId());
         }

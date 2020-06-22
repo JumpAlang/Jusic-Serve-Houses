@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -26,7 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 @Controller
 @Slf4j
-@CrossOrigin
+//@CrossOrigin
 public class HomeController {
     @Autowired
     private HouseContainer houseContainer;
@@ -117,7 +116,7 @@ public class HomeController {
             if(house.getEnableStatus() != null){
                 housePrimitive.setEnableStatus(house.getEnableStatus());
             }
-            return Response.success((Object)null, "修改房间成功,修改后房间："+housePrimitive);
+            return Response.success(housePrimitive, "修改房间成功");
         }else{
             return Response.failure((Objects)null,"没有权限");
         }

@@ -135,7 +135,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     @Override
     public Float getVoteRate(String houseId) {
         Object  voteRateObj = this.get(redisKeys.getVoteSkipRate(),houseId);
-        return (Float)voteRateObj;
+        return voteRateObj==null?jusicProperties.getVoteRate():(Float)voteRateObj;
 //        return (float) this.get(redisKeys.getVoteSkipRate(),houseId);
     }
 

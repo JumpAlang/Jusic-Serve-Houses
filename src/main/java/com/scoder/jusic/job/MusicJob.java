@@ -2,6 +2,7 @@ package com.scoder.jusic.job;
 
 import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.configuration.HouseContainer;
+import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.Music;
@@ -41,6 +42,8 @@ public class MusicJob {
     private MusicService musicService;
     @Autowired
     private HouseContainer houseContainer;
+    @Autowired
+    private JusicProperties jusicProperties;
 
     /**
      * 广播条件：第一次启动时 playing 为空、音乐播放完毕、投票切歌
@@ -49,49 +52,52 @@ public class MusicJob {
     private void sendIfSufficient() {
         CopyOnWriteArrayList<House> houses = houseContainer.getHouses();
         for(House house : houses){
-//           log.info("houseName:{},houseId:{}",house.getName(),house.getId());
-            try{
-                if (this.isPlayingNull(house.getId())) {
-                    configRepository.setPushSwitch(true,house.getId());
-                    log.info("推送开关开启, 原因: 首次启动"+house.getName());
-                } else if (this.isPlayingOver(house.getId())) {
-                    configRepository.setPushSwitch(true,house.getId());
-                    log.info("推送开关开启, 原因: 上一首播放完毕");
-                } else if (this.isPlayingSkip(house.getId())) {
-                    configRepository.setPushSwitch(true,house.getId());
-                    log.info("推送开关开启, 原因: 投票通过");
-                }
-
-                if (this.isPushSwitchOpen(house.getId())) {
-                    log.info("检测到推送开关已开启");
-                    Music music = musicService.musicSwitch(house.getId());
-                    long pushTime = System.currentTimeMillis();
-                    Long duration = music.getDuration() == null?300000L:music.getDuration();
-
-                    configRepository.setLastMusicPushTimeAndDuration(pushTime, duration,house.getId());
-                    music.setPushTime(pushTime);
-                    sessionService.send(MessageType.MUSIC, Response.success(music, "正在播放"),house.getId());
-                    musicPlayingRepository.leftPush(music,house.getId());
-                    musicPlayingRepository.keepTheOne(house.getId());
-                    log.info("已保存推送时间和音乐时长"+house.getName());
-                    configRepository.setPushSwitch(false,house.getId());
-                    log.info("已关闭音乐推送开关"+house.getName());
-                    musicVoteRepository.reset(house.getId());
-                    log.info("已重置投票");
-                    log.info("已向所有客户端推送音乐, 音乐: {}, 时长: {}, 推送时间: {}, 链接: {}", music.getName(), duration, pushTime, music.getUrl());
-                    LinkedList<Music> result = musicService.getPickList(house.getId());
-                    sessionService.send(MessageType.PICK, Response.success(result, "播放列表"),house.getId());
-                    log.info("已向客户端推送播放列表, 共 {} 首, 列表: {}", result.size(), result);
-                }
-            }catch(Exception e){
+            if(jusicProperties.getSessions(house.getId()).size() > 0){//没人就不推送
+//                log.info("houseName:{},houseId:{}",house.getName(),house.getId());
                 try{
-                    configRepository.destroy(house.getId());
-                    musicPlayingRepository.destroy(house.getId());
-                }catch(Exception e2){
-                    log.error("定时任务销毁config及playing异常[{}]",e2.getMessage());
+                    if (this.isPlayingNull(house.getId())) {
+                        configRepository.setPushSwitch(true,house.getId());
+                        log.info("推送开关开启, 原因: 首次启动"+house.getName());
+                    } else if (this.isPlayingOver(house.getId())) {
+                        configRepository.setPushSwitch(true,house.getId());
+                        log.info("推送开关开启, 原因: 上一首播放完毕");
+                    } else if (this.isPlayingSkip(house.getId())) {
+                        configRepository.setPushSwitch(true,house.getId());
+                        log.info("推送开关开启, 原因: 投票通过");
+                    }
+
+                    if (this.isPushSwitchOpen(house.getId())) {
+                        log.info("检测到推送开关已开启");
+                        Music music = musicService.musicSwitch(house.getId());
+                        long pushTime = System.currentTimeMillis();
+                        Long duration = music.getDuration() == null?300000L:music.getDuration();
+
+                        configRepository.setLastMusicPushTimeAndDuration(pushTime, duration,house.getId());
+                        music.setPushTime(pushTime);
+                        sessionService.send(MessageType.MUSIC, Response.success(music, "正在播放"),house.getId());
+                        musicPlayingRepository.leftPush(music,house.getId());
+                        musicPlayingRepository.keepTheOne(house.getId());
+                        log.info("已保存推送时间和音乐时长"+house.getName());
+                        configRepository.setPushSwitch(false,house.getId());
+                        log.info("已关闭音乐推送开关"+house.getName());
+                        musicVoteRepository.reset(house.getId());
+                        log.info("已重置投票");
+                        log.info("已向所有客户端推送音乐, 音乐: {}, 时长: {}, 推送时间: {}, 链接: {}", music.getName(), duration, pushTime, music.getUrl());
+                        LinkedList<Music> result = musicService.getPickList(house.getId());
+                        sessionService.send(MessageType.PICK, Response.success(result, "播放列表"),house.getId());
+                        log.info("已向客户端推送播放列表, 共 {} 首, 列表: {}", result.size(), result);
+                    }
+                }catch(Exception e){
+                    try{
+                        configRepository.destroy(house.getId());
+                        musicPlayingRepository.destroy(house.getId());
+                    }catch(Exception e2){
+                        log.error("定时任务销毁config及playing异常[{}]",e2.getMessage());
+                    }
+                    log.error("houseName:{},houseId:{},message:[{}]",house.getName(),house.getId(),e.getMessage());
                 }
-                log.error("houseName:{},houseId:{},message:[{}]",house.getName(),house.getId(),e.getMessage());
             }
+//
 
         }
 

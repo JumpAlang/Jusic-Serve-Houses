@@ -66,13 +66,17 @@ public class JusicWebSocketHandlerAsync {
 
         // 2. send playing
         Music playing = musicPlayingRepository.getPlaying(houseId);
-        if(JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) || (connectType != null && !"".equals((String)connectType))){
-
-        }else{
-            while(playing  == null){
-                Thread.sleep(500);
-                playing = musicPlayingRepository.getPlaying(houseId);
-            }
+//        if(JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) || (connectType != null && !"".equals((String)connectType))){
+//
+//        }else{
+//            while(playing  == null){
+//                Thread.sleep(500);
+//                playing = musicPlayingRepository.getPlaying(houseId);
+//            }
+//        }
+        while(playing  == null){
+            Thread.sleep(500);
+            playing = musicPlayingRepository.getPlaying(houseId);
         }
         sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
         // 3. send pick list
