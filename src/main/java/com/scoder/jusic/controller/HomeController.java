@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -88,6 +87,7 @@ public class HomeController {
             houseSimple.setDesc(house.getDesc());
             houseSimple.setCreateTime(house.getCreateTime());
             houseSimple.setNeedPwd(house.getNeedPwd());
+            houseSimple.setPopulation(jusicProperties.getSessions(house.getId()).size());
             housesSimple.add(houseSimple);
         }
         return Response.success(housesSimple, "房间列表");
@@ -98,9 +98,11 @@ public class HomeController {
     @ResponseBody
     public Response edit(@RequestBody House house, HttpServletRequest accessor) {
         // TODO  权限认证
-        String ip = IPUtils.getRemoteAddress(accessor);
-        if("127.0.0.1|localhost|140.243.217.20|0:0:0:0:0:0:0:1".indexOf(ip) != -1){
+//        String ip = IPUtils.getRemoteAddress(accessor);
             House housePrimitive = houseContainer.get(house.getId());
+            if(housePrimitive == null){
+                return Response.failure((Object)null,"当前房间不存在");
+            }
             if(house.getNeedPwd() != null){
                 housePrimitive.setNeedPwd(house.getNeedPwd());
             }
@@ -117,10 +119,6 @@ public class HomeController {
                 housePrimitive.setEnableStatus(house.getEnableStatus());
             }
             return Response.success(housePrimitive, "修改房间成功");
-        }else{
-            return Response.failure((Objects)null,"没有权限");
-        }
-
     }
 
     @RequestMapping("/house/get")

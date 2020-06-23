@@ -35,8 +35,10 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 //                .anyRequest()
 //                .permitAll() .and().cors() // 需要添加此配置项
 //                .and().csrf().disable();;// .authenticated(); //任何请求,登录后可以访问
-        http.csrf().disable().authorizeRequests().antMatchers(HttpMethod.POST,"/house/**").permitAll()
-        .antMatchers(HttpMethod.POST,"/user/**").permitAll().antMatchers(HttpMethod.POST,"/server/**").permitAll().anyRequest().authenticated().and().httpBasic().and().cors();
+        http.csrf().disable().authorizeRequests().antMatchers(HttpMethod.POST,"/house/add").permitAll()
+                .antMatchers(HttpMethod.POST,"/house/enter").permitAll()
+                .antMatchers(HttpMethod.POST,"/house/get").permitAll()
+                .antMatchers(HttpMethod.POST,"/house/search").permitAll().antMatchers(HttpMethod.POST,"/server/**").permitAll().antMatchers(HttpMethod.GET,"/server/**").permitAll().anyRequest().authenticated().and().httpBasic().and().cors();
     }
 
     @Bean

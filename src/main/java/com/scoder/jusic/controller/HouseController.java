@@ -227,6 +227,7 @@ public class HouseController {
             houseSimple.setDesc(house.getDesc());
             houseSimple.setCreateTime(house.getCreateTime());
             houseSimple.setNeedPwd(house.getNeedPwd());
+            houseSimple.setPopulation(jusicProperties.getSessions(house.getId()).size());
             housesSimple.add(houseSimple);
         }
         String sessionId = accessor.getHeader("simpSessionId").toString();

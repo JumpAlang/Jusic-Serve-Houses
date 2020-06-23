@@ -52,6 +52,8 @@ public class House implements Serializable {
 
     private Boolean needPwd;
 
+    private Integer population;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
