@@ -54,7 +54,8 @@ public class MusicServiceImpl implements MusicService {
     public Music toPick(String sessionId, Music music,String houseId) {
         music.setSessionId(sessionId);
         music.setPickTime(System.currentTimeMillis());
-        music.setNickName(sessionRepository.getSession(sessionId,houseId).getNickName());
+        User user = sessionRepository.getSession(sessionId,houseId);
+        music.setNickName(user==null?"":user.getNickName());
         musicPickRepository.leftPush(music,houseId);
         log.info("点歌成功, 音乐: {}, 已放入点歌列表", music.getName());
         return music;
@@ -519,6 +520,8 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
+                Unirest.setTimeouts(10000,15000);
+
                 response = Unirest.get(jusicProperties.getMusicServeDomainQq() + "/lyric?songmid=" + id)
                         .asString();
 
@@ -548,6 +551,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
+                Unirest.setTimeouts(10000,15000);
                 response = Unirest.get(jusicProperties.getMusicServeDomain() + "/lyric?id=" + id)
                         .asString();
 
@@ -578,6 +582,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
+                Unirest.setTimeouts(10000,15000);
                 response = Unirest.get(jusicProperties.getMusicServeDomainMg() + "/lyric?cid=" + id)
                         .asString();
 
