@@ -123,6 +123,7 @@ public class JusicProperties {
     private String musicServeDomain = "http://localhost";
     private String musicServeDomainQq = "http://localhost";
     private String musicServeDomainMg = "http://localhost";
+    private String musicServeDomainKwXm = "http://localhost";
 
     /**
      * mail send from

@@ -5,6 +5,7 @@ import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.util.IPUtils;
+import com.scoder.jusic.util.StringUtils;
 import com.scoder.jusic.util.UUIDUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +39,13 @@ public class HomeController {
         if(house.getName() == null || house.getName() == ""){
            return Response.failure((Object) null, "房间名称不能为空");
         }
-        if(house.getNeedPwd() != null && house.getNeedPwd() && (house.getPassword() == null || house.getPassword() == "")){
-            return Response.failure((Object) null, "房间密码不能为空");
+        if(house.getNeedPwd() != null && house.getNeedPwd()){
+            if(house.getPassword() == null || "".equals(house.getPassword().trim())){
+                return Response.failure((Object) null, "房间密码不能为空");
+            }else if(StringUtils.isUrlSpecialCharacter(house.getPassword())){
+                return Response.failure((Object) null, "密码不能有如下字符：空格、?、%、#、&、=、+");
+            }
+            house.setPassword(house.getPassword().trim());
         }
         if(houseContainer.contains(sessionId)){
             return Response.failure((Object) null, "你已经创建过一个房间，待其被自动腾空方可再创建");

@@ -34,8 +34,26 @@ public class TestQQMusic {
         System.out.println(URLDecoder.decode(ab, "UTF-8"));
         String c = "love story";
         System.out.println(URLEncoder.encode(c,"UTF-8"));
+        testKwXm();
     }
 
+    public static void testKwXm(){
+        HttpResponse<String> response = null;
+        try {
+            response = Unirest.get("http://120.24.243.237:8081" + "/api/searchsingle").queryString("provider","kuwo").queryString("keyword","周杰伦+Mojito").asString();
+
+            if (response.getStatus() != 200) {
+            } else {
+                JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+                if (jsonObject.getString("code").equals("20000")) {
+                    String result = jsonObject.getString("data");
+                    System.out.println(result);
+                }
+            }
+        } catch (Exception e) {
+        }
+
+    }
 
     public static void search(String keyWord) {
         StringBuilder url = new StringBuilder()

@@ -48,11 +48,12 @@ jusic:
   retry-count: 1
   vote-rate: 0.3
   default-music-file: 'file:/usr/local/nginx/html/default-list.txt' # ## #'classpath:music/default-list.txt'
-  wy-top-url: 'https://music.163.com/discover/toplist?id=3778678'
+  wy-top-url: '3778678'
   music-json: 'file:/usr/local/nginx/html/lizhimusic.json'#'classpath:lizhimusic.json'#json格式歌曲列表（for禁歌） # #
   music-serve-domain: 'http://120.24.243.237:8888'
   music-serve-domain-qq: 'http://120.24.243.237:3300'
   music-serve-domain-mg: 'http://120.24.243.237:3400'#'http://localhost:3400'#
+  music-serve-domain-kw-xm: 'http://120.24.243.237:8081'#'http://localhost:3400'#
   mail-send-from: '18759478272@139.com'
   mail-send-to: '1040927107@qq.com'
   serverJUrl: 'https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send'

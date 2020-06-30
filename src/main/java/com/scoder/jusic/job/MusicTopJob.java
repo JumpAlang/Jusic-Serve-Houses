@@ -108,7 +108,7 @@ public class MusicTopJob {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/top/list?idx=1")
+                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/top/list?id="+jusicProperties.getWyTopUrl())
                         .asString();
 
                 if (response.getStatus() != 200) {

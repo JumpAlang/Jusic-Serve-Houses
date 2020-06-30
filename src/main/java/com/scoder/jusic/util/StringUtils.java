@@ -174,6 +174,14 @@ public class StringUtils {
         }
     }
 
+    public static boolean isUrlSpecialCharacter(String str){
+        String regEx="[\\s\\?%#&=/\\+]+";
+        Pattern p= Pattern.compile(regEx);
+        Matcher m=p.matcher(str);
+        boolean result=m.find();
+        return result;
+    }
+
     public static void main(String[] args) throws UnsupportedEncodingException {
         String a = "dsdfsfs夺@njhiivhg，@3jhiivhg非机动车顶起顶起";
         System.out.println(getSessionId(a));
@@ -186,6 +194,8 @@ public class StringUtils {
         System.out.println(isPlayListIds(d));
         System.out.println(Arrays.toString(splitPlayListIds(c)));
         System.out.println(Arrays.toString(splitPlayListIds(d)));
+        String e = "asdfs%df_d";
+        System.out.println(StringUtils.isUrlSpecialCharacter(e));
     }
 
 }

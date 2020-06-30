@@ -9,6 +9,7 @@ import com.scoder.jusic.repository.MusicPlayingRepository;
 import com.scoder.jusic.service.ConfigService;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.service.SessionService;
+import com.scoder.jusic.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -53,11 +54,19 @@ public class HouseController {
                     Response.failure((Object) null, "房间名称不能为空"),houseId);
             return;
         }
-        if(house.getNeedPwd() != null && house.getNeedPwd() && (house.getPassword() == null || house.getPassword() == "")){
-            sessionService.send(sessionId,
-                    MessageType.ADD_HOUSE,
-                    Response.failure((Object) null, "房间密码不能为空"),houseId);
-            return;
+        if(house.getNeedPwd() != null && house.getNeedPwd()){
+            if(house.getPassword() == null || "".equals(house.getPassword().trim())){
+                sessionService.send(sessionId,
+                        MessageType.ADD_HOUSE,
+                        Response.failure((Object) null, "房间密码不能为空"),houseId);
+                return;
+            }else if(StringUtils.isUrlSpecialCharacter(house.getPassword())){
+                sessionService.send(sessionId,
+                        MessageType.ADD_HOUSE,
+                        Response.failure((Object) null, "密码不能有如下字符：空格、?、%、#、&、=、+"),houseId);
+                return;
+            }
+            house.setPassword(house.getPassword().trim());
         }
         if(houseContainer.contains(sessionId)){
             sessionService.send(sessionId,
