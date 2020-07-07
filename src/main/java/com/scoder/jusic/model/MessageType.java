@@ -9,6 +9,7 @@ public enum MessageType {
      *
      */
     NOTICE("NOTICE"),
+    ANNOUNCEMENT("ANNOUNCEMENT"),
     ONLINE("ONLINE"),
     SETTING_NAME("SETTING_NAME"),
     AUTH("AUTH"),
@@ -25,7 +26,9 @@ public enum MessageType {
     VOLUMN("VOLUMN"),
     GOODMODEL("GOODMODEL"),
     ADD_HOUSE("ADD_HOUSE"),
+    ADD_HOUSE_START("ADD_HOUSE_START"),
     SEARCH_HOUSE("SEARCH_HOUSE"),
+    ENTER_HOUSE_START("ENTER_HOUSE_START"),
     ENTER_HOUSE("ENTER_HOUSE");
 
     MessageType(String type) {

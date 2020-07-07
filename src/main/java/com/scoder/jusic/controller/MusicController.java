@@ -55,6 +55,7 @@ public class MusicController {
         Chat chat = new Chat();
         chat.setContent("点歌 " + music.getName());
         chat.setNickName(nickName);
+        chat.setSendTime(System.currentTimeMillis());
         chat.setSessionId(sessionId);
         sessionService.send(MessageType.CHAT, Response.success(chat),houseId);
 
@@ -194,6 +195,7 @@ public class MusicController {
         String nickName = sessionService.getNickName(sessionId,houseId);
         Chat chat = new Chat();
         chat.setSessionId(sessionId);
+        chat.setSendTime(System.currentTimeMillis());
         chat.setContent("投票切歌");
         chat.setNickName(nickName);
         sessionService.send(MessageType.CHAT, Response.success(chat),houseId);
@@ -201,7 +203,7 @@ public class MusicController {
             sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "禁止切歌"),houseId);
             return;
         }
-        Long voteCount = 0L;
+        Integer voteCount = 0;
         Long vote = 0L;
         Long size = sessionService.size(houseId);
         if (roles.contains(sessionService.getRole(sessionId,houseId))) {
@@ -212,7 +214,7 @@ public class MusicController {
         } else {
             // 投票
             vote = musicService.vote(sessionId,houseId);
-            voteCount = musicService.getVoteCount(houseId);
+            voteCount = jusicProperties.getSessions(houseId).size();
             if (vote == 0) {
                 sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "你已经投过票了,当前状态："+voteCount + "/" + size),houseId);
                 log.info("你已经投过票了");

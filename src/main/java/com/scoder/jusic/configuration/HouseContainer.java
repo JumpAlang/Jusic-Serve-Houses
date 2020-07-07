@@ -1,12 +1,14 @@
 package com.scoder.jusic.configuration;
 
 import com.scoder.jusic.model.House;
+import com.scoder.jusic.model.RetainKey;
 import com.scoder.jusic.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -26,9 +28,10 @@ public class HouseContainer {
     private final SessionBlackRepository sessionBlackRepository;
     private final JusicProperties jusicProperties;
     private final HousesRespository housesRespository;
+    private final RetainKeyRepository retainKeyRepository;
     private CopyOnWriteArrayList<House> houses = new CopyOnWriteArrayList<House>();
 
-    public HouseContainer(ConfigRepository configRepository, SessionRepository sessionRepository, MusicDefaultRepository musicDefaultRepository, MusicPlayingRepository musicPlayingRepository, MusicPickRepository musicPickRepository, MusicVoteRepository musicVoteRepository,MusicBlackRepository musicBlackRepository,SessionBlackRepository sessionBlackRepository,JusicProperties jusicProperties,HousesRespository housesRespository) {
+    public HouseContainer(ConfigRepository configRepository, SessionRepository sessionRepository, MusicDefaultRepository musicDefaultRepository, MusicPlayingRepository musicPlayingRepository, MusicPickRepository musicPickRepository, MusicVoteRepository musicVoteRepository,MusicBlackRepository musicBlackRepository,SessionBlackRepository sessionBlackRepository,JusicProperties jusicProperties,HousesRespository housesRespository,RetainKeyRepository retainKeyRepository) {
         this.configRepository = configRepository;
         this.sessionRepository = sessionRepository;
         this.musicDefaultRepository = musicDefaultRepository;
@@ -39,6 +42,7 @@ public class HouseContainer {
         this.sessionBlackRepository = sessionBlackRepository;
         this.jusicProperties = jusicProperties;
         this.housesRespository = housesRespository;
+        this.retainKeyRepository = retainKeyRepository;
 //        House house = new House();
 //        house.setName(JusicProperties.HOUSE_DEFAULT_NAME);
 //        house.setId(JusicProperties.HOUSE_DEFAULT_ID);
@@ -124,7 +128,7 @@ public class HouseContainer {
         Iterator<House> iterator = houses.iterator();
         while(iterator.hasNext()){
             House house = iterator.next();
-            if(!JusicProperties.HOUSE_DEFAULT_ID.equals(house.getId()) && !house.getEnableStatus()){
+            if(!JusicProperties.HOUSE_DEFAULT_ID.equals(house.getId()) && (house.getEnableStatus() == null || !house.getEnableStatus())){
                 sessionRepository.destroy(house.getId());
                 configRepository.destroy(house.getId());
                 musicPlayingRepository.destroy(house.getId());
@@ -181,4 +185,23 @@ public class HouseContainer {
         this.setHouses(houses);
     }
 
+    public RetainKey getRetainKey(String retainKey){
+        return retainKeyRepository.getRetainKey(retainKey);
+    }
+
+    public void removeRetainKey(String retainKey){
+        retainKeyRepository.removeRetainKey(retainKey);
+    }
+
+    public void addRetainKey(RetainKey retainKey){
+        retainKeyRepository.addRetainKey(retainKey);
+    }
+
+    public void updateRetainKey(RetainKey retainKey){
+        retainKeyRepository.updateRetainKey(retainKey);
+    }
+
+    public List showRetainKey(){
+        return retainKeyRepository.showRetainKey();
+    }
 }

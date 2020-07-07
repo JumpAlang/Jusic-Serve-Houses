@@ -54,6 +54,12 @@ public class House implements Serializable {
 
     private Integer population;
 
+    private Boolean canDestroy;
+
+    private String retainKey;
+
+    private Message announce;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

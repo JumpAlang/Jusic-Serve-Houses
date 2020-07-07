@@ -66,9 +66,14 @@ public class JusicWebSocketHandlerAsync {
 
         // 2. send playing
         Music playing = musicPlayingRepository.getPlaying(houseId);
-//        if(JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) || (connectType != null && !"".equals((String)connectType))){
-//
-//        }else{
+        if(JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) || (connectType != null && !"".equals((String)connectType))){
+            if(house.getAnnounce() != null && house.getAnnounce().getContent() != null && !"".equals(house.getAnnounce().getContent().trim())){
+                sessionService.send(session,MessageType.ANNOUNCEMENT, Response.success(house.getAnnounce(), "房间公告"));
+            }else{
+                sessionService.send(session,MessageType.ANNOUNCEMENT, Response.success("", "房间公告"));
+            }
+        }
+//        else{
 //            while(playing  == null){
 //                Thread.sleep(500);
 //                playing = musicPlayingRepository.getPlaying(houseId);
@@ -102,7 +107,8 @@ public class JusicWebSocketHandlerAsync {
             musicVoteRepository.remove(session.getId(),houseId);
             sessionService.send(MessageType.ONLINE, Response.success(online, null),houseId);
         }else{
-            if(!JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) && !houseContainer.get(houseId).getEnableStatus()){
+            House house  = houseContainer.get(houseId);
+            if(!JusicProperties.HOUSE_DEFAULT_ID.equals(houseId) && house != null && (house.getEnableStatus() == null || !house.getEnableStatus()) ){
                 houseContainer.destroy(houseId);
             }
         }

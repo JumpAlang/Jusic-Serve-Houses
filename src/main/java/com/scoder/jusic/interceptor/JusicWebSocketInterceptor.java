@@ -1,6 +1,7 @@
 package com.scoder.jusic.interceptor;
 
 import com.scoder.jusic.common.message.Response;
+import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.User;
 import com.scoder.jusic.service.SessionService;
@@ -20,12 +21,17 @@ public class JusicWebSocketInterceptor implements ChannelInterceptor {
 
     @Autowired
     private SessionService sessionService;
+    @Autowired
+    private HouseContainer houseContainer;
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         User black = sessionService.getBlack(sessionId,houseId);
+        if(houseId == null || houseContainer.get(houseId) == null){
+            return null;
+        }
         if (null != black && black.getSessionId().equals(sessionId)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你已被管理员拉黑"),houseId);
             return null;

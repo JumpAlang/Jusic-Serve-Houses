@@ -4,6 +4,7 @@ import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.House;
+import com.scoder.jusic.model.RetainKey;
 import com.scoder.jusic.util.IPUtils;
 import com.scoder.jusic.util.StringUtils;
 import com.scoder.jusic.util.UUIDUtils;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -57,9 +59,27 @@ public class HomeController {
         if(houseContainer.isBeyondIpHouse(ip,jusicProperties.getIpHouse())){
             return Response.failure((Object) null, "该网络暂时不能新增房间，待其他空房间被自动腾空方可创建。");
         }
+        if(house.getEnableStatus() != null && house.getEnableStatus()){
+            if(house.getRetainKey() == null || "".equals(house.getRetainKey().trim())){
+                return Response.failure((Object) null, "订单号不能为空");
+            }
+            RetainKey key = houseContainer.getRetainKey(house.getRetainKey());
+            if(key == null){
+                return Response.failure((Object) null, "订单号不存在或须等待3分钟后系统才能生效，如3分钟后还不存在，请加q群：672905926");
+            }else if(key.getIsUsed()){
+                    return Response.failure((Object) null, "订单号已被使用");
+            }else if(key.getExpireTime() != null && key.getExpireTime() < System.currentTimeMillis()){
+                    return Response.failure((Object) null, "订单号已过期");
+            }
+            key.setHouseId(sessionId);
+            key.setRemoteAddress(ip);
+            key.setUsedTime(System.currentTimeMillis());
+            key.setIsUsed(true);
+            houseContainer.updateRetainKey(key);
+        }
         house.setId(sessionId);
         house.setCreateTime(System.currentTimeMillis());
-        house.setEnableStatus(false);
+//        house.setEnableStatus(false);
         house.setSessionId(sessionId);
         house.setRemoteAddress(ip);
         houseContainer.add(house);
@@ -109,6 +129,10 @@ public class HomeController {
             if(housePrimitive == null){
                 return Response.failure((Object)null,"当前房间不存在");
             }
+            if(house.getCanDestroy() != null && house.getCanDestroy()){
+                houseContainer.destroy(house.getId());
+                return Response.success(housePrimitive, "销毁房间成功");
+            }
             if(house.getNeedPwd() != null){
                 housePrimitive.setNeedPwd(house.getNeedPwd());
             }
@@ -125,6 +149,54 @@ public class HomeController {
                 housePrimitive.setEnableStatus(house.getEnableStatus());
             }
             return Response.success(housePrimitive, "修改房间成功");
+    }
+
+    @RequestMapping("/house/setSize/{size}")
+    @ResponseBody
+    public Response setSize(@PathVariable Integer size, HttpServletRequest accessor) {
+        // TODO  权限认证
+        if(size == null){
+            return Response.failure((Object)jusicProperties.getHouseSize(),"当前可创建房间总数"+(jusicProperties.getHouseSize()-houseContainer.size()));
+        }else{
+            jusicProperties.setHouseSize(size);
+            return Response.success(jusicProperties.getHouseSize(), "当前可创建房间总数"+(jusicProperties.getHouseSize()-houseContainer.size()));
+        }
+    }
+
+    @RequestMapping("/house/addRetainKey/{key}")
+    @ResponseBody
+    public Response addRetainKey(@PathVariable String key, HttpServletRequest accessor) {
+        if(key == null){
+            return Response.failure((Object)null,"订单号不能为空");
+        }else{
+            RetainKey retainKey = houseContainer.getRetainKey(key);
+            if(retainKey != null){
+                return Response.failure(retainKey,"订单号已经存在");
+            }
+            RetainKey retainKeyNew = new RetainKey();
+            retainKeyNew.setIsUsed(false);
+            retainKeyNew.setCreateTime(System.currentTimeMillis());
+            retainKeyNew.setKey(key);
+            houseContainer.addRetainKey(retainKeyNew);
+            return Response.success((Object) null, "添加成功");
+        }
+    }
+
+    @RequestMapping("/house/showRetainKey")
+    @ResponseBody
+    public Response showRetainKey(HttpServletRequest accessor) {
+            return Response.success(houseContainer.showRetainKey(), "所有订单号");
+    }
+
+    @RequestMapping("/house/removeRetainKey/{key}")
+    @ResponseBody
+    public Response removeRetainKey(@PathVariable String key, HttpServletRequest accessor) {
+        if(key == null){
+            return Response.failure((Object)null,"订单号不能为空");
+        }else{
+            houseContainer.removeRetainKey(key);
+            return Response.success((Object) null, "移除成功");
+        }
     }
 
     @RequestMapping("/house/get")

@@ -86,13 +86,46 @@ public class HouseController {
                     MessageType.ADD_HOUSE,
                     Response.failure((Object) null, "该网络暂时不能新增房间，待其他空房间被自动腾空方可创建。"),houseId);
             return;}
+        if(house.getEnableStatus() != null && house.getEnableStatus()){
+            if(house.getRetainKey() == null || "".equals(house.getRetainKey().trim())){
+                sessionService.send(sessionId,
+                        MessageType.ADD_HOUSE,
+                        Response.failure((Object) null, "订单号不能为空。"),houseId);
+                return;
+            }
+            RetainKey key = houseContainer.getRetainKey(house.getRetainKey());
+            if(key == null){
+                sessionService.send(sessionId,
+                        MessageType.ADD_HOUSE,
+                        Response.failure((Object) null, "订单号不存在或须等待3分钟后系统才能生效，如3分钟后还不存在，请加q群：672905926。"),houseId);
+                return;
+            }else if(key.getIsUsed()){
+                sessionService.send(sessionId,
+                        MessageType.ADD_HOUSE,
+                        Response.failure((Object) null, "订单号已被使用"),houseId);
+                return;
+
+            }else if(key.getExpireTime() != null && key.getExpireTime() < System.currentTimeMillis()){
+                sessionService.send(sessionId,
+                        MessageType.ADD_HOUSE,
+                        Response.failure((Object) null, "订单号已过期"),houseId);
+                return;
+            }
+            key.setHouseId(sessionId);
+            key.setRemoteAddress(ip);
+            key.setUsedTime(System.currentTimeMillis());
+            key.setIsUsed(true);
+            houseContainer.updateRetainKey(key);
+        }
+        WebSocketSession oldSession = sessionService.clearSession(sessionId,houseId);
+        sessionService.send(oldSession,
+                MessageType.ADD_HOUSE_START,
+                Response.success((Object)null, "房间创建开始"));
         house.setId(sessionId);
         house.setCreateTime(System.currentTimeMillis());
-        house.setEnableStatus(false);
         house.setSessionId(sessionId);
         house.setRemoteAddress(ip);//IPUtils.getRemoteAddress(request);
         houseContainer.add(house);
-        WebSocketSession oldSession = sessionService.clearSession(sessionId,houseId);
         oldSession.getAttributes().put("houseId",sessionId);
         sessionService.putSession(oldSession,sessionId);
         //通知当前要离开的房间总数变化，及推送最新房间歌单等
@@ -138,7 +171,7 @@ public class HouseController {
         sessionService.send(MessageType.GOODMODEL, Response.success("GOOD", "goodlist"),sessionId);
 
         // 5.设置要离开的房间总人数
-        if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID) && !houseContainer.get(houseId).getEnableStatus()){
+        if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID) &&  (houseContainer.get(houseId).getEnableStatus() == null || !houseContainer.get(houseId).getEnableStatus())){
             houseContainer.destroy(houseId);
         }
         sessionService.send(oldSession,
@@ -160,7 +193,7 @@ public class HouseController {
                     MessageType.ENTER_HOUSE,
                     Response.failure((Object) null, "房间已经不存在"),houseId);
             return;
-        }else{
+        }
             House matchHouse = houseContainer.get(house.getId());
             if(matchHouse.getNeedPwd() && !matchHouse.getPassword().equals(house.getPassword())){// !matchHouse.getSessionId().equals(sessionId)
                 sessionService.send(sessionId,
@@ -168,8 +201,11 @@ public class HouseController {
                         Response.failure((Object) null, "请输入正确的房间密码"),houseId);
                 return;
             }
-        }
+
         WebSocketSession oldSession = sessionService.clearSession(sessionId,houseId);
+        sessionService.send(oldSession,
+                MessageType.ENTER_HOUSE_START,
+                Response.success((Object) null, "进入房间开始"));
         oldSession.getAttributes().put("houseId",house.getId());
         User user = sessionService.putSession(oldSession,house.getId());
 
@@ -215,12 +251,17 @@ public class HouseController {
                     Response.failure((Object) null, "切换房间成功"));
         }
         // 5.设置要离开的房间总人数
-        if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID) && !houseContainer.get(houseId).getEnableStatus()){
+        if(oldHouseCount == 0 && !houseId.equals(JusicProperties.HOUSE_DEFAULT_ID) &&  (houseContainer.get(houseId).getEnableStatus() == null || !houseContainer.get(houseId).getEnableStatus())){
             houseContainer.destroy(houseId);
+        }
+        if(matchHouse.getAnnounce() != null && matchHouse.getAnnounce().getContent() != null && !"".equals(matchHouse.getAnnounce().getContent().trim())){
+            sessionService.send(oldSession,MessageType.ANNOUNCEMENT, Response.success(matchHouse.getAnnounce(), "房间公告"));
+        }else{
+            sessionService.send(oldSession,MessageType.ANNOUNCEMENT, Response.success("", "房间公告"));
         }
         sessionService.send(oldSession,
                 MessageType.ENTER_HOUSE,
-                Response.success((Object) null, "进入房间成功"));
+                Response.success(house.getId(), "进入房间成功"));
     }
 
 

@@ -3,9 +3,8 @@ package com.scoder.jusic.controller;
 import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
-import com.scoder.jusic.model.Chat;
-import com.scoder.jusic.model.MessageType;
-import com.scoder.jusic.model.User;
+import com.scoder.jusic.configuration.HouseContainer;
+import com.scoder.jusic.model.*;
 import com.scoder.jusic.service.ChatService;
 import com.scoder.jusic.service.SessionService;
 import com.scoder.jusic.util.StringUtils;
@@ -30,6 +29,8 @@ public class ChatController {
 
     @Autowired
     private SessionService sessionService;
+    @Autowired
+    private HouseContainer houseContainer;
     @Autowired
     private ChatService chatService;
     private static final List<String> roles = new ArrayList<String>() {{
@@ -99,6 +100,26 @@ public class ChatController {
                 sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "拉黑成功"),houseId);
             }
          }
+    }
+
+    @MessageMapping("/chat/announce")
+    public void announcement(Message message, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!roles.contains(role)) {
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+
+            message.setSendTime(System.currentTimeMillis());
+            User user = sessionService.getUser(sessionId,houseId);
+            message.setNickName(user.getNickName());
+            message.setSessionId(user.getSessionId());
+            sessionService.send(MessageType.ANNOUNCEMENT, Response.success(message, "发布成功"),houseId);
+            message.setPushTime(System.currentTimeMillis());
+            House house = houseContainer.get(houseId);
+            house.setAnnounce(message);
+        }
     }
 
 

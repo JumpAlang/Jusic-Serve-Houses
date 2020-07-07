@@ -160,6 +160,11 @@ public class JusicProperties {
          * 存放在线用户
          */
         private String sessionHash = "jusic_session";
+
+        /***
+         * 留存码
+         */
+        private String retainKeyHash = "jusic_retain_key";
         /**
          * 黑名单
          */
@@ -229,6 +234,10 @@ public class JusicProperties {
 
         public String getSessionHash() {
             return this.sessionHash + "_" + jusicEnvironment.getServerPort()+"_";
+        }
+
+        public String getRetainKeyHash() {
+            return this.retainKeyHash + "_" + jusicEnvironment.getServerPort()+"_";
         }
 
         public String getSessionBlackHash() {
