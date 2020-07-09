@@ -203,9 +203,9 @@ public class MusicController {
             sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "禁止切歌"),houseId);
             return;
         }
-        Integer voteCount = 0;
+        Long voteCount = 0L;
         Long vote = 0L;
-        Long size = sessionService.size(houseId);
+        Integer size = jusicProperties.getSessions(houseId).size();
         if (roles.contains(sessionService.getRole(sessionId,houseId))) {
             // 管理员
             configService.setPushSwitch(true,houseId);
@@ -214,7 +214,7 @@ public class MusicController {
         } else {
             // 投票
             vote = musicService.vote(sessionId,houseId);
-            voteCount = jusicProperties.getSessions(houseId).size();
+            voteCount = musicService.getVoteCount(houseId);
             if (vote == 0) {
                 sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "你已经投过票了,当前状态："+voteCount + "/" + size),houseId);
                 log.info("你已经投过票了");
