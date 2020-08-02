@@ -115,7 +115,7 @@ public class MusicJob {
 
     private boolean isPlayingSkip(String houseId) {
         Long voteSize = musicVoteRepository.size(houseId);
-        Long sessionSize = sessionRepository.size(houseId);
+        Integer sessionSize = jusicProperties.getSessions(houseId).size();
         Float voteRate = configRepository.getVoteRate(houseId);
         if (voteSize != null && voteSize != 0 && sessionSize != null && voteRate != null) {
             return voteSize >= sessionSize * voteRate;
