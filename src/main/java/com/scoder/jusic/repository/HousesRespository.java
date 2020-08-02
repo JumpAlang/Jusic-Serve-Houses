@@ -21,6 +21,7 @@ public interface HousesRespository {
 
     void reset();
 
+    Long add(Object... value);
 
     List<House> get();
 }

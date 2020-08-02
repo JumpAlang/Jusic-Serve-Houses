@@ -50,6 +50,12 @@ public class HousesRepositoryImpl implements HousesRespository {
         }
     }
 
+    @Override
+    public Long add(Object... value) {
+        return redisTemplate.opsForList()
+                .rightPush(redisKeys.getHouses(), value);
+    }
+
 
     @Override
     public Long size() {

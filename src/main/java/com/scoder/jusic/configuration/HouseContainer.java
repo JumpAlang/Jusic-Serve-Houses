@@ -104,6 +104,9 @@ public class HouseContainer {
 //        }
         configRepository.initialize(house.getId());
         houses.add(house);
+        if(house.getEnableStatus() != null && house.getEnableStatus()){
+            housesRespository.add(house);
+        }
     }
 
     public void destroy(String id){
