@@ -13,7 +13,7 @@ spring:
   security:
     user:
       name: admin
-      password: 54288wlj
+      password: xxxxx
 
   redis:
     host: localhost
@@ -23,8 +23,8 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: 18759478272@139.com
-    password: 54288Wlj
+    username: xxx@139.com
+    password: xxxxxx
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -50,13 +50,13 @@ jusic:
   default-music-file: 'file:/usr/local/nginx/html/default-list.txt' # ## #'classpath:music/default-list.txt'
   wy-top-url: '3778678'
   music-json: 'file:/usr/local/nginx/html/lizhimusic.json'#'classpath:lizhimusic.json'#json格式歌曲列表（for禁歌） # #
-  music-serve-domain: 'http://120.24.243.237:8888'
-  music-serve-domain-qq: 'http://120.24.243.237:3300'
-  music-serve-domain-mg: 'http://120.24.243.237:3400'#'http://localhost:3400'#
-  music-serve-domain-kw-xm: 'http://120.24.243.237:8081'#'http://localhost:3400'#
-  mail-send-from: '18759478272@139.com'
-  mail-send-to: '1040927107@qq.com'
-  serverJUrl: 'https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send'
+  music-serve-domain: 'http://localhost:8888'
+  music-serve-domain-qq: 'http://localhost:3300'
+  music-serve-domain-mg: 'http://localhost:3400'#'http://localhost:3400'#
+  music-serve-domain-kw-xm: 'http://localhost:8081'#'http://localhost:3400'#
+  mail-send-from: 'xxx@139.com'
+  mail-send-to: 'xxx@qq.com'
+  serverJUrl: 'https://sc.ftqq.com/xxxxxxx.send'
   ip_house: 3
   house_size: 32
 
