@@ -5,20 +5,18 @@
 
 ## 项目背景
 
-参照 [JusicServe](https://github.com/hanhuoer/Jusic-serve) 觉得挺有意思 ...
-
-感觉音乐源有点少，且自己也想实现一些自己的想法
+此版本是多房间版，在jusic-serve的基础上[Jusic-serve](https://github.com/JumpAlang/Jusic-serve)
 
 后端: 本项目
 
-前端: [Jusic-ui](https://github.com/JumpAlang/Jusic-ui)
+前端: [Jusic-ui](https://github.com/JumpAlang/Jusic-ui/tree/jusic-ui-houses)
 
 ## 安装
 
 1. 克隆项目
 
    ```
-   git clone https://github.com/JumpAlang/Jusic-serve.git
+   git clone https://github.com/JumpAlang/Jusic-Serve-Houses.git
    ```
 
    
@@ -29,7 +27,7 @@
 
 3. 安装音乐基础服务
 
-   3.1 网易云音乐（后面会改成nodejs，参照<https://github.com/jsososo/NeteaseMusic>）：你需要一个可以提供音乐的服务，本项目中使用的是另一个仓库的 [Musicoo](https://github.com/hanhuoer/Musicoo) 搭建的
+   3.1 网易云音乐：[NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
    
    3.2 qq音乐:<https://github.com/jsososo/QQMusicApi>
    
@@ -59,7 +57,7 @@
 
 7. 前端
 
-   请前往 [Jusic-ui](https://github.com/hanhuoer/Jusic-ui) 项目
+   请前往[Jusic-ui](https://github.com/JumpAlang/Jusic-ui/tree/jusic-ui-houses)项目
 
 
 
@@ -94,9 +92,6 @@
 
 Jusic：[Jusic 点歌台](http://www.alang.run/syncmusic)
 
-## todo
-1. 网易云音乐接口api改成用nodejs版https://github.com/jsososo/NeteaseMusic
-2. 用户可以自己创建房间
 
 
 ## 相关项目
