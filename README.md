@@ -93,7 +93,7 @@
 Jusic：[Jusic 点歌台](http://music.alang.run)
 
 ## 打赏请我喝奶茶
-![微信打赏](http://www.alang.run/sponsor/images/WeChanSQ.png)
+[打赏](http://www.alang.run/sponsor)
 
 
 
