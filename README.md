@@ -90,7 +90,10 @@
 
 ## 在线预览
 
-Jusic：[Jusic 点歌台](http://www.alang.run/syncmusic)
+Jusic：[Jusic 点歌台](http://music.alang.run)
+
+##打赏请我喝奶茶
+![微信打赏](http://www.alang.run/sponsor/images/WeChanSQ.png)
 
 
 
@@ -101,7 +104,6 @@ Jusic：[Jusic 点歌台](http://www.alang.run/syncmusic)
 * 网易云音乐api:[NeteaseMusic](https://github.com/jsososo/NeteaseMusic)
 * qq音乐api:[qqMusicApi](https://github.com/jsososo/QQMusicApi)
 * 咪咕音乐api:[miguMusicApi](https://github.com/jsososo/MiguMusicApi)
-## 更新日志
 
 
 
