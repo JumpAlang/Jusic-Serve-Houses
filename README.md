@@ -32,6 +32,8 @@
    3.2 qq音乐:<https://github.com/jsososo/QQMusicApi>
    
    3.3 咪咕音乐：<https://github.com/JumpAlang/MiguMusicApi>
+   
+   3.4 铜钟forJusic(引入了酷我与虾米，当网易或者qq或者虾米找不到资源时，根据歌手名+歌曲名从酷我和虾米搜索)：<https://github.com/JumpAlang/tongzhongForJusic>
 4. 配置
 
    在 `src\main\resources\application.yml` 中配置好 redis 以及音乐服务
