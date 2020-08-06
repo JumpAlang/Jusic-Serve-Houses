@@ -106,34 +106,33 @@ public class MusicTopJob {
         ArrayList<String> topList = new ArrayList<>();
         Integer failCount = 0;
 
+        StringBuilder url = new StringBuilder()
+                .append(jusicProperties.getMusicServeDomain())
+                .append("/playlist/detail?id=")
+                .append(jusicProperties.getWyTopUrl());
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/top/list?id="+jusicProperties.getWyTopUrl())
+                response = Unirest.get(url.toString())
                         .asString();
-
-                if (response.getStatus() != 200) {
+                JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
+                if (responseJsonObject.getInteger("code") != 200) {
                     failCount++;
                 } else {
-                    JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-                    if (jsonObject.get("code").equals(200)) {
-                        JSONArray data = jsonObject.getJSONObject("playlist").getJSONArray("trackIds");
-                        int size = data.size();
-                        String musicId = "";
-                        for(int i = 0; i < size; i++) {
+                    JSONArray data = responseJsonObject.getJSONObject("playlist").getJSONArray("trackIds");
+                    int size = data.size();
+                    String musicId = "";
+                    for(int i = 0; i < size; i++) {
                             musicId = data.getJSONObject(i).getString("id");
                             if (musicId != null && musicId != "") {
                                 musicIds += musicId+"\n";
                                 topList.add(musicId);
                             }
-                        }
-                        break;
-                    }else{
-                        return new TopMusic(topList,"");
                     }
+                    break;
                 }
             } catch (Exception e) {
                 failCount++;
-                log.error("qq音乐热门歌曲获取失败; Exception: [{}]",e.getMessage());
+                log.error("网易音乐热门歌曲获取失败; Exception: [{}]",e.getMessage());
             }
         }
 
