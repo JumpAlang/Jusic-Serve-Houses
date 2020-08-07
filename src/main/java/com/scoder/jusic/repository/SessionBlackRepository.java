@@ -22,7 +22,7 @@ public interface SessionBlackRepository {
      * @param sessionId session id
      * @return User {@link User}
      */
-    User getSession(String sessionId,String houseId);
+    User getSession(String sessionId,String ip,String houseId);
 
     /**
      * set session

@@ -3,6 +3,7 @@ package com.scoder.jusic.repository.impl;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.Music;
 import com.scoder.jusic.repository.MusicPlayingRepository;
+import com.scoder.jusic.util.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -36,6 +37,20 @@ public class MusicPlayingRepositoryImpl implements MusicPlayingRepository {
     public Music pickToPlaying(String houseId) {
         return (Music) redisTemplate.opsForList()
                 .rightPopAndLeftPush(redisKeys.getPickList()+houseId, redisKeys.getPlayingList()+houseId);
+    }
+
+    @Override
+    public Music randomToPlaying(String houseId) {
+        int size = redisTemplate.opsForList()
+                .size(redisKeys.getPickList()+houseId).intValue();
+        if(size == 1){
+            return this.pickToPlaying(houseId);
+        }
+        int index = RandomUtils.getRandNumber(size);
+        Music music =(Music)redisTemplate.opsForList().index(redisKeys.getPickList()+houseId,index);
+        this.leftPush(music,houseId);
+        long count = redisTemplate.opsForList().remove(redisKeys.getPickList()+houseId,1,music);
+        return music;
     }
 
     @Override

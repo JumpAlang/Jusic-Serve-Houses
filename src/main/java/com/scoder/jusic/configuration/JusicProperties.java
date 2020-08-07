@@ -138,6 +138,7 @@ public class JusicProperties {
     private Integer houseSize = 10;
     private Integer ipHouse = 10;
     private Boolean goodModel = true;
+    private Boolean randomModel = false;
 
     public static final String HOUSE_DEFAULT_ID = "DEFAULT";
     public static final String HOUSE_DEFAULT_NAME = "一起听歌吧";
@@ -217,6 +218,7 @@ public class JusicProperties {
         private String switchMusicEnable ="switch_music_enable";
         private String searchMusicEnable ="search_music_enable";
         private String goodModel = "good_model";
+        private String randomModel = "random_model";
         /**
          * 投票通过率, config 子键名
          */

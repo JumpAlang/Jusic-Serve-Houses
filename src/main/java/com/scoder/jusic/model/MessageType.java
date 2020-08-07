@@ -29,7 +29,8 @@ public enum MessageType {
     ADD_HOUSE_START("ADD_HOUSE_START"),
     SEARCH_HOUSE("SEARCH_HOUSE"),
     ENTER_HOUSE_START("ENTER_HOUSE_START"),
-    ENTER_HOUSE("ENTER_HOUSE");
+    ENTER_HOUSE("ENTER_HOUSE"),
+    HOUSE_USER("HOUSE_USER");
 
     MessageType(String type) {
         this.type = type;

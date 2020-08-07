@@ -32,19 +32,32 @@ public class SessionBlackRepositoryImpl implements SessionBlackRepository {
     }
 
     @Override
-    public User getSession(String sessionId,String houseId) {
-        return (User) redisTemplate.opsForHash()
+    public User getSession(String sessionId,String ip, String houseId) {
+        User user = (User) redisTemplate.opsForHash()
                 .get(redisKeys.getSessionBlackHash()+houseId, sessionId);
+        if(user == null){
+            user = (User) redisTemplate.opsForHash()
+                    .get(redisKeys.getSessionBlackHash()+houseId, ip);
+        }
+        return user;
     }
 
     @Override
     public void setSession(User user,String houseId) {
         redisTemplate.opsForHash()
                 .put(redisKeys.getSessionBlackHash()+houseId, user.getSessionId(), user);
+        redisTemplate.opsForHash()
+                .put(redisKeys.getSessionBlackHash()+houseId, user.getRemoteAddress(), user);
     }
 
     @Override
     public Long removeSession(String sessionId,String houseId) {
+        User user = (User) redisTemplate.opsForHash()
+                .get(redisKeys.getSessionBlackHash()+houseId, sessionId);
+        if(user != null){
+            redisTemplate.opsForHash()
+                    .delete(redisKeys.getSessionBlackHash()+houseId, user.getRemoteAddress());
+        }
         return redisTemplate.opsForHash()
                 .delete(redisKeys.getSessionBlackHash()+houseId, sessionId);
     }

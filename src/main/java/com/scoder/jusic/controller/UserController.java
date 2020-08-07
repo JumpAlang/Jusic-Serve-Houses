@@ -45,4 +45,6 @@ public class UserController {
                 return Response.success(  sessionRepository.getSession(user.getHouseId()), "获取用户成功");
             }
     }
+
+
 }

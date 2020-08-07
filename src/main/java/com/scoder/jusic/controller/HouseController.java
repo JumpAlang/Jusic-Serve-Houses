@@ -20,6 +20,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -228,6 +229,7 @@ public class HouseController {
 //        }
         Music playing = musicPlayingRepository.getPlaying(house.getId());
         if(playing != null){
+            playing.setIps(null);
             sessionService.send(oldSession, MessageType.MUSIC, Response.success(playing, "正在播放"));
             // 3. send pick list
             LinkedList<Music> pickList = musicService.getPickList(house.getId());
@@ -299,5 +301,16 @@ public class HouseController {
             houseContainer.get(houseId).setEnableStatus(retain);
             sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "设置房间留存与否成功"),houseId);
         }
+    }
+
+    @MessageMapping("/house/houseuser")
+    public void houseuser(StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        List<User> users = sessionService.getSession(houseId);
+        users.forEach(user ->{
+            user.setRemoteAddress("");
+        });
+        sessionService.send(sessionId, MessageType.HOUSE_USER, Response.success(users, "获取房间用户成功"),houseId);
     }
 }

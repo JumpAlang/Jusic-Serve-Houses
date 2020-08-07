@@ -8,7 +8,7 @@ import java.util.HashSet;
 /**
  * @author H
  */
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Data
 @ToString
 @NoArgsConstructor
@@ -20,10 +20,12 @@ public class Music extends Message implements Serializable {
     /**
      * 音乐 id
      */
+    @EqualsAndHashCode.Include
     private String id;
     /**
      * 音乐名
      */
+    @EqualsAndHashCode.Include
     private String name;
     /**
      * 歌手
@@ -52,6 +54,7 @@ public class Music extends Message implements Serializable {
     /**
      * 选歌时间，毫秒时间戳
      */
+    @EqualsAndHashCode.Include
     private long pickTime;
     /**
      * 推送时间

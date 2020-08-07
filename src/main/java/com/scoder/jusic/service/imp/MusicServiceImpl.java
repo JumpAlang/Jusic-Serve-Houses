@@ -98,10 +98,16 @@ public class MusicServiceImpl implements MusicService {
             }
             result.setPickTime(System.currentTimeMillis());
             result.setNickName("system");
-            musicPickRepository.leftPush(result,houseId);
+//            musicPickRepository.leftPush(result,houseId);
+            musicPlayingRepository.leftPush(result,houseId);
+        }else{
+            if(configRepository.getRandomModel(houseId) == null || !configRepository.getRandomModel(houseId)) {
+                result = musicPlayingRepository.pickToPlaying(houseId);
+            }else{
+                result = musicPlayingRepository.randomToPlaying(houseId);
+            }
+            result.setIps(null);
         }
-
-        result = musicPlayingRepository.pickToPlaying(houseId);
         // 防止选歌的时间超过音乐链接的有效时长
         if (!"lz".equals(result.getSource()) && result.getPickTime() + jusicProperties.getMusicExpireTime() <= System.currentTimeMillis()) {
             String musicUrl;
@@ -147,6 +153,7 @@ public class MusicServiceImpl implements MusicService {
             result.forEach(m -> {
                 // 由于歌词数据量太大了, 而且列表这种不需要关注歌词, 具体歌词放到推送音乐的时候再给提供
                 m.setLyric("");
+                m.setIps(null);
             });
         }catch(Exception e){
             log.error(e.getMessage());
@@ -175,6 +182,7 @@ public class MusicServiceImpl implements MusicService {
         result.forEach(m -> {
             // 由于歌词数据量太大了, 而且列表这种不需要关注歌词, 具体歌词放到推送音乐的时候再给提供
             m.setLyric("");
+            m.setIps(null);
         });
         return result;
     }

@@ -95,6 +95,7 @@ public class ChatController {
             if(black == null){
                 sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "用户已经退出来了"),houseId);
             }else{
+
                 sessionService.black(black,houseId);
                 log.info("session: {} 拉黑用户: {}, 已成功", sessionId, user.getSessionId());
                 sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "拉黑成功"),houseId);

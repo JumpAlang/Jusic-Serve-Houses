@@ -18,6 +18,7 @@ import org.springframework.web.socket.WebSocketSession;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -190,8 +191,8 @@ public class SessionServiceImpl implements SessionService {
 
 
     @Override
-    public User getBlack(String sessionId,String houseId) {
-        return sessionBlackRepository.getSession(sessionId,houseId);
+    public User getBlack(String sessionId,String ip,String houseId) {
+        return sessionBlackRepository.getSession(sessionId,ip,houseId);
     }
 
     @Override
@@ -202,6 +203,11 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public Long size(String houseId) {
         return sessionRepository.size(houseId);
+    }
+
+    @Override
+    public List getSession(String houseId) {
+        return sessionRepository.getSession(houseId);
     }
 
     /**

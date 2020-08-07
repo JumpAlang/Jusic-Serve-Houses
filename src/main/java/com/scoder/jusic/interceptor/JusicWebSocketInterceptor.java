@@ -28,11 +28,12 @@ public class JusicWebSocketInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
-        User black = sessionService.getBlack(sessionId,houseId);
+        String ip = (String)(accessor.getSessionAttributes().get("remoteAddress"));
+        User black = sessionService.getBlack(sessionId,ip,houseId);
         if(houseId == null || houseContainer.get(houseId) == null){
             return null;
         }
-        if (null != black && black.getSessionId().equals(sessionId)) {
+        if (null != black) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你已被管理员拉黑"),houseId);
             return null;
         }

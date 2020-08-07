@@ -4,6 +4,8 @@ import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.User;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.util.List;
+
 /**
  * @author H
  */
@@ -133,7 +135,7 @@ public interface SessionService {
      * @param sessionId the client session id
      * @return black user
      */
-    User getBlack(String sessionId,String houseId);
+    User getBlack(String sessionId,String ip,String houseId);
 
     /**
      * unblack
@@ -149,4 +151,5 @@ public interface SessionService {
      */
     Long size(String houseId);
 
+    List getSession(String houseId);
 }

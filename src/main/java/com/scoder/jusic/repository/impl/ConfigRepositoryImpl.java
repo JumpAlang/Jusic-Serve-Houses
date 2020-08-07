@@ -37,6 +37,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
         this.put(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword(),houseId);
         this.put(redisKeys.getVoteSkipRate(), jusicProperties.getVoteRate(),houseId);
         this.put(redisKeys.getGoodModel(),jusicProperties.getGoodModel(),houseId);
+        this.put(redisKeys.getRandomModel(),jusicProperties.getRandomModel(),houseId);
     }
 
     @Override
@@ -172,5 +173,15 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     @Override
     public void setGoodModel(boolean goodModel,String houseId) {
         this.put(redisKeys.getGoodModel(), goodModel,houseId);
+    }
+
+    @Override
+    public Boolean getRandomModel(String houseId) {
+        return (Boolean) this.get(redisKeys.getRandomModel(),houseId);
+    }
+
+    @Override
+    public void setRandomModel(boolean randomModel,String houseId) {
+        this.put(redisKeys.getRandomModel(), randomModel,houseId);
     }
 }

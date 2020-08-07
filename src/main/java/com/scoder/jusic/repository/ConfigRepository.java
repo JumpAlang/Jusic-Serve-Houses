@@ -150,6 +150,9 @@ public interface ConfigRepository {
     Boolean getGoodModel(String houseId);
     void setGoodModel(boolean goodModel,String houseId);
 
+    Boolean getRandomModel(String houseId);
+    void setRandomModel(boolean randomModel,String houseId);
+
     void setAdminPassword(String password, String houseId);
     void setRootPassword(String password, String houseId);
 

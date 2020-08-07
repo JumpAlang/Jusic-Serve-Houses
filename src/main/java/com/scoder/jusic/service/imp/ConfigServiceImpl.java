@@ -59,4 +59,14 @@ public class ConfigServiceImpl implements ConfigService {
     public void setGoodModel(boolean goodModel,String houseId) {
         configRepository.setGoodModel(goodModel,houseId);
     }
+
+    @Override
+    public Boolean getRandomModel(String houseId) {
+        return configRepository.getRandomModel(houseId);
+    }
+
+    @Override
+    public void setRandomModel(boolean randomModel, String houseId) {
+        configRepository.setRandomModel(randomModel,houseId);
+    }
 }

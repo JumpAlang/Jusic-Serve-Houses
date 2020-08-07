@@ -27,6 +27,8 @@ public interface MusicPlayingRepository {
      */
     Music pickToPlaying(String houseId);
 
+    Music randomToPlaying(String houseId);
+
     /**
      * 清理播放列表，除了 index = 0
      */

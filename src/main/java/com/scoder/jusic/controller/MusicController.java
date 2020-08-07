@@ -376,7 +376,7 @@ public class MusicController {
     }
 
     /**
-     * 禁止切歌
+     * 点赞模式的切换
      * @param accessor
      */
     @MessageMapping("/music/goodmodel/{good}")
@@ -399,6 +399,26 @@ public class MusicController {
                 log.info("session: {} 退出点赞模式已成功", sessionId);
                 sessionService.send(MessageType.NOTICE, Response.success((Object) null, "退出点赞模式"),houseId);
                 sessionService.send(MessageType.GOODMODEL, Response.success("EXITGOOD", "goodlist"),houseId);
+            }
+        }
+    }
+
+    @MessageMapping("/music/randommodel/{random}")
+    public void randomModel(@DestinationVariable boolean random,StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!roles.contains(role)) {
+            log.info("session: {} 尝试随机模式, 没有权限, 已被阻止", sessionId);
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            configService.setRandomModel(random,houseId);
+            if(random){
+                log.info("session: {} 进入随机模式已成功", sessionId);
+                sessionService.send(MessageType.NOTICE, Response.success((Object) null, "进入随机模式"),houseId);
+            }else{
+                log.info("session: {} 退出随机模式已成功", sessionId);
+                sessionService.send(MessageType.NOTICE, Response.success((Object) null, "退出随机模式"),houseId);
             }
         }
     }

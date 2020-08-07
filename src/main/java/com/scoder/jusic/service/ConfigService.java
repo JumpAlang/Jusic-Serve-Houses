@@ -25,5 +25,8 @@ public interface ConfigService {
     Boolean getGoodModel(String houseId);
     void setGoodModel(boolean goodModel,String houseId);
 
+    Boolean getRandomModel(String houseId);
+    void setRandomModel(boolean goodModel,String houseId);
+
     Float getVoteRate(String houseId);
 }

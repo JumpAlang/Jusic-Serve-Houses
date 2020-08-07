@@ -1,6 +1,7 @@
 package com.scoder.jusic.controller;
 
 import com.scoder.jusic.common.message.Response;
+import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.model.Chat;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.User;
@@ -24,16 +25,20 @@ public class MailController {
     @Autowired
     private SessionService sessionService;
 
+    @Autowired
+    private HouseContainer houseContainer;
+
     @MessageMapping("/mail/send")
     public void send(Chat chat, StompHeaderAccessor stompHeaderAccessor) {
         String sessionId = stompHeaderAccessor.getHeader("simpSessionId").toString();
         String houseId = (String)stompHeaderAccessor.getSessionAttributes().get("houseId");
         User user = sessionService.getUser(sessionId,houseId);
-        User black = sessionService.getBlack(sessionId,houseId);
+//        User black = sessionService.getBlack(sessionId,houseId);
         long currentTime = System.currentTimeMillis();
-        if (null != black && black.getSessionId().equals(sessionId)) {
-            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你已被拉黑"),houseId);
-        } else if (null != user.getLastMessageTime() && currentTime - user.getLastMessageTime() < 2000) {
+//        if (null != black && black.getSessionId().equals(sessionId)) {
+//            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你已被拉黑"),houseId);
+//        } else
+        if (null != user.getLastMessageTime() && currentTime - user.getLastMessageTime() < 2000) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "发言时间间隔太短"),houseId);
         } else {
             chat.setSessionId(user.getSessionId());
@@ -45,8 +50,10 @@ public class MailController {
             StringBuilder content = new StringBuilder()
                     .append(user)
                     .append("\n\n\n\n")
+                    .append(houseContainer.get(user.getHouseId()))
+                    .append("\n\n\n\n")
                     .append(chat.getContent());
-            boolean rs = mailService.sendServerJ("一起听歌有人@你了[远方:"+user.getRemoteAddress() +"]",content.toString());
+            boolean rs = mailService.sendServerJ("一起听歌有人@你了[远方:"+user.getRemoteAddress() + ":"+user.getNickName()+"]",content.toString());
             if(!rs){
                 boolean result = mailService.sendSimpleMail("music.scoder.club@管理员[" + user.getRemoteAddress() + "]", content.toString());
                 if (result) {
