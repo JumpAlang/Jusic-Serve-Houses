@@ -309,7 +309,7 @@ public class HouseController {
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         List<User> users = sessionService.getSession(houseId);
         users.forEach(user ->{
-            user.setRemoteAddress("");
+            user.setRemoteAddress(StringUtils.desensitizeIPV4(user.getRemoteAddress()));
         });
         sessionService.send(sessionId, MessageType.HOUSE_USER, Response.success(users, "获取房间用户成功"),houseId);
     }
