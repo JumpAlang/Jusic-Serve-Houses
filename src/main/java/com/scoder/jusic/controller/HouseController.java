@@ -229,6 +229,7 @@ public class HouseController {
 //        }
         Music playing = musicPlayingRepository.getPlaying(house.getId());
         if(playing != null){
+            musicService.updateMusicUrl(playing);
             playing.setIps(null);
             sessionService.send(oldSession, MessageType.MUSIC, Response.success(playing, "正在播放"));
             // 3. send pick list

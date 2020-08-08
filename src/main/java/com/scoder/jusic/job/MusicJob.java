@@ -75,7 +75,7 @@ public class MusicJob {
                         configRepository.setLastMusicPushTimeAndDuration(pushTime, duration,house.getId());
                         music.setPushTime(pushTime);
                         sessionService.send(MessageType.MUSIC, Response.success(music, "正在播放"),house.getId());
-//                        musicPlayingRepository.leftPush(music,house.getId());
+                        musicPlayingRepository.leftPush(music,house.getId());//更新music pushTime
                         musicPlayingRepository.keepTheOne(house.getId());
                         log.info("已保存推送时间和音乐时长"+house.getName());
                         configRepository.setPushSwitch(false,house.getId());

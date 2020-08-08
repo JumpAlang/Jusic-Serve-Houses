@@ -83,6 +83,7 @@ public class JusicWebSocketHandlerAsync {
             Thread.sleep(500);
             playing = musicPlayingRepository.getPlaying(houseId);
         }
+        musicService.updateMusicUrl(playing);
         sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
         // 3. send pick list
         LinkedList<Music> pickList = musicService.getPickList(houseId);

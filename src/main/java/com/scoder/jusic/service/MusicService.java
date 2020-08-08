@@ -167,4 +167,6 @@ public interface MusicService {
 
     Long playlistSize(String houseId);
 
-}
+    void updateMusicUrl(Music result);
+
+    }

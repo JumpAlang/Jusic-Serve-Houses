@@ -108,6 +108,14 @@ public class MusicServiceImpl implements MusicService {
             }
             result.setIps(null);
         }
+        updateMusicUrl(result);
+        musicPlayingRepository.keepTheOne(houseId);
+
+        return result;
+    }
+
+    @Override
+    public void updateMusicUrl(Music result){
         // 防止选歌的时间超过音乐链接的有效时长
         if (!"lz".equals(result.getSource()) && result.getPickTime() + jusicProperties.getMusicExpireTime() <= System.currentTimeMillis()) {
             String musicUrl;
@@ -128,10 +136,6 @@ public class MusicServiceImpl implements MusicService {
                 log.info("音乐链接更新失败, 接下来客户端音乐链接可能会失效, 请检查音乐服务");
             }
         }
-
-        musicPlayingRepository.keepTheOne(houseId);
-
-        return result;
     }
 
     /**
