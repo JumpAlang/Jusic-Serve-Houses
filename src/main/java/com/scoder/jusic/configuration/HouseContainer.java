@@ -169,7 +169,7 @@ public class HouseContainer {
         log.info("清理工作开始");
         CopyOnWriteArrayList<House> housesRedis = (CopyOnWriteArrayList<House>) housesRespository.initialize();
         musicDefaultRepository.destroy("");
-        for(House house : houses){
+        for(House house : housesRedis){
             sessionRepository.destroy(house.getId());
             sessionBlackRepository.destroy(house.getId());
 //            configRepository.destroy(house.getId());
