@@ -79,7 +79,7 @@ public class JusicWebSocketHandlerAsync {
 //                playing = musicPlayingRepository.getPlaying(houseId);
 //            }
 //        }
-        while(playing  == null){
+        while(playing  == null || playing.getPushTime() == null || playing.getDuration() == null || ((playing.getPushTime() + playing.getDuration()) - System.currentTimeMillis() <= 0)){
             Thread.sleep(500);
             playing = musicPlayingRepository.getPlaying(houseId);
         }
@@ -95,6 +95,7 @@ public class JusicWebSocketHandlerAsync {
         log.info("发现有客户端连接, 已向该客户端: {} 发送正在播放的音乐: {}, 以及播放列表, 共 {} 首", session.getId(), playing.getName(), pickList.size());
 
     }
+
 
     @Async
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {

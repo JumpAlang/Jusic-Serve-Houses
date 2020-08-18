@@ -1,7 +1,5 @@
 package com.scoder.jusic.util;
 
-import java.util.UUID;
-
 /**
  * @author JumpAlang
  * @create 2020-06-10 12:42
@@ -18,7 +16,7 @@ public class UUIDUtils {
 
     public static String getUUID8Len(String uuid) {
         //调用Java提供的生成随机字符串的对象：32位，十六进制，中间包含-
-        uuid = uuid.replace("-", "");UUID.randomUUID().toString().replace("-", "");
+        uuid = uuid.replace("-", "");//UUID.randomUUID().toString().replace("-", "");
         StringBuffer shortBuffer = new StringBuffer();
         for (int i = 0; i < 8; i++) { //分为8组
             String str = uuid.substring(i * 4, i * 4 + 4); //每组4位
