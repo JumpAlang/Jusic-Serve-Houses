@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8888
 management:
   endpoint:
     shutdown:
@@ -12,8 +12,8 @@ management:
 spring:
   security:
     user:
-      name: admin
-      password: xxxxx
+      name: ${APIUSER:admin}
+      password: ${APIPWD:54288wlj}
 
   redis:
     host: localhost
@@ -23,8 +23,8 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: xx@139.com
-    password: xxxxxxx
+    username: 18759478272@139.com
+    password: 54288Wlj
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -44,20 +44,20 @@ spring:
             socketFactory:
               class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
 jusic:
-  music-expire-time: 1200000
-  retry-count: 1
-  vote-rate: 0.3
-  default-music-file: 'file:/usr/local/nginx/html/default-list.txt' # ## #'classpath:music/default-list.txt'
-  wy-top-url: '3778678'
-  music-json: 'file:/usr/local/nginx/html/lizhimusic.json'#'classpath:lizhimusic.json'#json格式歌曲列表（for禁歌） # #
-  music-serve-domain: 'http://xxxxxx:1234'
-  music-serve-domain-qq: 'http://xxxxx:4567'
-  music-serve-domain-mg: 'http://xxxxx:5678'#'http://localhost:5678'#
-  music-serve-domain-kw-xm: 'http://www.alang.run:9012'#'http://localhost:9012'#
-  mail-send-from: 'xx@139.com'
-  mail-send-to: 'xxx@qq.com'
-  serverJUrl: 'https://sc.ftqq.com/xxxxxxx.send'
-  ip_house: 3
-  house_size: 32
+  music-expire-time: ${MusicExpireTime:1200000}
+  retry-count: ${ReTryCount:1}
+  vote-rate: ${VoteRate:0.3}
+  default-music-file: 'classpath:music/default-list.txt'#'file:/usr/local/nginx/html/default-list.txt' # ## #
+  wy-top-url: ${WyTopUrl:3778678}
+  music-json: 'classpath:lizhimusic.json'#'file:/usr/local/nginx/html/lizhimusic.json'##json格式歌曲列表（for禁歌） # #
+  music-serve-domain: ${musicWyApi:http://localhost:3000} #'http://www.alang.run:8888'
+  music-serve-domain-qq: ${musicQQApi:http://localhost:3300} #'http://www.alang.run:3300'
+  music-serve-domain-mg: ${musicMgApi:http://localhost:3400} #'http://www.alang.run:3400'#
+  music-serve-domain-kw-xm: ${musicKwXmApi:http://localhost:8081} #'http://www.alang.run:8081'#'
+  mail-send-from: ${MailFrom:18759478272@139.com}
+  mail-send-to: ${MailTo:1040927107@qq.com}
+  serverJUrl: ${ServerJUrl:https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send}
+  ip_house: ${IpHouse:3}
+  house_size: ${houseSize:32}
 
 

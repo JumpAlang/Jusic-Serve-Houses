@@ -32,8 +32,8 @@ public class MusicTopJob {
 //        getData(topUrl);
 //    }
 
-    //每天0时更新
-    @Scheduled(cron = "0 0 0 * * ? ")//fixedRate = 10800000)//表示每隔3小时
+    //每天0时33分更新
+    @Scheduled(cron = "0 33 0 * * ? ")//fixedRate = 10800000)//表示每隔3小时
     public void getMusicTopJob(){
         JusicProperties.setDefaultListByJob(getData());
     }
