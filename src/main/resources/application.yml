@@ -13,7 +13,7 @@ spring:
   security:
     user:
       name: ${APIUSER:admin}
-      password: ${APIPWD:54288wlj}
+      password: ${APIPWD:xxx}
 
   redis:
     host: localhost
@@ -24,7 +24,7 @@ spring:
   mail:
     host: smtp.139.com
     username: 18759478272@139.com
-    password: 54288Wlj
+    password: xxxx
     test-connection: false
     port: 465
     default-encoding: UTF-8
