@@ -23,7 +23,7 @@
   请使用<https://hub.docker.com/repository/docker/jumpalang/jusic_music_api>查看说明
    
 2.只要java后端服务
-  请使用<https://hub.docker.com/repository/docker/jumpalang/jusic_music_api>查看说明
+  请使用<https://hub.docker.com/repository/docker/jumpalang/jusic_serve_houses>查看说明
   
 3.如果想整套部署
 
