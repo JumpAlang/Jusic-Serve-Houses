@@ -11,10 +11,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @EnableAsync
+//@Controller
 public class JusicApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(JusicApplication.class, "--debug");
     }
 
+//    @GetMapping("/")
+//    public String index(){
+//        return "index.html";
+//    }
 }

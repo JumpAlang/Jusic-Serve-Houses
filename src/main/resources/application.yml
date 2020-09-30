@@ -13,10 +13,10 @@ spring:
   security:
     user:
       name: ${APIUSER:admin}
-      password: ${APIPWD:xxx}
+      password: ${APIPWD:xxxx}
 
   redis:
-    host: localhost
+    host: ${RedisHost:redis}
     port: 6379
     database: 1
     password:
@@ -24,7 +24,7 @@ spring:
   mail:
     host: smtp.139.com
     username: 18759478272@139.com
-    password: xxxx
+    password: xxxxx
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -43,6 +43,7 @@ spring:
             enable: true
             socketFactory:
               class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
+music-api: ${MusicApi:http://jusicMusicApi}
 jusic:
   music-expire-time: ${MusicExpireTime:1200000}
   retry-count: ${ReTryCount:1}
@@ -50,14 +51,14 @@ jusic:
   default-music-file: 'classpath:music/default-list.txt'#'file:/usr/local/nginx/html/default-list.txt' # ## #
   wy-top-url: ${WyTopUrl:3778678}
   music-json: 'classpath:lizhimusic.json'#'file:/usr/local/nginx/html/lizhimusic.json'##json格式歌曲列表（for禁歌） # #
-  music-serve-domain: ${musicWyApi:http://localhost:3000} #'http://www.alang.run:8888'
-  music-serve-domain-qq: ${musicQQApi:http://localhost:3300} #'http://www.alang.run:3300'
-  music-serve-domain-mg: ${musicMgApi:http://localhost:3400} #'http://www.alang.run:3400'#
-  music-serve-domain-kw-xm: ${musicKwXmApi:http://localhost:8081} #'http://www.alang.run:8081'#'
+  music-serve-domain: ${music-api}:3000 #'http://www.alang.run:8888'
+  music-serve-domain-qq: ${music-api}:3300 #'http://www.alang.run:3300'
+  music-serve-domain-mg: ${music-api}:3400 #'http://www.alang.run:3400'#
+  music-serve-domain-kw-xm: ${music-api}:8081 #'http://www.alang.run:8081'#'
   mail-send-from: ${MailFrom:18759478272@139.com}
   mail-send-to: ${MailTo:1040927107@qq.com}
   serverJUrl: ${ServerJUrl:https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send}
   ip_house: ${IpHouse:3}
-  house_size: ${houseSize:32}
+  house_size: ${HouseSize:32}
 
 

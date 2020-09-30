@@ -540,6 +540,7 @@ public class MusicController {
             return;
         }
         Page<List<SongList>> page = musicService.search(songList, hulkPage);
+        log.info("链接：{}",jusicProperties.getMusicServeDomain());
         log.info("session: {} 尝试搜索歌单, 关键字: {},{}, 即将向该用户推送结果", accessor.getHeader("simpSessionId"), songList.getName(),songList.getSource());
         sessionService.send(sessionId, MessageType.SEARCH_SONGLIST, Response.success(page, "搜索结果"),houseId);
     }

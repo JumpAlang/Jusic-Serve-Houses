@@ -38,7 +38,16 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable().authorizeRequests().antMatchers(HttpMethod.POST,"/house/add").permitAll()
                 .antMatchers(HttpMethod.POST,"/house/enter").permitAll()
                 .antMatchers(HttpMethod.POST,"/house/get").permitAll()
-                .antMatchers(HttpMethod.POST,"/house/search").permitAll().antMatchers(HttpMethod.POST,"/server/**").permitAll().antMatchers(HttpMethod.GET,"/server/**").permitAll().anyRequest().authenticated().and().httpBasic().and().cors();
+                .antMatchers(HttpMethod.POST,"/house/search").permitAll().
+                antMatchers(HttpMethod.POST,"/server/**").permitAll().
+                antMatchers(HttpMethod.GET,"/server/**").permitAll().
+                antMatchers("/img/**").permitAll().
+                antMatchers("/css/**").permitAll().
+                antMatchers("/js/**").permitAll().
+                antMatchers("/index.html").permitAll().
+                antMatchers("/favicon.ico").permitAll().
+                antMatchers(HttpMethod.GET,"/").permitAll().
+                anyRequest().authenticated().and().httpBasic().and().cors();
     }
 
     @Bean

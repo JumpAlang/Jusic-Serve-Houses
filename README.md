@@ -19,6 +19,16 @@
 
 
 ## docker部署
+1.只要nodejs音乐api接口
+  请使用<https://hub.docker.com/repository/docker/jumpalang/jusic_music_api>查看说明
+   
+2.只要java后端服务
+  请使用<https://hub.docker.com/repository/docker/jumpalang/jusic_music_api>查看说明
+  
+3.如果想整套部署
+ 3.1 使用根目录下的docker-compose.yml，修改参数后，执行`docker-compose up -d`
+ 
+ 3.2 使用Jonnyan404小伙伴制作的docker
 > 感谢小伙伴制作的docker <https://github.com/Jonnyan404>
 
 
