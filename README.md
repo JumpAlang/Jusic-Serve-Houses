@@ -20,14 +20,27 @@
 
 ## docker部署
 1.只要nodejs音乐api接口
-  请使用<https://hub.docker.com/repository/docker/jumpalang/jusic_music_api>查看说明
+  请使用<https://hub.docker.com/r/jumpalang/jusic_music_api>查看说明
    
 2.只要java后端服务
-  请使用<https://hub.docker.com/repository/docker/jumpalang/jusic_serve_houses>查看说明
+  请使用<https://hub.docker.com/r/jumpalang/jusic_serve_houses>查看说明
   
 3.如果想整套部署
 
  3.1 使用根目录下的docker-compose.yml，修改参数后，执行`docker-compose up -d`
+ 
+  参数说明：
+  * 接口认证用户名：APIUSER，默认admin
+  * 接口认证密码：APIPWD 默认123456 
+  * Redis Host:RedisHost 默认redis，如果不是docker启动的redis，在本地可以直接填写localhost
+  * 音乐api host:MusicApi 默认http://jusicMusicApi，如果不是docker启动的音乐api，在本地可以填写http://localhost
+  * 音乐链接过期时间：MusicExpireTime 默认1200000毫秒
+  * 获取音乐失败重试次数：ReTryCount 默认1次
+  * 投票切歌率：VoteRate 默认0.3 
+  * 网易热歌榜歌单id：WyTopUrl 默认3778678
+  * 个人Server酱接口：ServerJUrl 默认https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send，必须修改，否则当有用户@管理员时，消息会发到我这里
+  * 每个ip限制创建房间数：IpHouse 默认3个
+  * 系统最多可创建房间数：HouseSize 默认32个
  
  3.2 使用Jonnyan404小伙伴制作的docker
 > 感谢小伙伴制作的docker <https://github.com/Jonnyan404>
