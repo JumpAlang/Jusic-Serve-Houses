@@ -27,7 +27,7 @@
   
 3.如果想整套部署
 
- 3.1 使用根目录下的docker-compose.yml，修改参数后，执行`docker-compose up -d`
+ 3.1 使用根目录下的docker-compose.yml，修改参数后，执行`docker-compose up -d` 然后在浏览器访问：<http://localhost:8888>
  
   参数说明：
   * 接口认证用户名：APIUSER，默认admin
