@@ -46,10 +46,7 @@
 > 感谢小伙伴制作的docker <https://github.com/Jonnyan404>
 
 
-`docker run -d --name music -p 8089:8089 -p 8080:8080 -e IP=1.1.1.1 -e QQ=123456 jonnyan404/jusic`
-
-详情：
-<https://github.com/JumpAlang/Jusic-serve/issues/4#issuecomment-670856519>
+`docker run -d --name music -p 8888:8888 jonnyan404/jusic`
 
 
 ## 安装
