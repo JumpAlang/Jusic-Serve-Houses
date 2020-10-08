@@ -1,4 +1,4 @@
-
+> 一起听歌吧官方所使用服务器配置：[阿里云ecs_t5_突发型](https://www.aliyun.com/minisite/goods?userCode=ze4tzlf9&share_source=copy_link)
 
 > 目前服务器配置比较弱鸡，经常炸机，欢迎大佬赞助。mail to me .
 
@@ -19,6 +19,7 @@
 
 
 ## docker部署
+> 一起听歌吧官方所使用服务器配置：[阿里云](https://www.aliyun.com/minisite/goods?userCode=ze4tzlf9&share_source=copy_link)
 1.只要nodejs音乐api接口
   请使用<https://hub.docker.com/r/jumpalang/jusic_music_api>查看说明
    
