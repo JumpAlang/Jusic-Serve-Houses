@@ -51,9 +51,10 @@ public class MusicServiceImpl implements MusicService {
      * 把音乐放进点歌列表
      */
     @Override
-    public Music toPick(String sessionId, Music music,String houseId) {
+    public Music toPick(String sessionId, Music music,String houseId,String source) {
         music.setSessionId(sessionId);
         music.setPickTime(System.currentTimeMillis());
+        music.setSource(source);
         User user = sessionRepository.getSession(sessionId,houseId);
         music.setNickName(user==null?"":user.getNickName());
         musicPickRepository.leftPush(music,houseId);

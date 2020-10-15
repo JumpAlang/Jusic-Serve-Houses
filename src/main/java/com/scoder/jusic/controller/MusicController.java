@@ -99,7 +99,7 @@ public class MusicController {
             sessionService.send(MessageType.NOTICE, Response.failure((Object) null, "点歌失败, 已在播放列表"),houseId);
         } else {
             log.info("点歌成功, 音乐: {}, 时长: {}, 链接: {}, 即将向客户端广播消息以及列表", pick.getName(), pick.getDuration(), pick.getUrl(),houseId);
-            musicService.toPick(sessionId, pick,houseId);
+            musicService.toPick(sessionId, pick,houseId,music.getSource());
             LinkedList<Music> pickList = musicService.getPickList(houseId);
             sessionService.send(MessageType.NOTICE, Response.success((Object) null, "点歌成功"),houseId);
             log.info("点歌成功");

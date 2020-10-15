@@ -53,6 +53,17 @@ public class JusicWebSocketConfiguration implements WebSocketMessageBrokerConfig
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         // 配置应用前缀，客户端每次访问的时候需要带上此前缀，比如 /app/hello
 //        registry.setApplicationDestinationPrefixes("/app");
+
+        //设置简单的消息代理器，它使用Memory（内存）作为消息代理器，
+        //其中/user和/topic都是我们发送到前台的数据前缀。前端必须订阅以/user开始的消息（.subscribe()进行监听）。
+        //setHeartbeatValue设置后台向前台发送的心跳，
+        //注意：setHeartbeatValue这个不能单独设置，不然不起作用，要配合后面setTaskScheduler才可以生效。
+        //对应的解决方法的网址：https://stackoverflow.com/questions/39220647/spring-stomp-over-websockets-not-scheduling-heartbeats
+//        ThreadPoolTaskScheduler te = new ThreadPoolTaskScheduler();
+//        te.setPoolSize(1);
+//        te.setThreadNamePrefix("wss-heartbeat-thread-");
+//        te.initialize();
+//        registry.enableSimpleBroker("/topic").setHeartbeatValue(new long[]{25000,25000}).setTaskScheduler(te);;
     }
 
     /**

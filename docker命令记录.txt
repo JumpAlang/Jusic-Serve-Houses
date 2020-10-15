@@ -1,8 +1,8 @@
 #创建镜像
-docker image build -t jusic_serve_houses:1.0 .
+docker image build -t jusic_serve_houses:1.1 .
 
 #运行镜像
- docker run --name jusic_serve_houses -e APIPWD=123 -e MusicApi="http://musicApi" -p 8888:8888 -d --link redis:redis --link jusic_music_api:musicApi  jusic_serve_houses:1.0
+ docker run --name jusic_serve_houses -e APIPWD=123 -e MusicApi="http://musicApi" -p 8888:8888 -d --link redis:redis --link jusic_music_api:musicApi  jusic_serve_houses:1.1
  参数说明：
  接口认证用户名：APIUSER，默认admin
  接口认证密码：APIPWD 默认123456 

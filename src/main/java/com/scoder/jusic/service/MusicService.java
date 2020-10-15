@@ -21,7 +21,7 @@ public interface MusicService {
      * @param request   music info
      * @return music info
      */
-    Music toPick(String sessionId, Music request,String houseId);
+    Music toPick(String sessionId, Music request,String houseId, String source);
 
     /**
      * 切歌
