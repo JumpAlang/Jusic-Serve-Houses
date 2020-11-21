@@ -1,5 +1,7 @@
 > 热烈庆祝一起听歌吧微信小程序上架成功，搜索：***灵魂自习室***
 
+[Jusic-mini](https://github.com/JumpAlang/Jusic_mini)
+
 > 使用docker一键部署一起听歌吧应用，从此你也拥有了自己的点歌台，docker部署详见下方
 
 > 一起听歌吧官方所使用服务器配置,趁双11新用户1年只要84元（建议买3年）：[阿里云ecs_t5_突发型](https://www.aliyun.com/minisite/goods?userCode=ze4tzlf9&share_source=copy_link)
