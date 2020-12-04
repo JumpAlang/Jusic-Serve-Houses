@@ -131,7 +131,13 @@ public class HomeController {
             }
             if(house.getCanDestroy() != null && house.getCanDestroy()){
                 houseContainer.destroy(house.getId());
+                if(housePrimitive.getEnableStatus() != null && housePrimitive.getEnableStatus()){
+                    houseContainer.refreshHouses();
+                }
                 return Response.success(housePrimitive, "销毁房间成功");
+            }
+            if(house.getForbiddenModiPwd() != null){
+                housePrimitive.setForbiddenModiPwd(house.getForbiddenModiPwd());
             }
             if(house.getNeedPwd() != null){
                 housePrimitive.setNeedPwd(house.getNeedPwd());
@@ -147,6 +153,9 @@ public class HomeController {
             }
             if(house.getEnableStatus() != null){
                 housePrimitive.setEnableStatus(house.getEnableStatus());
+            }
+            if(housePrimitive.getEnableStatus() != null && housePrimitive.getEnableStatus()){
+                houseContainer.refreshHouses();
             }
             return Response.success(housePrimitive, "修改房间成功");
     }

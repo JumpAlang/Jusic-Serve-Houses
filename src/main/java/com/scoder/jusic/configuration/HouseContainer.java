@@ -105,8 +105,19 @@ public class HouseContainer {
         configRepository.initialize(house.getId());
         houses.add(house);
         if(house.getEnableStatus() != null && house.getEnableStatus()){
-            housesRespository.add(house);
+//            housesRespository.add(house);
+            this.refreshHouses();
         }
+    }
+
+    public void refreshHouses(){
+        CopyOnWriteArrayList<House> retainHouse = new CopyOnWriteArrayList<>();
+        for(House house : houses){
+            if(house.getEnableStatus() != null && house.getEnableStatus()){
+                retainHouse.add(house);
+            }
+        }
+        housesRespository.destroy(retainHouse);
     }
 
     public void destroy(String id){
@@ -145,7 +156,7 @@ public class HouseContainer {
                 sessionRepository.destroy(house.getId());
                 musicPlayingRepository.destroy(house.getId());
 //                musicPickRepository.destroy(house.getId());
-                sessionBlackRepository.destroy(house.getId());
+//                sessionBlackRepository.destroy(house.getId());
                 musicVoteRepository.destroy(house.getId());
             }
         }
@@ -171,7 +182,7 @@ public class HouseContainer {
         musicDefaultRepository.destroy("");
         for(House house : housesRedis){
             sessionRepository.destroy(house.getId());
-            sessionBlackRepository.destroy(house.getId());
+//            sessionBlackRepository.destroy(house.getId());
 //            configRepository.destroy(house.getId());
             musicPlayingRepository.destroy(house.getId());
 //            musicPickRepository.destroy(house.getId());

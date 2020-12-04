@@ -130,6 +130,9 @@ public class MusicServiceImpl implements MusicService {
             if(musicUrl == null){
                 musicUrl = this.getKwXmUrlIterator(result.getArtist()+"+"+result.getName());
             }
+            if(musicUrl == null || (result.getDuration() <= 30000)){
+                musicUrl = this.getKwXmUrlIterator(result.getArtist()+"+"+result.getName());
+            }
             if (Objects.nonNull(musicUrl)) {
                 result.setUrl(musicUrl);
                 log.info("音乐链接已超时, 已更新链接");
@@ -324,13 +327,14 @@ public class MusicServiceImpl implements MusicService {
                             singerNames = singerNames.substring(0,singerNames.length()-1);
                         }
                         music.setArtist(singerNames);
+                        long duration = data.getLong("interval")*1000;
+                        music.setDuration(duration);
                         String url = data.getString("url");
-                        if(url == null){
+                        if(url == null || duration <= 30000){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
-                        long duration = data.getLong("interval")*1000;
-                        music.setDuration(duration);
+
                         Album album = new Album();
                         Integer albumid = data.getInteger("albumid");
                         album.setId(albumid);
@@ -535,7 +539,7 @@ public class MusicServiceImpl implements MusicService {
                         }
                         music.setArtist(singerNames);
                         String url = data.getString("128k");
-                        if(url == null){
+                        if(url == null || music.getDuration() <= 30000){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
@@ -694,13 +698,14 @@ public class MusicServiceImpl implements MusicService {
                             singerNames = singerNames.substring(0,singerNames.length()-1);
                         }
                         music.setArtist(singerNames);
+
+                        long duration = trackInfoJSON.getLong("interval")*1000;
+                        music.setDuration(duration);
                         String url = getQQMusicUrl(id);
-                        if(url == null){
+                        if(url == null || duration <= 30000){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
-                        long duration = trackInfoJSON.getLong("interval")*1000;
-                        music.setDuration(duration);
                         Album album = new Album();
                         JSONObject albumJSON = trackInfoJSON.getJSONObject("album");
                         Integer albumid = albumJSON.getInteger("id");
@@ -764,11 +769,12 @@ public class MusicServiceImpl implements MusicService {
                         }
                         music.setArtist(singerNames);
                         String url = getMusicUrl(id);
-                        if(url == null){
+
+                        long duration = song.getLong("dt");
+                        if(url == null || (duration <= 30000)){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
-                        long duration = song.getLong("dt");
                         music.setDuration(duration);
                         Album album = new Album();
                         JSONObject albumJSON = song.getJSONObject("al");
@@ -924,7 +930,7 @@ public class MusicServiceImpl implements MusicService {
                         }
                         music.setArtist(singerNames);
                         String url = data.getString("128k");
-                        if(url == null){
+                        if(url == null || (music.getDuration() <= 30000)){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
@@ -2079,20 +2085,34 @@ public class MusicServiceImpl implements MusicService {
         if("wy".equals(source)){
             Integer count = 0;
             for(String id : playlistIds){
-                String[] list = this.searchWYGD(id);
-                if(list != null && list.length > 0){
-                    musicDefaultRepository.add(list,houseId);
-                    count += list.length;
+                if(id != null && id.startsWith("*")){
+                    count++;
+                    String[] songId = new String[1];
+                    songId[0] = id.substring(1);
+                    musicDefaultRepository.add(songId,houseId);
+                }else{
+                    String[] list = this.searchWYGD(id);
+                    if(list != null && list.length > 0){
+                        musicDefaultRepository.add(list,houseId);
+                        count += list.length;
+                    }
                 }
             }
             return count;
         }else if("qq".equals(source)){
             Integer count = 0;
             for(String id : playlistIds){
-                String[] list = this.searchQQGD(id);
-                if(list != null && list.length > 0){
-                    musicDefaultRepository.add(list,houseId);
-                    count += list.length;
+                if(id != null && id.startsWith("*")){
+                    count++;
+                    String[] songId = new String[1];
+                    songId[0] = id.substring(1)+"___qq";
+                    musicDefaultRepository.add(songId,houseId);
+                }else{
+                    String[] list = this.searchQQGD(id);
+                    if(list != null && list.length > 0){
+                        musicDefaultRepository.add(list,houseId);
+                        count += list.length;
+                    }
                 }
             }
             return count;

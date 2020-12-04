@@ -111,7 +111,6 @@ public class ChatController {
         if (!roles.contains(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
-
             message.setSendTime(System.currentTimeMillis());
             User user = sessionService.getUser(sessionId,houseId);
             message.setNickName(user.getNickName());
@@ -120,6 +119,9 @@ public class ChatController {
             message.setPushTime(System.currentTimeMillis());
             House house = houseContainer.get(houseId);
             house.setAnnounce(message);
+            if(house.getEnableStatus() != null && house.getEnableStatus()){
+                houseContainer.refreshHouses();
+            }
         }
     }
 

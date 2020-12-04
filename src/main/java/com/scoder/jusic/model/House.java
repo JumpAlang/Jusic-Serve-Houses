@@ -60,6 +60,8 @@ public class House implements Serializable {
 
     private Message announce;
 
+    private Boolean forbiddenModiPwd;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

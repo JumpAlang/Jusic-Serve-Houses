@@ -1,7 +1,9 @@
 package com.scoder.jusic.controller;
 
 import com.scoder.jusic.common.message.Response;
+import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.model.Auth;
+import com.scoder.jusic.model.House;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.User;
 import com.scoder.jusic.service.AuthService;
@@ -24,6 +26,8 @@ import java.util.List;
 @Slf4j
 public class AuthController {
 
+    @Autowired
+    private HouseContainer houseContainer;
     @Autowired
     private AuthService authService;
     @Autowired
@@ -67,6 +71,11 @@ public class AuthController {
         if (!roles.contains(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         }else{
+            House house = houseContainer.get(houseId);
+            if(house.getForbiddenModiPwd() != null && house.getForbiddenModiPwd() && !roles.get(0).equals(role)){
+                sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "房间不支持修改密码"),houseId);
+                return;
+            }
             authService.setAdminPassword(password,houseId);
             sessionService.send(sessionId,MessageType.NOTICE, Response.success((Object) null, "密码修改成功"),houseId);
         }

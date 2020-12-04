@@ -34,20 +34,33 @@ public class HousesRepositoryImpl implements HousesRespository {
     @Override
     public CopyOnWriteArrayList<House> initialize() {
         if(this.size() == 0){
-            House house = new House();
-            house.setEnableStatus(true);
-            house.setName(JusicProperties.HOUSE_DEFAULT_NAME);
-            house.setId(JusicProperties.HOUSE_DEFAULT_ID);
-            house.setDesc(JusicProperties.HOUSE_DEFAULT_DESC);
-            house.setCreateTime(System.currentTimeMillis());
-            house.setNeedPwd(false);
-            house.setRemoteAddress("127.0.0.1");
             CopyOnWriteArrayList<House> houses = new CopyOnWriteArrayList<House>();
-            houses.add(house);
+            houses.add(defaultHouse());
             return houses;
         }else{
-            return this.get();
+            CopyOnWriteArrayList<House> houses = this.get();
+            House house = defaultHouse();
+            if(houses.contains(house)){
+                return houses;
+            }else{
+                CopyOnWriteArrayList<House> newHouses = new CopyOnWriteArrayList<>();
+                newHouses.add(house);
+                newHouses.addAll(houses);
+                return newHouses;
+            }
         }
+    }
+
+    private House defaultHouse(){
+        House house = new House();
+        house.setEnableStatus(true);
+        house.setName(JusicProperties.HOUSE_DEFAULT_NAME);
+        house.setId(JusicProperties.HOUSE_DEFAULT_ID);
+        house.setDesc(JusicProperties.HOUSE_DEFAULT_DESC);
+        house.setCreateTime(System.currentTimeMillis());
+        house.setNeedPwd(false);
+        house.setRemoteAddress("127.0.0.1");
+        return house;
     }
 
     @Override

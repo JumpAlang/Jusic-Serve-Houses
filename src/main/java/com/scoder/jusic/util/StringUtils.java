@@ -105,7 +105,7 @@ public class StringUtils {
         Pattern p= Pattern.compile(regEx);
         Matcher m=p.matcher(id);
         boolean result=m.find();
-        return result;
+        return result || id.startsWith("*");
     }
 
     public static String[] splitPlayListIds(String id){
