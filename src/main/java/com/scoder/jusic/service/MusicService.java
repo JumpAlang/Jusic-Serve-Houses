@@ -169,4 +169,11 @@ public interface MusicService {
 
     void updateMusicUrl(Music result);
 
-    }
+    String netEaseLoginByPhone(String phone,String pwd,String md5Pwd,String countryCode);
+
+    String netEaseLoginByEmail(String email,String pwd,String md5Pwd);
+
+    void netEaseLoginRefresh();
+
+    void setNetEaseCookie(String cookie);
+}

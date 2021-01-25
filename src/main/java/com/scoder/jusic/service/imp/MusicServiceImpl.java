@@ -28,6 +28,8 @@ import java.util.*;
 @Slf4j
 public class MusicServiceImpl implements MusicService {
 
+    public static String NETEASE_COOKIE = "";
+
     @Autowired
     private JusicProperties jusicProperties;
     @Autowired
@@ -130,7 +132,7 @@ public class MusicServiceImpl implements MusicService {
             if(musicUrl == null){
                 musicUrl = this.getKwXmUrlIterator(result.getArtist()+"+"+result.getName());
             }
-            if(musicUrl == null || (result.getDuration() <= 30000)){
+            if(musicUrl == null){
                 musicUrl = this.getKwXmUrlIterator(result.getArtist()+"+"+result.getName());
             }
             if (Objects.nonNull(musicUrl)) {
@@ -140,6 +142,113 @@ public class MusicServiceImpl implements MusicService {
                 log.info("音乐链接更新失败, 接下来客户端音乐链接可能会失效, 请检查音乐服务");
             }
         }
+    }
+
+    @Override
+    public String netEaseLoginByPhone(String phone, String pwd, String md5Pwd, String countryCode) {
+        HttpResponse<String> response = null;
+        Integer failCount = 0;
+
+        while (failCount < jusicProperties.getRetryCount()) {
+            try {
+                Unirest.setTimeouts(10000,15000);
+                String params = "?phone="+phone;
+                if(md5Pwd != null){
+                    params += "&md5_password="+md5Pwd;
+                }
+                if(pwd != null){
+                    params += "&password="+pwd;
+                }
+                if(countryCode != null){
+                    params += "&countrycode="+countryCode;
+                }
+                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/login/cellphone"+params )
+                        .asString();
+
+                if (response.getStatus() != 200) {
+                    failCount++;
+                } else {
+                    JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+//                    log.info("获取音乐结果：{}", jsonObject);
+                    if (jsonObject.get("code").equals(200)) {
+                        String cookie = jsonObject.getString("cookie");
+                        NETEASE_COOKIE = cookie;
+                        return cookie;
+                    }else{
+                        return jsonObject.getString("msg");
+                    }
+                }
+            } catch (Exception e) {
+                failCount++;
+                log.error("网易音乐手機登錄异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+            }
+        }
+
+        return "";
+    }
+
+    @Override
+    public String netEaseLoginByEmail(String email, String pwd, String md5Pwd) {
+        HttpResponse<String> response = null;
+        Integer failCount = 0;
+
+        while (failCount < jusicProperties.getRetryCount()) {
+            try {
+                Unirest.setTimeouts(10000,15000);
+                String params = "?email="+email;
+                if(md5Pwd != null){
+                    params += "&md5_password="+md5Pwd;
+                }
+                if(pwd != null){
+                    params += "&password="+pwd;
+                }
+                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/login"+params )
+                        .asString();
+
+                if (response.getStatus() != 200) {
+                    failCount++;
+                } else {
+                    JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+//                    log.info("获取音乐结果：{}", jsonObject);
+                    if (jsonObject.get("code").equals(200)) {
+                        String cookie = jsonObject.getString("cookie");
+                        NETEASE_COOKIE = cookie;
+                        return cookie;
+                    }else{
+                        return jsonObject.getString("msg");
+                    }
+                }
+            } catch (Exception e) {
+                failCount++;
+                log.error("网易音乐郵箱登錄异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+            }
+        }
+
+        return "";
+    }
+
+    @Override
+    public void netEaseLoginRefresh() {
+        HttpResponse<String> response = null;
+        Integer failCount = 0;
+
+            try {
+                Unirest.setTimeouts(10000,15000);
+
+                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/login/refresh" )
+                        .asString();
+
+
+            } catch (Exception e) {
+                failCount++;
+                log.error("网易音乐刷新异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+            }
+
+    }
+
+    @Override
+    public void setNetEaseCookie(String cookie) {
+        NETEASE_COOKIE = cookie;
     }
 
     /**
@@ -330,7 +439,7 @@ public class MusicServiceImpl implements MusicService {
                         long duration = data.getLong("interval")*1000;
                         music.setDuration(duration);
                         String url = data.getString("url");
-                        if(url == null || duration <= 30000){
+                        if(url == null){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
@@ -539,7 +648,7 @@ public class MusicServiceImpl implements MusicService {
                         }
                         music.setArtist(singerNames);
                         String url = data.getString("128k");
-                        if(url == null || music.getDuration() <= 30000){
+                        if(url == null){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
@@ -702,7 +811,7 @@ public class MusicServiceImpl implements MusicService {
                         long duration = trackInfoJSON.getLong("interval")*1000;
                         music.setDuration(duration);
                         String url = getQQMusicUrl(id);
-                        if(url == null || duration <= 30000){
+                        if(url == null){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
@@ -771,7 +880,7 @@ public class MusicServiceImpl implements MusicService {
                         String url = getMusicUrl(id);
 
                         long duration = song.getLong("dt");
-                        if(url == null || (duration <= 30000)){
+                        if(url == null){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
@@ -930,7 +1039,7 @@ public class MusicServiceImpl implements MusicService {
                         }
                         music.setArtist(singerNames);
                         String url = data.getString("128k");
-                        if(url == null || (music.getDuration() <= 30000)){
+                        if(url == null){
                             url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
                         }
                         music.setUrl(url);
@@ -969,8 +1078,14 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/url?br=128000&id=" + musicId + "")
+//                String cookie= "";
+//                if(NETEASE_COOKIE != null && NETEASE_COOKIE != ""){
+//                    cookie = "&cookie="+NETEASE_COOKIE;
+//                }
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/url").queryString("br",128000).queryString("id",musicId).queryString("cookie",NETEASE_COOKIE)
                         .asString();
+//                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/url?br=128000&id=" + musicId + cookie)
+//                        .asString();
 
                 if (response.getStatus() != 200) {
                     failCount++;

@@ -38,7 +38,11 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable().authorizeRequests().antMatchers(HttpMethod.POST,"/house/add").permitAll()
                 .antMatchers(HttpMethod.POST,"/house/enter").permitAll()
                 .antMatchers(HttpMethod.POST,"/house/get").permitAll()
-                .antMatchers(HttpMethod.POST,"/house/search").permitAll().
+                .antMatchers(HttpMethod.POST,"/house/search").permitAll()
+                .antMatchers(HttpMethod.GET,"/netease/loginByPhone").permitAll()
+                .antMatchers(HttpMethod.GET,"/netease/loginByEmail").permitAll()
+                .antMatchers(HttpMethod.GET,"/netease/loginRefresh").permitAll()
+                .antMatchers(HttpMethod.GET,"/netease/setCookie").permitAll().
                 antMatchers(HttpMethod.POST,"/server/**").permitAll().
                 antMatchers(HttpMethod.GET,"/server/**").permitAll().
                 antMatchers("/img/**").permitAll().
