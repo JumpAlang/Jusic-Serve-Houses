@@ -2,8 +2,8 @@ version: "3"
 services:
   service_redis:
     restart: always
-#    ports:
-#      - 6379:6379
+    #    ports:
+    #      - 6379:6379
     image: redis
     container_name: redis
     environment:
@@ -17,10 +17,10 @@ services:
       - QQ=1040927107 #qq号
     container_name: jusicMusicApi
     ports:
-#      - "3000:3000"
+      #      - "3000:3000"
       - "3300:3300"
-#      - "3400:3400"
-#      - "8081:8081"
+    #      - "3400:3400"
+    #      - "8081:8081"
     restart: always
   service_jusicServeHouses:
     container_name: jusicServeHouses
@@ -30,8 +30,10 @@ services:
       - APIUSER=admin  #api认证接口用户名
       - APIPWD=123456  #api认证接口密码
       - ServerJUrl=https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send #server酱消息接口，用户@管理员时会通知微信
+      - MiniId=xxxxxx
+      - MiniSecrect=yyyyyy
     ports:
-      - "8888:8888"
+      - "8080:8888"
     depends_on:
       - service_redis
       - service_jusicMusicApi

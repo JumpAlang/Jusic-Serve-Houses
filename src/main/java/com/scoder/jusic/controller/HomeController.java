@@ -1,10 +1,15 @@
 package com.scoder.jusic.controller;
 
+import com.alibaba.fastjson.JSONObject;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.model.RetainKey;
+import com.scoder.jusic.model.Token;
 import com.scoder.jusic.util.IPUtils;
 import com.scoder.jusic.util.StringUtils;
 import com.scoder.jusic.util.UUIDUtils;
@@ -18,7 +23,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -33,6 +44,8 @@ public class HomeController {
     private HouseContainer houseContainer;
     @Autowired
     private JusicProperties jusicProperties;
+
+    public static Token TOKEN;
 
     @RequestMapping("/house/add")
     @ResponseBody
@@ -205,6 +218,103 @@ public class HomeController {
         }else{
             houseContainer.removeRetainKey(key);
             return Response.success((Object) null, "移除成功");
+        }
+    }
+
+    @RequestMapping("/house/getMiniCode")
+    @ResponseBody
+    public Response getMiniCode(@RequestBody House house, HttpServletRequest accessor) throws IOException {
+        House housePrimitive = houseContainer.get(house.getId());
+        if(housePrimitive == null){
+            housePrimitive = house;
+        }
+        String token = getToken();
+        Map<String,Object> map = new LinkedHashMap<>();
+        map.put("path","pages/player/player?houseId="+housePrimitive.getId()+"&housePwd="+housePrimitive.getPassword());
+        map.put("width",280);
+        HttpResponse<InputStream> response = null;
+        try {
+            response = Unirest.post("https://api.weixin.qq.com/wxa/getwxacode?access_token="+token).body(JSONObject.toJSONString(map)).asBinary();
+        } catch (UnirestException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+        return Response.success(inputStreamToBase64(response.getBody()),"获取成功");
+
+    }
+
+//    @RequestMapping("/house/getMiniCode")
+//    @ResponseBody
+//    public Response getMiniCode(@RequestBody House house, HttpServletRequest accessor) throws IOException {
+//        House housePrimitive = houseContainer.get(house.getId());
+//        if(housePrimitive == null){
+//            housePrimitive = house;
+//        }
+//        String token = getToken();
+//        Map<String,Object> map = new LinkedHashMap<>();
+//        map.put("scene","?houseId="+housePrimitive.getId()+"&housePwd="+housePrimitive.getPassword());
+//        map.put("page","pages/player/player");
+//        map.put("width",280);
+//        HttpResponse<InputStream> response = null;
+//        try {
+//            response = Unirest.post("https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token="+token).body(JSONObject.toJSONString(map)).asBinary();
+//        } catch (UnirestException e) {
+//            throw new RuntimeException(e.getMessage());
+//        }
+//        return Response.success(inputStreamToBase64(response.getBody()),"获取成功");
+//
+//    }
+
+    public static String inputStreamToBase64(InputStream inputStream) throws IOException {
+        return Base64.getEncoder().encodeToString(inputStreamToBytes(inputStream));
+    }
+
+    /**
+     * inputStream 转化成 bytes
+     * @param inputStream
+     * @return
+     * @throws IOException
+     */
+    public static byte[] inputStreamToBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buff = new byte[4096];
+        int index = 0;
+        while ((index = inputStream.read(buff, 0, 4096)) > 0) {
+            baos.write(buff, 0, index);
+        }
+        return baos.toByteArray();
+
+    }
+
+
+        private Token requestToken() {
+        try{
+            HttpResponse<String> response = Unirest.get("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+jusicProperties.getMiniId()+"&secret="+jusicProperties.getMiniSecrect()).asString();
+            JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+            if(jsonObject.containsKey("errcode")){
+                throw new RuntimeException("获取小程序accessToken失败"+jsonObject.getString("errcode")+jsonObject.getString("errmsg"));
+            }else{
+                String accessToken = jsonObject.getString("access_token");
+                Long expires = jsonObject.getLong("expires_in");
+                Token token = new Token();
+                token.setToken(accessToken);
+                token.setExpires(expires);
+                token.setTokenTime(System.currentTimeMillis());
+                return token;
+            }
+        }catch (UnirestException e){
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    private String getToken() {
+        Token token = TOKEN;
+        if(token == null || !token.isValid()){
+            Token newToken = requestToken();
+            token = newToken;
+            return newToken.getToken();
+        }else {
+            return token.getToken();
         }
     }
 

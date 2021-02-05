@@ -139,6 +139,8 @@ public class JusicProperties {
     private Integer ipHouse = 10;
     private Boolean goodModel = true;
     private Boolean randomModel = false;
+    private String miniId = "";
+    private String miniSecrect = "";
 
     public static final String HOUSE_DEFAULT_ID = "DEFAULT";
     public static final String HOUSE_DEFAULT_NAME = "一起听歌吧";

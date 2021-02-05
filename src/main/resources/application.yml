@@ -24,7 +24,7 @@ spring:
   mail:
     host: smtp.139.com
     username: 18759478272@139.com
-    password: 1
+    password: xxxxx
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -60,3 +60,5 @@ jusic:
   serverJUrl: ${ServerJUrl:https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send}
   ip_house: ${IpHouse:3}
   house_size: ${HouseSize:32}
+  mini_id: ${MiniId:xxxxx}
+  mini_secrect: ${MiniSecrect:yyyyy}
