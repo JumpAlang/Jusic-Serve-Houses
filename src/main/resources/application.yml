@@ -24,7 +24,7 @@ spring:
   mail:
     host: smtp.139.com
     username: 18759478272@139.com
-    password: xxxxx
+    password: XXXX
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -61,4 +61,5 @@ jusic:
   ip_house: ${IpHouse:3}
   house_size: ${HouseSize:32}
   mini_id: ${MiniId:xxxxx}
-  mini_secrect: ${MiniSecrect:yyyyy}
+  mini_secrect: ${MiniSecrect:yyyyy},
+  role_root_password: ${RoleRootPassword:654321}

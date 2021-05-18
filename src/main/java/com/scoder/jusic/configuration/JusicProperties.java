@@ -103,7 +103,7 @@ public class JusicProperties {
     /**
      * root 密码
      */
-    private String roleRootPassword = "542885";
+    private String roleRootPassword = "654321";
     /**
      * admin 密码
      */
