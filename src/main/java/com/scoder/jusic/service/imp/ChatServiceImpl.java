@@ -29,7 +29,7 @@ public class ChatServiceImpl implements ChatService {
 //                .append(hulkPage.getPageSize())
 //                .append("&offset=")
 //                .append(hulkPage.getPageIndex() - 1);
-                .append("https://doutu.lccyy.com/t/doutu")
+                .append("https://doutu.lccyy.com/doutu")
                 .append("/items")
                 .append("?keyword=")
                 .append(keyword)
