@@ -24,7 +24,7 @@ spring:
   mail:
     host: smtp.139.com
     username: 18759478272@139.com
-    password: XXXX
+    password: xxxx
     test-connection: false
     port: 465
     default-encoding: UTF-8

@@ -1623,7 +1623,8 @@ public class MusicServiceImpl implements MusicService {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomain())
                 .append("/playlist/detail?id=")
-                .append(id);
+                .append(id)
+                .append("&cookie="+NETEASE_COOKIE);
         HttpResponse<String> response = null;
         try {
             response = Unirest.get(url.toString())

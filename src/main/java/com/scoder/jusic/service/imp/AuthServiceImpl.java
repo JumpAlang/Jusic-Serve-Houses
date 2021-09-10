@@ -53,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
         }
         String adminPassword = configRepository.getAdminPassword(houseId);
         if (null == adminPassword) {
-            adminPassword = jusicProperties.getRoleRootPassword();
+            adminPassword = jusicProperties.getRoleAdminPassword();
             configRepository.initAdminPassword(houseId);
         }
         User user = sessionRepository.getSession(sessionId,houseId);
