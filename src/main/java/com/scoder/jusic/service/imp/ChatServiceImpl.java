@@ -39,7 +39,7 @@ public class ChatServiceImpl implements ChatService {
                 .append(hulkPage.getPageIndex());
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
+            response = Unirest.post(url.toString()).header("User-Agent","PostmanRuntime/7.26.8").header("Cookie","JSESSIONID=6E7B4196A0E717CC308241DC786BE027")
                     .asString();
 
             JSONObject jsonObject = JSONObject.parseObject(response.getBody());

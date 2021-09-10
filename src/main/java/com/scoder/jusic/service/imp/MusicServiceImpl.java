@@ -1620,15 +1620,17 @@ public class MusicServiceImpl implements MusicService {
      * @return
      */
     private HulkPage searchWYGD(String id,HulkPage hulkPage) {
-        StringBuilder url = new StringBuilder()
-                .append(jusicProperties.getMusicServeDomain())
-                .append("/playlist/detail?id=")
-                .append(id)
-                .append("&cookie="+NETEASE_COOKIE);
+//        StringBuilder url = new StringBuilder()
+//                .append(jusicProperties.getMusicServeDomain())
+//                .append("/playlist/detail?id=")
+//                .append(id)
+//                .append("&cookie="+NETEASE_COOKIE);
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
+            response = Unirest.post(jusicProperties.getMusicServeDomain() + "/playlist/detail").queryString("id",id).queryString("cookie",NETEASE_COOKIE)
                     .asString();
+//            response = Unirest.get(url.toString())
+//                    .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {
                 JSONArray data = responseJsonObject.getJSONObject("playlist").getJSONArray("trackIds");
