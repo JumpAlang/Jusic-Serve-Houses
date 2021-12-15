@@ -49,10 +49,16 @@ public class HouseController {
     public void addHouse(House house, StompHeaderAccessor accessor) {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
-        if(house.getName() == null || house.getName() == ""){
+        if(house.getName() == null || house.getName() == "" || house.getName().length() > 33){
             sessionService.send(sessionId,
                     MessageType.ADD_HOUSE,
-                    Response.failure((Object) null, "房间名称不能为空"),houseId);
+                    Response.failure((Object) null, "房间名称不能为空且不能超过33个字符"),houseId);
+            return;
+        }
+        if(house.getDesc() != null && house.getDesc().length() > 133){
+            sessionService.send(sessionId,
+                    MessageType.ADD_HOUSE,
+                    Response.failure((Object) null, "房间描述不能超过133个字符"),houseId);
             return;
         }
         if(house.getNeedPwd() != null && house.getNeedPwd()){

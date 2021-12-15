@@ -26,10 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -51,8 +48,11 @@ public class HomeController {
     @ResponseBody
     public Response addHouse(@RequestBody House house, HttpServletRequest accessor) {
         String sessionId = UUIDUtils.getUUID8Len(accessor.getSession().getId());
-        if(house.getName() == null || house.getName() == ""){
-           return Response.failure((Object) null, "房间名称不能为空");
+        if(house.getName() == null || house.getName() == "" || house.getName().length() > 33){
+           return Response.failure((Object) null, "房间名称不能为空且不能超过33个字符");
+        }
+        if(house.getDesc() != null && house.getDesc().length() > 133){
+            return Response.failure((Object) null, "房间描述不能超过133个字符");
         }
         if(house.getNeedPwd() != null && house.getNeedPwd()){
             if(house.getPassword() == null || "".equals(house.getPassword().trim())){
@@ -238,10 +238,10 @@ public class HomeController {
         } catch (UnirestException e) {
             throw new RuntimeException(e.getMessage());
         }
-
         return Response.success(inputStreamToBase64(response.getBody()),"获取成功");
 
     }
+
 
 //    @RequestMapping("/house/getMiniCode")
 //    @ResponseBody

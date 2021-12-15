@@ -111,6 +111,10 @@ public class ChatController {
         if (!roles.contains(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
+            if(message != null && message.getContent() != null && message.getContent().length() > 333){
+                sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "公告不能超233个字符"),houseId);
+                return;
+            }
             message.setSendTime(System.currentTimeMillis());
             User user = sessionService.getUser(sessionId,houseId);
             message.setNickName(user.getNickName());

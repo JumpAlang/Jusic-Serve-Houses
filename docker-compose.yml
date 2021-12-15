@@ -12,7 +12,7 @@ services:
     volumes:
       - D:\docker\redis\data:/data  #redis数据挂载到本地
   service_jusicMusicApi:
-    image: jumpalang/jusic_music_api:1.1
+    image: jumpalang/jusic_music_api:1.4
     environment:
       - QQ=1040927107 #qq号
     container_name: jusicMusicApi
@@ -24,11 +24,11 @@ services:
     restart: always
   service_jusicServeHouses:
     container_name: jusicServeHouses
-    image: jumpalang/jusic_serve_houses:2.0
+    image: jumpalang/jusic_serve_houses:2.1
     environment:
       - MusicApi=http://jusicMusicApi  #必须与service_jusicMusicApi的container_name一致
       - APIUSER=admin  #api认证接口用户名
-      - APIPWD=542885  #api认证接口密码
+      - APIPWD=54288  #api认证接口密码
       - ServerJUrl=https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send #server酱消息接口，用户@管理员时会通知微信
       - MiniId=wx693312f83f255cf3
       - MiniSecrect=eccc0908c65a4491da6811b3cbe3e986

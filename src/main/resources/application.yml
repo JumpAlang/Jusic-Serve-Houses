@@ -23,8 +23,8 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: 18759478272@139.com
-    password: xxxxx
+    username: xxx@139.com
+    password: xxxx
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -58,8 +58,8 @@ jusic:
   mail-send-from: ${MailFrom:18759478272@139.com}
   mail-send-to: ${MailTo:1040927107@qq.com}
   serverJUrl: ${ServerJUrl:https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send}
-  ip_house: ${IpHouse:3}
-  house_size: ${HouseSize:32}
-  mini_id: ${MiniId:xxxxx}
-  mini_secrect: ${MiniSecrect:yyyyy},
+  ip_house: ${IpHouse:128}
+  house_size: ${HouseSize:128}
+  mini_id: ${MiniId:xxx}
+  mini_secrect: ${MiniSecrect:xxxxxxxx}
   role_root_password: ${RoleRootPassword:654321}
