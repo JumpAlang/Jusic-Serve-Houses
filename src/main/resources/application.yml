@@ -23,7 +23,7 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: xxx@139.com
+    username: 18759478272@139.com
     password: xxxx
     test-connection: false
     port: 465
@@ -60,6 +60,6 @@ jusic:
   serverJUrl: ${ServerJUrl:https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send}
   ip_house: ${IpHouse:128}
   house_size: ${HouseSize:128}
-  mini_id: ${MiniId:xxx}
-  mini_secrect: ${MiniSecrect:xxxxxxxx}
+  mini_id: ${MiniId:wx693312f83f255cf3}
+  mini_secrect: ${MiniSecrect:eccc0908c65a4491da6811b3cbe3e986}
   role_root_password: ${RoleRootPassword:654321}
