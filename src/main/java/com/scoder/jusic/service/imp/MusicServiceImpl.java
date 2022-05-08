@@ -2,8 +2,6 @@ package com.scoder.jusic.service.imp;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
 import com.scoder.jusic.configuration.JusicProperties;
@@ -12,6 +10,8 @@ import com.scoder.jusic.repository.*;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.util.FileOperater;
 import com.scoder.jusic.util.StringUtils;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -151,7 +151,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                Unirest.setTimeouts(10000,15000);
+//                Unirest.setTimeouts(10000,15000);
                 String params = "?phone="+phone;
                 if(md5Pwd != null){
                     params += "&md5_password="+md5Pwd;
@@ -194,7 +194,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                Unirest.setTimeouts(10000,15000);
+//                Unirest.setTimeouts(10000,15000);
                 String params = "?email="+email;
                 if(md5Pwd != null){
                     params += "&md5_password="+md5Pwd;
@@ -233,7 +233,7 @@ public class MusicServiceImpl implements MusicService {
         Integer failCount = 0;
 
             try {
-                Unirest.setTimeouts(10000,15000);
+//                Unirest.setTimeouts(10000,15000);
 
                 response = Unirest.get(jusicProperties.getMusicServeDomain() + "/login/refresh" )
                         .asString();
@@ -505,7 +505,8 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/search").queryString("limit",1).queryString("offset",0).queryString("keywords",keyword).asString();
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/search").queryString("limit",1).queryString("offset",0).queryString("keywords",keyword).queryString("cookie",NETEASE_COOKIE)
+                        .asString();
 
                 if (response.getStatus() != 200) {
                     failCount++;
@@ -684,7 +685,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                Unirest.setTimeouts(10000,15000);
+//                Unirest.setTimeouts(10000,15000);
 
                 response = Unirest.get(jusicProperties.getMusicServeDomainQq() + "/lyric?songmid=" + id)
                         .asString();
@@ -715,8 +716,8 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                Unirest.setTimeouts(10000,15000);
-                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/lyric?id=" + id)
+//                Unirest.setTimeouts(10000,15000);
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/lyric").queryString("id",id).queryString("cookie",NETEASE_COOKIE)
                         .asString();
 
                 if (response.getStatus() != 200) {
@@ -746,7 +747,7 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                Unirest.setTimeouts(10000,15000);
+//                Unirest.setTimeouts(10000,15000);
                 response = Unirest.get(jusicProperties.getMusicServeDomainMg() + "/lyric?cid=" + id)
                         .asString();
 
@@ -849,9 +850,11 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/detail?ids=" + id)
-                        .asString();
 
+//                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/detail?ids=" + id)
+//                        .asString();
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/detail").queryString("ids",id).queryString("cookie",NETEASE_COOKIE)
+                        .asString();
                 if (response.getStatus() != 200) {
                     failCount++;
                 } else {
@@ -917,9 +920,10 @@ public class MusicServiceImpl implements MusicService {
 
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/detail?ids=" + ids)
+//                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/detail?ids=" + ids)
+//                        .asString();
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/detail").queryString("ids",ids).queryString("cookie",NETEASE_COOKIE)
                         .asString();
-
                 if (response.getStatus() != 200) {
                     failCount++;
                 } else {
@@ -1550,37 +1554,48 @@ public class MusicServiceImpl implements MusicService {
                 .append(jusicProperties.getMusicServeDomain())
                 .append("/search");
         HttpResponse<String> response = null;
-        try {
-            response = Unirest.post(url.toString()).queryString("keywords",music.getName()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize())
-                    .asString();
-            JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
-            if (responseJsonObject.getInteger("code") == 200) {
-                JSONArray data = responseJsonObject.getJSONObject("result").getJSONArray("songs");
-                int size = data.size();
-                JSONArray buildJSONArray = new JSONArray();
-                for(int i = 0; i < size; i++){
-                    JSONObject jsonObject = data.getJSONObject(i);
-                    JSONObject buildJSONObject = new JSONObject();
-                    JSONObject albumObject = jsonObject.getJSONObject("album");
-                    JSONArray singerArray = jsonObject.getJSONArray("artists");
-                    int singerSize = singerArray.size();
-                    String singerNames = "";
-                    for(int j = 0; j < singerSize; j++){
-                        singerNames += singerArray.getJSONObject(j).getString("name")+",";
-                    }
-                    if(singerNames.endsWith(",")){
-                        singerNames = singerNames.substring(0,singerNames.length()-1);
-                    }
-                    buildJSONObject.put("picture_url","");
-                    buildJSONObject.put("artist",singerNames);
-                    String songname = jsonObject.getString("name");
-                    buildJSONObject.put("name",songname);
-                    String songmid = jsonObject.getString("id");
-                    buildJSONObject.put("id",songmid);
-                    int interval = jsonObject.getInteger("duration");
-                    buildJSONObject.put("duration",interval);
-                    JSONObject privilege = new JSONObject();
-                    int fee = jsonObject.getInteger("fee");
+        String cookie = NETEASE_COOKIE;
+        Integer failCount = 0;
+        while (failCount < 2) {
+            try {
+                if(failCount.equals(1)){
+                    cookie = "";
+                }
+//                HttpClient httpClient = HttpClients.custom()
+//                        .setDefaultRequestConfig(RequestConfig.custom()
+//                                .setCookieSpec(CookieSpecs.STANDARD).build())
+//                        .build();
+//                Unirest.setHttpClient(httpClient);
+                response = Unirest.post(url.toString()).queryString("keywords",music.getName()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize()).queryString("cookie",cookie)
+                        .asString();
+                JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
+                if (responseJsonObject.getInteger("code") == 200) {
+                    JSONArray data = responseJsonObject.getJSONObject("result").getJSONArray("songs");
+                    int size = data.size();
+                    JSONArray buildJSONArray = new JSONArray();
+                    for(int i = 0; i < size; i++){
+                        JSONObject jsonObject = data.getJSONObject(i);
+                        JSONObject buildJSONObject = new JSONObject();
+                        JSONObject albumObject = jsonObject.getJSONObject("album");
+                        JSONArray singerArray = jsonObject.getJSONArray("artists");
+                        int singerSize = singerArray.size();
+                        String singerNames = "";
+                        for(int j = 0; j < singerSize; j++){
+                            singerNames += singerArray.getJSONObject(j).getString("name")+",";
+                        }
+                        if(singerNames.endsWith(",")){
+                            singerNames = singerNames.substring(0,singerNames.length()-1);
+                        }
+                        buildJSONObject.put("picture_url","");
+                        buildJSONObject.put("artist",singerNames);
+                        String songname = jsonObject.getString("name");
+                        buildJSONObject.put("name",songname);
+                        String songmid = jsonObject.getString("id");
+                        buildJSONObject.put("id",songmid);
+                        int interval = jsonObject.getInteger("duration");
+                        buildJSONObject.put("duration",interval);
+                        JSONObject privilege = new JSONObject();
+                        int fee = jsonObject.getInteger("fee");
 //                    if(fee == 0){
 //                        privilege.put("st",0);
 //                        privilege.put("fl",0);
@@ -1588,28 +1603,33 @@ public class MusicServiceImpl implements MusicService {
                         privilege.put("st",1);
                         privilege.put("fl",1);
 //                    }
-                    buildJSONObject.put("privilege",privilege);
+                        buildJSONObject.put("privilege",privilege);
 
-                    JSONObject album = new JSONObject();
-                    album.put("picture_url","");
-                    String albumid = albumObject.getString("id");
-                    String albumname = jsonObject.getString("name");
-                    album.put("id",albumid);
-                    album.put("name",albumname);
-                    buildJSONObject.put("album",album);
-                    buildJSONArray.add(buildJSONObject);
+                        JSONObject album = new JSONObject();
+                        album.put("picture_url","");
+                        String albumid = albumObject.getString("id");
+                        String albumname = jsonObject.getString("name");
+                        album.put("id",albumid);
+                        album.put("name",albumname);
+                        buildJSONObject.put("album",album);
+                        buildJSONArray.add(buildJSONObject);
+                    }
+                    Integer count = responseJsonObject.getJSONObject("result").getInteger("songCount");
+                    List list = JSONObject.parseObject(JSONObject.toJSONString(buildJSONArray), List.class);
+                    hulkPage.setData(list);
+                    hulkPage.setTotalSize(count);
+                    return hulkPage;
+                } else {
+                    log.info("音乐搜索接口异常, 请检查音乐服务");
+                    failCount++;
+//                return null;
                 }
-                Integer count = responseJsonObject.getJSONObject("result").getInteger("songCount");
-                List list = JSONObject.parseObject(JSONObject.toJSONString(buildJSONArray), List.class);
-                hulkPage.setData(list);
-                hulkPage.setTotalSize(count);
-            } else {
-                log.info("音乐搜索接口异常, 请检查音乐服务");
-                return null;
+            } catch (Exception e) {
+                log.error("音乐搜索接口异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+                failCount++;
             }
-        } catch (Exception e) {
-            log.error("音乐搜索接口异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
         }
+
         return hulkPage;
     }
 
@@ -1664,14 +1684,10 @@ public class MusicServiceImpl implements MusicService {
         return hulkPage;
     }
     private String[] searchWYGD(String id) {
-        StringBuilder url = new StringBuilder()
-                .append(jusicProperties.getMusicServeDomain())
-                .append("/playlist/detail?id=")
-                .append(id);
         HttpResponse<String> response = null;
         ArrayList<String> ids = new ArrayList();
         try {
-            response = Unirest.get(url.toString())
+            response = Unirest.post(jusicProperties.getMusicServeDomain() + "/playlist/detail").queryString("id",id).queryString("cookie",NETEASE_COOKIE)
                     .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {
@@ -1709,7 +1725,7 @@ public class MusicServiceImpl implements MusicService {
                 .append("/search");
         HttpResponse<String> response = null;
         try {
-            response = Unirest.post(url.toString()).queryString("type",1000).queryString("keywords",songList.getName()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize())
+            response = Unirest.post(url.toString()).queryString("type",1000).queryString("keywords",songList.getName()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize()).queryString("cookie",NETEASE_COOKIE)
                     .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {
@@ -1748,13 +1764,15 @@ public class MusicServiceImpl implements MusicService {
     private HulkPage searchWYGDAll(HulkPage hulkPage) {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomain())
-                .append("/top/playlist?order=hot")
-                .append("&offset=").append((hulkPage.getPageIndex()-1)*hulkPage.getPageSize())
-                .append("&limit=").append(hulkPage.getPageSize());
+                .append("/top/playlist");
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
+            response = Unirest.post(url.toString()).queryString("order","hot").queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize()).queryString("cookie",NETEASE_COOKIE)
                     .asString();
+
+//            response = Unirest.get(url.toString())
+//                    .asString();
+
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {
                 JSONArray data = responseJsonObject.getJSONArray("playlists");
@@ -1792,12 +1810,15 @@ public class MusicServiceImpl implements MusicService {
     private HulkPage searchWYGDByUid(SongList songList,HulkPage hulkPage) {
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomain())
-                .append("/user/playlist?uid=")
-                .append(songList.getName());
+                .append("/user/playlist");
+//                .append(songList.getName());
         HttpResponse<String> response = null;
         try {
-            response = Unirest.get(url.toString())
+            response = Unirest.post(url.toString()).queryString("uid",songList.getName()).queryString("cookie",NETEASE_COOKIE)
                     .asString();
+
+//            response = Unirest.get(url.toString())
+//                    .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {
                 JSONArray data = responseJsonObject.getJSONArray("playlist");
@@ -2119,7 +2140,7 @@ public class MusicServiceImpl implements MusicService {
                 .append("/search");
         HttpResponse<String> response = null;
         try {
-            response = Unirest.post(url.toString()).queryString("type",1002).queryString("keywords",musicUser.getNickname()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize())
+            response = Unirest.post(url.toString()).queryString("type",1002).queryString("keywords",musicUser.getNickname()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize()).queryString("cookie",NETEASE_COOKIE)
                     .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {

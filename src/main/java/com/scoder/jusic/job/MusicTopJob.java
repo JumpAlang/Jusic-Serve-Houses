@@ -7,10 +7,10 @@ package com.scoder.jusic.job;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.util.FileOperater;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -108,11 +108,10 @@ public class MusicTopJob {
 
         StringBuilder url = new StringBuilder()
                 .append(jusicProperties.getMusicServeDomain())
-                .append("/playlist/detail?id=")
-                .append(jusicProperties.getWyTopUrl());
+                .append("/playlist/detail");
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.get(url.toString())
+                response = Unirest.post(url.toString()).queryString("id",jusicProperties.getWyTopUrl())
                         .asString();
                 JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
                 if (responseJsonObject.getInteger("code") != 200) {

@@ -1,12 +1,12 @@
 package com.scoder.jusic.service.imp;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
 import com.scoder.jusic.service.ChatService;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

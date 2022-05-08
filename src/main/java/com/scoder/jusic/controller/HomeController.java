@@ -1,9 +1,6 @@
 package com.scoder.jusic.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.configuration.JusicProperties;
@@ -13,6 +10,9 @@ import com.scoder.jusic.model.Token;
 import com.scoder.jusic.util.IPUtils;
 import com.scoder.jusic.util.StringUtils;
 import com.scoder.jusic.util.UUIDUtils;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -26,7 +26,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -232,9 +235,12 @@ public class HomeController {
         Map<String,Object> map = new LinkedHashMap<>();
         map.put("path","pages/player/player?houseId="+housePrimitive.getId()+"&housePwd="+housePrimitive.getPassword());
         map.put("width",280);
-        HttpResponse<InputStream> response = null;
+//        HttpResponse<InputStream> response = null;
+        HttpResponse<byte[]> response = null;
         try {
-            response = Unirest.post("https://api.weixin.qq.com/wxa/getwxacode?access_token="+token).body(JSONObject.toJSONString(map)).asBinary();
+//            response = Unirest.post("https://api.weixin.qq.com/wxa/getwxacode?access_token="+token).body(JSONObject.toJSONString(map)).asBinary();
+            response = Unirest.post("https://api.weixin.qq.com/wxa/getwxacode?access_token="+token).body(JSONObject.toJSONString(map)).asBytes();
+
         } catch (UnirestException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -267,6 +273,10 @@ public class HomeController {
 
     public static String inputStreamToBase64(InputStream inputStream) throws IOException {
         return Base64.getEncoder().encodeToString(inputStreamToBytes(inputStream));
+    }
+
+    public static String inputStreamToBase64(byte[] bytes) throws IOException {
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
     /**

@@ -53,10 +53,15 @@
             <version>1.2.31</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.mashape.unirest/unirest-java -->
+<!--        <dependency>-->
+<!--            <groupId>com.mashape.unirest</groupId>-->
+<!--            <artifactId>unirest-java</artifactId>-->
+<!--            <version>1.4.9</version>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>com.mashape.unirest</groupId>
+            <groupId>com.konghq</groupId>
             <artifactId>unirest-java</artifactId>
-            <version>1.4.9</version>
+            <version>3.13.8</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
