@@ -12,7 +12,7 @@ services:
     volumes:
       - D:\docker\redis\data:/data  #redis数据挂载到本地
   service_jusicMusicApi:
-    image: jumpalang/jusic_music_api:1.5
+    image: jumpalang/jusic_music_api:1.7
     environment:
       - QQ=1040927107 #qq号
     container_name: jusicMusicApi
