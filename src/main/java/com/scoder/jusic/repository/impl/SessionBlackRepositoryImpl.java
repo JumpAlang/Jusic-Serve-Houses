@@ -52,14 +52,20 @@ public class SessionBlackRepositoryImpl implements SessionBlackRepository {
 
     @Override
     public Long removeSession(String sessionId,String houseId) {
-        User user = (User) redisTemplate.opsForHash()
-                .get(redisKeys.getSessionBlackHash()+houseId, sessionId);
-        if(user != null){
-            redisTemplate.opsForHash()
-                    .delete(redisKeys.getSessionBlackHash()+houseId, user.getRemoteAddress());
+        if(sessionId != null || !"".equals(sessionId)){
+            String[] sessionIds = sessionId.split(",");
+            for(String session : sessionIds){
+                User user = (User) redisTemplate.opsForHash()
+                        .get(redisKeys.getSessionBlackHash()+houseId, session);
+                if(user != null){
+                    redisTemplate.opsForHash()
+                            .delete(redisKeys.getSessionBlackHash()+houseId, user.getRemoteAddress());
+                }
+                redisTemplate.opsForHash()
+                        .delete(redisKeys.getSessionBlackHash()+houseId, session);
+            }
         }
-        return redisTemplate.opsForHash()
-                .delete(redisKeys.getSessionBlackHash()+houseId, sessionId);
+        return 1l;
     }
 
     @Override

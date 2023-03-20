@@ -71,8 +71,11 @@ public class MusicServiceImpl implements MusicService {
      */
     @Override
     public Music musicSwitch(String houseId) {
-        Music result = null;
-        if (musicPickRepository.size(houseId) < 1) {
+        Music result = musicPlayingRepository.getPlaying(houseId);
+        if(configRepository.getMusicCircleModel(houseId) != null && configRepository.getMusicCircleModel(houseId) && result != null){
+                result.setIps(null);
+                musicPlayingRepository.leftPush(result,houseId);
+        }else if (musicPickRepository.size(houseId) < 1) {
 
             String defaultPlayListHouse = houseId;
             if(musicDefaultRepository.size(houseId) == 0){

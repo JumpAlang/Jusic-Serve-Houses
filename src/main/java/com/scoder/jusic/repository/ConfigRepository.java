@@ -150,6 +150,9 @@ public interface ConfigRepository {
     Boolean getGoodModel(String houseId);
     void setGoodModel(boolean goodModel,String houseId);
 
+    Boolean getMusicCircleModel(String houseId);
+    void setMusicCircleModel(boolean musicCircleModel,String houseId);
+
     Boolean getRandomModel(String houseId);
     void setRandomModel(boolean randomModel,String houseId);
 

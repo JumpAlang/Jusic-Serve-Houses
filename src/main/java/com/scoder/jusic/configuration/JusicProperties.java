@@ -139,6 +139,7 @@ public class JusicProperties {
     private Integer ipHouse = 10;
     private Boolean goodModel = true;
     private Boolean randomModel = false;
+    private Boolean musicCircleModel = false;
     private String miniId = "";
     private String miniSecrect = "";
 
@@ -221,6 +222,8 @@ public class JusicProperties {
         private String searchMusicEnable ="search_music_enable";
         private String goodModel = "good_model";
         private String randomModel = "random_model";
+        private String musicCircleModel = "music_circle_model";
+
         /**
          * 投票通过率, config 子键名
          */

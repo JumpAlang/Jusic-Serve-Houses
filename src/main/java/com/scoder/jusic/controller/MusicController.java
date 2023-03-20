@@ -403,6 +403,30 @@ public class MusicController {
         }
     }
 
+    /**
+     * 点赞模式的切换
+     * @param accessor
+     */
+    @MessageMapping("/music/musiccirclemodel/{circle}")
+    public void musicCircleModel(@DestinationVariable boolean circle,StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!roles.contains(role)) {
+            log.info("session: {} 尝试单曲循环模式, 没有权限, 已被阻止", sessionId);
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            configService.setMusicCircleModel(circle,houseId);
+            if(circle){
+                log.info("session: {} 进入单曲循环模式已成功", sessionId);
+                sessionService.send(MessageType.NOTICE, Response.success((Object) null, "进入单曲循环模式"),houseId);
+            }else{
+                log.info("session: {} 退出点赞模式已成功", sessionId);
+                sessionService.send(MessageType.NOTICE, Response.success((Object) null, "退出单曲循环模式"),houseId);
+            }
+        }
+    }
+
     @MessageMapping("/music/randommodel/{random}")
     public void randomModel(@DestinationVariable boolean random,StompHeaderAccessor accessor) {
         String sessionId = accessor.getHeader("simpSessionId").toString();
