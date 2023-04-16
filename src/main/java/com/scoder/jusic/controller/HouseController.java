@@ -240,7 +240,8 @@ public class HouseController {
             sessionService.send(oldSession, MessageType.MUSIC, Response.success(playing, "正在播放"));
             // 3. send pick list
             LinkedList<Music> pickList = musicService.getPickList(house.getId());
-            if(configService.getGoodModel(house.getId()) != null && configService.getGoodModel(house.getId())) {
+            Boolean goodModel = configService.getGoodModel(house.getId());
+            if(goodModel != null && goodModel) {
                 sessionService.send(oldSession, MessageType.PICK, Response.success(pickList, "goodlist"));
                 sessionService.send(oldSession,MessageType.GOODMODEL, Response.success("GOOD", "goodlist"));
             }else{

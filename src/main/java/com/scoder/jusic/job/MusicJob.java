@@ -83,10 +83,10 @@ public class MusicJob {
                         log.info("已关闭音乐推送开关"+house.getName());
                         musicVoteRepository.reset(house.getId());
                         log.info("已重置投票");
-                        log.info("已向所有客户端推送音乐, 音乐: {}, 时长: {}, 推送时间: {}, 链接: {}", music.getName(), music.getDuration(), pushTime, music.getUrl());
+//                        log.info("已向所有客户端推送音乐, 音乐: {}, 时长: {}, 推送时间: {}, 链接: {}", music.getName(), music.getDuration(), pushTime, music.getUrl());
                         LinkedList<Music> result = musicService.getPickList(house.getId());
                         sessionService.send(MessageType.PICK, Response.success(result, "播放列表"),house.getId());
-                        log.info("已向客户端推送播放列表, 共 {} 首, 列表: {}", result.size(), result);
+//                        log.info("已向客户端推送播放列表, 共 {} 首, 列表: {}", result.size(), result);
                     }
                 }catch(Exception e){
                     try{

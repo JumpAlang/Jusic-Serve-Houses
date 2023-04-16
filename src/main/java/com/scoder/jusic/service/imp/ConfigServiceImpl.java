@@ -71,6 +71,16 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
+    public Boolean getListCircleModel(String houseId) {
+        return configRepository.getListCircleModel(houseId);
+    }
+
+    @Override
+    public void setListCircleModel(boolean listCircleModel, String houseId) {
+        configRepository.setListCircleModel(listCircleModel,houseId);
+    }
+
+    @Override
     public Boolean getRandomModel(String houseId) {
         return configRepository.getRandomModel(houseId);
     }

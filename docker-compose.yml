@@ -24,7 +24,7 @@ services:
     restart: always
   service_jusicServeHouses:
     container_name: jusicServeHouses
-    image: jumpalang/jusic_serve_houses:2.6
+    image: jumpalang/jusic_serve_houses:2.9
     environment:
       - MusicApi=http://jusicMusicApi  #必须与service_jusicMusicApi的container_name一致
       - APIUSER=admin  #api认证接口用户名
@@ -33,6 +33,10 @@ services:
       - MiniId=yyy
       - MiniSecrect=xx
       - RoleRootPassword=654321
+      - WyAccount=xxx@163.com
+      - WyPassword=xxxx
+      - PlaylistSize=23
+      - ForeverlistSize=66
     ports:
       - "8080:8888"
     depends_on:

@@ -3,6 +3,7 @@ package com.scoder.jusic.controller;
 import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
+import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.*;
 import com.scoder.jusic.service.ConfigService;
@@ -29,6 +30,8 @@ import java.util.List;
 @Slf4j
 public class MusicController {
 
+    @Autowired
+    private HouseContainer houseContainer;
     @Autowired
     private JusicProperties jusicProperties;
     @Autowired
@@ -59,10 +62,18 @@ public class MusicController {
         chat.setSessionId(sessionId);
         sessionService.send(MessageType.CHAT, Response.success(chat),houseId);
 
+        Long playlistSize = musicService.noDefaultPlaylistSize(houseId);
+        House matchHouse = houseContainer.get(houseId);
+        long limitPlaylistSize = matchHouse.getEnableStatus()?jusicProperties.getForeverlistSize():jusicProperties.getPlaylistSize();
+        if(playlistSize != null && playlistSize+1 >= limitPlaylistSize){
+            sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "最多能点播"+limitPlaylistSize+"首歌"),houseId);
+            return;
+        }
         if(configService.getEnableSearch(houseId) != null && !configService.getEnableSearch(houseId) && !roles.contains(sessionService.getRole(sessionId,houseId)) && sessionService.getRole(sessionId,houseId).indexOf("picker") == -1){
             sessionService.send(sessionId,MessageType.NOTICE, Response.failure((Object) null, "当前禁止点歌"),houseId);
             return;
         }
+
         Music pick;
         // 点歌结果反馈
         if("qq".equals(music.getSource())){
@@ -109,7 +120,7 @@ public class MusicController {
 //                sessionService.send(MessageType.PICK, Response.success(pickList, "点歌列表"));
 //            }
             sessionService.send(MessageType.PICK, Response.success(pickList, "点歌列表"),houseId);
-            log.info("向客户端发送点歌列表, 共 {} 首, 列表: {}", pickList.size(), pickList);
+//            log.info("向客户端发送点歌列表, 共 {} 首, 列表: {}", pickList.size(), pickList);
         }
     }
 
@@ -133,7 +144,8 @@ public class MusicController {
         }
         Music music = (Music)musics[0];
         HashSet<String> ips = music.getIps();
-        if(ips.size() == 0){
+        if(ips == null || ips.size() == 0){
+            ips = new HashSet<>();
             ips.add(ip);
             music.setGoodTime(System.currentTimeMillis());
             music.setIps(ips);
@@ -392,7 +404,7 @@ public class MusicController {
             if(good){
                 log.info("session: {} 进入点赞模式已成功", sessionId);
                 sessionService.send(MessageType.NOTICE, Response.success((Object) null, "进入点赞模式"),houseId);
-                LinkedList<Music> pickList = musicService.getPickList(houseId);
+//                LinkedList<Music> pickList = musicService.getPickList(houseId);
                 sessionService.send(MessageType.GOODMODEL, Response.success("GOOD", "goodlist"),houseId);
 
             }else{
@@ -417,12 +429,34 @@ public class MusicController {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
             configService.setMusicCircleModel(circle,houseId);
+            configService.setListCircleModel(false,houseId);
             if(circle){
                 log.info("session: {} 进入单曲循环模式已成功", sessionId);
                 sessionService.send(MessageType.NOTICE, Response.success((Object) null, "进入单曲循环模式"),houseId);
             }else{
-                log.info("session: {} 退出点赞模式已成功", sessionId);
+                log.info("session: {} 退出单曲循环模式已成功", sessionId);
                 sessionService.send(MessageType.NOTICE, Response.success((Object) null, "退出单曲循环模式"),houseId);
+            }
+        }
+    }
+
+    @MessageMapping("/music/musiclistmodel/{circle}")
+    public void musicListModel(@DestinationVariable boolean circle,StompHeaderAccessor accessor) {
+        String sessionId = accessor.getHeader("simpSessionId").toString();
+        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!roles.contains(role)) {
+            log.info("session: {} 尝试列表循环模式, 没有权限, 已被阻止", sessionId);
+            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
+        } else {
+            configService.setListCircleModel(circle,houseId);
+            configService.setMusicCircleModel(false,houseId);
+            if(circle){
+                log.info("session: {} 进入列表循环模式已成功", sessionId);
+                sessionService.send(MessageType.NOTICE, Response.success((Object) null, "进入列表循环模式"),houseId);
+            }else{
+                log.info("session: {} 退出列表循环模式已成功", sessionId);
+                sessionService.send(MessageType.NOTICE, Response.success((Object) null, "退出列表循环模式"),houseId);
             }
         }
     }

@@ -39,6 +39,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
         this.put(redisKeys.getGoodModel(),jusicProperties.getGoodModel(),houseId);
         this.put(redisKeys.getRandomModel(),jusicProperties.getRandomModel(),houseId);
         this.put(redisKeys.getMusicCircleModel(),jusicProperties.getMusicCircleModel(),houseId);
+        this.put(redisKeys.getListCircleModel(),jusicProperties.getListCircleModel(),houseId);
     }
 
     @Override
@@ -184,6 +185,16 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     @Override
     public void setMusicCircleModel(boolean musicCircleModel, String houseId) {
         this.put(redisKeys.getMusicCircleModel(),musicCircleModel,houseId);
+    }
+
+    @Override
+    public Boolean getListCircleModel(String houseId) {
+        return (Boolean) this.get(redisKeys.getListCircleModel(),houseId);
+    }
+
+    @Override
+    public void setListCircleModel(boolean listCircleModel, String houseId) {
+        this.put(redisKeys.getListCircleModel(),listCircleModel,houseId);
     }
 
     @Override

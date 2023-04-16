@@ -23,6 +23,9 @@ public interface MusicService {
      */
     Music toPick(String sessionId, Music request,String houseId, String source);
 
+    Music toPick(Music request,String houseId);
+
+
     /**
      * 切歌
      *
@@ -176,4 +179,7 @@ public interface MusicService {
     void netEaseLoginRefresh();
 
     void setNetEaseCookie(String cookie);
+
+    Long noDefaultPlaylistSize(String houseId);
+
 }

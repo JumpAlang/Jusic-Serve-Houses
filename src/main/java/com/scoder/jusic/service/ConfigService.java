@@ -28,6 +28,9 @@ public interface ConfigService {
     Boolean getMusicCircleModel(String houseId);
     void setMusicCircleModel(boolean musicCircleModel,String houseId);
 
+    Boolean getListCircleModel(String houseId);
+    void setListCircleModel(boolean listCircleModel,String houseId);
+
     Boolean getRandomModel(String houseId);
     void setRandomModel(boolean goodModel,String houseId);
 

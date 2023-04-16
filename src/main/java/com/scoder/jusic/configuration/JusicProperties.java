@@ -142,6 +142,12 @@ public class JusicProperties {
     private Boolean musicCircleModel = false;
     private String miniId = "";
     private String miniSecrect = "";
+    private String wyAccount = "";
+    private String wyPassword = "";
+    private Integer playlistSize = 3;
+    private Integer foreverlistSize = 33;
+    private Boolean listCircleModel = false;
+
 
     public static final String HOUSE_DEFAULT_ID = "DEFAULT";
     public static final String HOUSE_DEFAULT_NAME = "一起听歌吧";
@@ -223,6 +229,7 @@ public class JusicProperties {
         private String goodModel = "good_model";
         private String randomModel = "random_model";
         private String musicCircleModel = "music_circle_model";
+        private String listCircleModel = "list_circle_model";
 
         /**
          * 投票通过率, config 子键名

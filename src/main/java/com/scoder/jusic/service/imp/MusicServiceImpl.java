@@ -15,6 +15,7 @@ import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -64,6 +65,13 @@ public class MusicServiceImpl implements MusicService {
         return music;
     }
 
+    @Override
+    public Music toPick(Music music,String houseId) {
+        musicPickRepository.leftPush(music,houseId);
+        log.info("点歌成功, 音乐: {}, 已放入点歌列表", music.getName());
+        return music;
+    }
+
     /**
      * 音乐切换
      *
@@ -72,50 +80,70 @@ public class MusicServiceImpl implements MusicService {
     @Override
     public Music musicSwitch(String houseId) {
         Music result = musicPlayingRepository.getPlaying(houseId);
-        if(configRepository.getMusicCircleModel(houseId) != null && configRepository.getMusicCircleModel(houseId) && result != null){
-                result.setIps(null);
-                musicPlayingRepository.leftPush(result,houseId);
+        Boolean musicCircle = configRepository.getMusicCircleModel(houseId);
+        Boolean listCircle = configRepository.getListCircleModel(houseId);
+        if(musicCircle != null && musicCircle && result != null){
+                result.setIps(new HashSet<>());
+                result.setPickTime(System.currentTimeMillis());
+//                musicPlayingRepository.leftPush(result,houseId);
         }else if (musicPickRepository.size(houseId) < 1) {
 
-            String defaultPlayListHouse = houseId;
-            if(musicDefaultRepository.size(houseId) == 0){
-                defaultPlayListHouse = "";
-            }
-            String keyword = musicDefaultRepository.randomMember(defaultPlayListHouse);
-            log.info("选歌列表为空, 已从默认列表中随机选择一首: {}", keyword);
-            if(keyword.endsWith("___qq")){
-                result = this.getQQMusicById(keyword.substring(0,keyword.length()-5));
+            if(result != null && listCircle != null && listCircle){
+                result.setIps(new HashSet<>());
+//                result.setPickTime(System.currentTimeMillis());
+//                musicPlayingRepository.leftPush(result,houseId);
             }else{
-                result = this.getWYMusicById(keyword);
-            }
-            while(result == null || result.getUrl() == null){
-                musicDefaultRepository.remove(keyword,defaultPlayListHouse);
-                log.info("该歌曲url为空:{}", keyword);
+                String defaultPlayListHouse = houseId;
                 if(musicDefaultRepository.size(houseId) == 0){
                     defaultPlayListHouse = "";
                 }
-                keyword = musicDefaultRepository.randomMember(defaultPlayListHouse);
+                String keyword = musicDefaultRepository.randomMember(defaultPlayListHouse);
                 log.info("选歌列表为空, 已从默认列表中随机选择一首: {}", keyword);
                 if(keyword.endsWith("___qq")){
                     result = this.getQQMusicById(keyword.substring(0,keyword.length()-5));
                 }else{
                     result = this.getWYMusicById(keyword);
                 }
-            }
-            result.setPickTime(System.currentTimeMillis());
-            result.setNickName("system");
+                while(result == null || result.getUrl() == null){
+                    musicDefaultRepository.remove(keyword,defaultPlayListHouse);
+                    log.info("该歌曲url为空:{}", keyword);
+                    if(musicDefaultRepository.size(houseId) == 0){
+                        defaultPlayListHouse = "";
+                    }
+                    keyword = musicDefaultRepository.randomMember(defaultPlayListHouse);
+                    log.info("选歌列表为空, 已从默认列表中随机选择一首: {}", keyword);
+                    if(keyword.endsWith("___qq")){
+                        result = this.getQQMusicById(keyword.substring(0,keyword.length()-5));
+                    }else{
+                        result = this.getWYMusicById(keyword);
+                    }
+                }
+                result.setPickTime(System.currentTimeMillis());
+                result.setNickName("system");
 //            musicPickRepository.leftPush(result,houseId);
-            musicPlayingRepository.leftPush(result,houseId);
-        }else{
-            if(configRepository.getRandomModel(houseId) == null || !configRepository.getRandomModel(houseId)) {
-                result = musicPlayingRepository.pickToPlaying(houseId);
-            }else{
-                result = musicPlayingRepository.randomToPlaying(houseId);
+//                musicPlayingRepository.leftPush(result,houseId);
             }
-            result.setIps(null);
+
+        }else{
+            Music listFirst;
+            Boolean randomModel = configRepository.getRandomModel(houseId);
+            if(randomModel == null || !randomModel) {
+                listFirst = musicPlayingRepository.pickToPlaying(houseId);
+            }else{
+                listFirst = musicPlayingRepository.randomToPlaying(houseId);
+            }
+
+            listFirst.setIps(null);
+            if(result != null && listCircle != null && listCircle){
+//                result.setPickTime(System.currentTimeMillis());
+                result.setTopTime(null);
+                result.setIps(new HashSet<>());
+                toPick(result,houseId);
+            }
+            result = listFirst;
         }
         updateMusicUrl(result);
-        musicPlayingRepository.keepTheOne(houseId);
+//        musicPlayingRepository.keepTheOne(houseId);
 
         return result;
     }
@@ -140,10 +168,21 @@ public class MusicServiceImpl implements MusicService {
             }
             if (Objects.nonNull(musicUrl)) {
                 result.setUrl(musicUrl);
+                result.setPickTime(System.currentTimeMillis());
                 log.info("音乐链接已超时, 已更新链接");
             } else {
                 log.info("音乐链接更新失败, 接下来客户端音乐链接可能会失效, 请检查音乐服务");
             }
+        }
+    }
+
+//    @Scheduled(fixedRate = 3600000)//表示每隔1小时
+    @Scheduled(cron = "0 0 * * * ?")//每个整点
+    public void netEaseAutoLogin(){
+        if(jusicProperties.getWyAccount().indexOf("@") != -1){
+            this.netEaseLoginByEmail(jusicProperties.getWyAccount(),jusicProperties.getWyPassword(),null);
+        }else{
+            this.netEaseLoginByPhone(jusicProperties.getWyAccount(),jusicProperties.getWyPassword(),null,null);
         }
     }
 
@@ -254,6 +293,11 @@ public class MusicServiceImpl implements MusicService {
         NETEASE_COOKIE = cookie;
     }
 
+    @Override
+    public Long noDefaultPlaylistSize(String houseId) {
+        return musicPickRepository.size(houseId);
+    }
+
     /**
      * 获取点歌列表
      *
@@ -361,7 +405,7 @@ public class MusicServiceImpl implements MusicService {
                     failCount++;
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-                    log.info("获取音乐结果：{}, response: {}", jsonObject.get("message"), jsonObject);
+//                    log.info("获取音乐结果：{}, response: {}", jsonObject.get("message"), jsonObject);
                     if (jsonObject.get("code").equals(1)) {
                         music = JSONObject.parseObject(jsonObject.get("data").toString(), Music.class);
                         break;
@@ -418,7 +462,7 @@ public class MusicServiceImpl implements MusicService {
                     failCount++;
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-                    log.info("获取音乐结果：{}", jsonObject);
+//                    log.info("获取音乐结果：{}", jsonObject);
                     if (jsonObject.get("result").equals(100)) {
                         JSONObject data = jsonObject.getJSONObject("data");
                         music = new Music();
@@ -473,9 +517,9 @@ public class MusicServiceImpl implements MusicService {
 
     private String getKwXmUrlIterator(String keyword){
         String result = this.getKwXmUrl(keyword,"kuwo");
-        if(result == null || result.indexOf("http") == -1){
-            result = this.getKwXmUrl(keyword,"xiami");
-        }
+//        if(result == null || result.indexOf("http") == -1){
+//            result = this.getKwXmUrl(keyword,"xiami");
+//        }
         return result;
     }
 
@@ -487,7 +531,7 @@ public class MusicServiceImpl implements MusicService {
                 if (response.getStatus() != 200) {
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-                    log.info("获取酷狗虾米音乐结果：{}", jsonObject);
+//                    log.info("获取酷狗虾米音乐结果：{}", jsonObject);
                     if (jsonObject.getString("code").equals("20000")) {
                         String result = jsonObject.getString("data");
                         return result;
@@ -505,17 +549,22 @@ public class MusicServiceImpl implements MusicService {
         Music music = null;
 
         Integer failCount = 0;
-
+        String cookie = NETEASE_COOKIE;
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/search").queryString("limit",1).queryString("offset",0).queryString("keywords",keyword).queryString("cookie",NETEASE_COOKIE)
+                if(failCount.equals(1)){
+                    cookie = "";
+                }else{
+                    cookie = NETEASE_COOKIE;
+                }
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/search").queryString("limit",1).queryString("offset",0).queryString("keywords",keyword).queryString("cookie",cookie)
                         .asString();
 
                 if (response.getStatus() != 200) {
                     failCount++;
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-                    log.info("获取音乐结果：{}", jsonObject);
+//                    log.info("获取音乐结果：{}", jsonObject);
                     if (jsonObject.get("code").equals(200)) {
                         JSONObject result = jsonObject.getJSONObject("result");
                         if(result.getInteger("songCount") > 0){
@@ -624,7 +673,7 @@ public class MusicServiceImpl implements MusicService {
                     failCount++;
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-                    log.info("获取音乐结果：{}", jsonObject);
+//                    log.info("获取音乐结果：{}", jsonObject);
                     if (jsonObject.get("result").equals(100)) {
                         JSONObject data = jsonObject.getJSONObject("data");
                         music = new Music();
@@ -697,7 +746,7 @@ public class MusicServiceImpl implements MusicService {
                     failCount++;
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-                    log.info("获取音乐结果：{}", jsonObject);
+//                    log.info("获取音乐结果：{}", jsonObject);
                     if (jsonObject.get("result").equals(100)) {
                         JSONObject data = jsonObject.getJSONObject("data");
                         return data.getString("lyric");
@@ -850,13 +899,17 @@ public class MusicServiceImpl implements MusicService {
         Music music = null;
 
         Integer failCount = 0;
-
+        String cookie = NETEASE_COOKIE;
         while (failCount < jusicProperties.getRetryCount()) {
             try {
-
+                if(failCount.equals(1)){
+                    cookie = "";
+                }else{
+                    cookie = NETEASE_COOKIE;
+                }
 //                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/detail?ids=" + id)
 //                        .asString();
-                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/detail").queryString("ids",id).queryString("cookie",NETEASE_COOKIE)
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/detail").queryString("ids",id).queryString("cookie",cookie)
                         .asString();
                 if (response.getStatus() != 200) {
                     failCount++;
@@ -920,12 +973,17 @@ public class MusicServiceImpl implements MusicService {
         JSONArray buildJSONArray = new JSONArray();
 
         Integer failCount = 0;
-
+        String cookie = NETEASE_COOKIE;
         while (failCount < jusicProperties.getRetryCount()) {
             try {
+                if(failCount.equals(1)){
+                    cookie = "";
+                }else{
+                    cookie = NETEASE_COOKIE;
+                }
 //                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/detail?ids=" + ids)
 //                        .asString();
-                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/detail").queryString("ids",ids).queryString("cookie",NETEASE_COOKIE)
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/detail").queryString("ids",ids).queryString("cookie",cookie)
                         .asString();
                 if (response.getStatus() != 200) {
                     failCount++;
@@ -1082,14 +1140,19 @@ public class MusicServiceImpl implements MusicService {
         String result = null;
 
         Integer failCount = 0;
-
+        String cookie = NETEASE_COOKIE;
         while (failCount < jusicProperties.getRetryCount()) {
             try {
 //                String cookie= "";
 //                if(NETEASE_COOKIE != null && NETEASE_COOKIE != ""){
 //                    cookie = "&cookie="+NETEASE_COOKIE;
 //                }
-                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/url").queryString("br",128000).queryString("id",musicId).queryString("cookie",NETEASE_COOKIE)
+                if(failCount.equals(1)){
+                    cookie = "";
+                }else{
+                    cookie = NETEASE_COOKIE;
+                }
+                response = Unirest.post(jusicProperties.getMusicServeDomain() + "/song/url").queryString("br",128000).queryString("id",musicId).queryString("cookie",cookie)
                         .asString();
 //                response = Unirest.get(jusicProperties.getMusicServeDomain() + "/song/url?br=128000&id=" + musicId + cookie)
 //                        .asString();
@@ -1563,6 +1626,8 @@ public class MusicServiceImpl implements MusicService {
             try {
                 if(failCount.equals(1)){
                     cookie = "";
+                }else{
+                    cookie = NETEASE_COOKIE;
                 }
 //                HttpClient httpClient = HttpClients.custom()
 //                        .setDefaultRequestConfig(RequestConfig.custom()
@@ -1650,6 +1715,7 @@ public class MusicServiceImpl implements MusicService {
 //                .append("&cookie="+NETEASE_COOKIE);
         HttpResponse<String> response = null;
         try {
+
             response = Unirest.post(jusicProperties.getMusicServeDomain() + "/playlist/detail").queryString("id",id).queryString("cookie",NETEASE_COOKIE)
                     .asString();
 //            response = Unirest.get(url.toString())
@@ -2142,8 +2208,17 @@ public class MusicServiceImpl implements MusicService {
                 .append(jusicProperties.getMusicServeDomain())
                 .append("/search");
         HttpResponse<String> response = null;
-        try {
-            response = Unirest.post(url.toString()).queryString("type",1002).queryString("keywords",musicUser.getNickname()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize()).queryString("cookie",NETEASE_COOKIE)
+        Integer failCount = 0;
+        String cookie = NETEASE_COOKIE;
+        while (failCount < 2) {
+            try {
+                if(failCount.equals(1)){
+                    cookie = "";
+                }else{
+                    cookie = NETEASE_COOKIE;
+                }
+//
+            response = Unirest.post(url.toString()).queryString("type",1002).queryString("keywords",musicUser.getNickname()).queryString("offset",(hulkPage.getPageIndex()-1)*hulkPage.getPageSize()).queryString("limit",hulkPage.getPageSize()).queryString("cookie",cookie)
                     .asString();
             JSONObject responseJsonObject = JSONObject.parseObject(response.getBody());
             if (responseJsonObject.getInteger("code") == 200) {
@@ -2152,13 +2227,16 @@ public class MusicServiceImpl implements MusicService {
                 List list = JSONObject.parseObject(JSONObject.toJSONString(data), List.class);
                 hulkPage.setData(list);
                 hulkPage.setTotalSize(count);
+                return hulkPage;
             } else {
+                failCount++;
                 log.info("网易用户搜索接口异常, 请检查音乐服务");
-                return null;
+//                return null;
             }
         } catch (Exception e) {
+                failCount++;
             log.error("网易用户搜索接口异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
-        }
+        }}
         return hulkPage;
     }
 

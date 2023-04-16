@@ -110,6 +110,9 @@ public class HomeController {
         }else{
             House matchHouse = houseContainer.get(house.getId());
             if(matchHouse.getNeedPwd() &&  !matchHouse.getPassword().equals(house.getPassword())){// || !matchHouse.getSessionId().equals(sessionId)
+             if(jusicProperties.getSessions(house.getId()).size() == 0 && !matchHouse.getEnableStatus()) {
+                 houseContainer.destroy(house.getId());
+             }
              return Response.failure((Object) null, "请输入正确的房间密码");
             }
         }
