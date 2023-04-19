@@ -16,7 +16,7 @@ spring:
       password: ${APIPWD:1}
 
   redis:
-    host: ${RedisHost:redis}
+    host: ${RedisHost:localhost}
     port: 6379
     database: 1
     password:
@@ -43,10 +43,10 @@ spring:
             enable: true
             socketFactory:
               class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
-music-api: ${MusicApi:http://jusicMusicApi}
+music-api: ${MusicApi:http://tx.alang.run}
 jusic:
   music-expire-time: ${MusicExpireTime:1200000}
-  retry-count: ${ReTryCount:1}
+  retry-count: ${ReTryCount:2}
   vote-rate: ${VoteRate:0.3}
   default-music-file: 'classpath:music/default-list.txt'#'file:/usr/local/nginx/html/default-list.txt' # ## #
   wy-top-url: ${WyTopUrl:3778678}
