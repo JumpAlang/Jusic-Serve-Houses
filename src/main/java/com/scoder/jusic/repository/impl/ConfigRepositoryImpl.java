@@ -1,8 +1,11 @@
 package com.scoder.jusic.repository.impl;
 
+import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.configuration.JusicProperties;
+import com.scoder.jusic.model.House;
 import com.scoder.jusic.repository.ConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -21,6 +24,9 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     private JusicProperties.RedisKeys redisKeys;
     @Autowired
     private RedisTemplate redisTemplate;
+    @Autowired
+    @Lazy
+    private HouseContainer houseContainer;
 
     @Override
     public Boolean destroy(String houseId) {
@@ -71,7 +77,12 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     }
 
     public void setAdminPassword(String password, String houseId){
-        this.put(redisKeys.getRedisRoleAdmin(),password,houseId);
+        House house = houseContainer.get(houseId);
+        house.setAdminPwd(password);
+        if(house.getEnableStatus() != null && house.getEnableStatus()){
+            houseContainer.refreshHouses();
+        }
+//        this.put(redisKeys.getRedisRoleAdmin(),password,houseId);
     }
 
     public void setRootPassword(String password, String houseId){
@@ -84,7 +95,12 @@ public class ConfigRepositoryImpl implements ConfigRepository {
 
     @Override
     public void initAdminPassword(String houseId) {
-        this.setPassword(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword(),houseId);
+        House house = houseContainer.get(houseId);
+        house.setAdminPwd(jusicProperties.getRoleAdminPassword());
+        if(house.getEnableStatus() != null && house.getEnableStatus()){
+            houseContainer.refreshHouses();
+        }
+//        this.setPassword(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword(),houseId);
     }
 
     @Override
@@ -94,7 +110,9 @@ public class ConfigRepositoryImpl implements ConfigRepository {
 
     @Override
     public String getAdminPassword(String houseId) {
-        return this.getPassword(redisKeys.getRedisRoleAdmin(),houseId);
+        House house = houseContainer.get(houseId);
+        return house.getAdminPwd();
+//        return this.getPassword(redisKeys.getRedisRoleAdmin(),houseId);
     }
 
     @Override

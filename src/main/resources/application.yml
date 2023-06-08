@@ -43,7 +43,7 @@ spring:
             enable: true
             socketFactory:
               class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
-music-api: ${MusicApi:http://tx.alang.run}
+music-api: ${MusicApi:http://jusicMusicApi}
 jusic:
   music-expire-time: ${MusicExpireTime:1200000}
   retry-count: ${ReTryCount:2}

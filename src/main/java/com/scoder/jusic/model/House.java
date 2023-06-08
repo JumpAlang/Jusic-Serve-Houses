@@ -62,6 +62,8 @@ public class House implements Serializable {
 
     private Boolean forbiddenModiPwd;
 
+    private String adminPwd;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

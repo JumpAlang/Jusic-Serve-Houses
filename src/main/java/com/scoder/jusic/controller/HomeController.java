@@ -98,6 +98,7 @@ public class HomeController {
 //        house.setEnableStatus(false);
         house.setSessionId(sessionId);
         house.setRemoteAddress(ip);
+        house.setAdminPwd(jusicProperties.getRoleAdminPassword());
         houseContainer.add(house);
         return Response.success(sessionId,"创建房间成功");
     }
@@ -172,6 +173,9 @@ public class HomeController {
             }
             if(house.getEnableStatus() != null){
                 housePrimitive.setEnableStatus(house.getEnableStatus());
+            }
+            if(house.getAdminPwd() != null){
+                housePrimitive.setAdminPwd(house.getAdminPwd());
             }
             if(housePrimitive.getEnableStatus() != null && housePrimitive.getEnableStatus()){
                 houseContainer.refreshHouses();

@@ -84,6 +84,13 @@ public class StringUtils {
         boolean result=m.find();
         return result;
     }
+    public static boolean isDTMusicId(String id){
+        String regEx="^\\*[0-9]+$";
+        Pattern p= Pattern.compile(regEx);
+        Matcher m=p.matcher(id);
+        boolean result=m.find();
+        return result;
+    }
     public static boolean isUserId(String id){
         String regEx="^[0-9]+$";
         Pattern p= Pattern.compile(regEx);

@@ -89,6 +89,8 @@ public interface MusicService {
 
     Music getMGMusicById(String id);
 
+    Music getWYDTMusicById(String id);
+
     /**
      * get music url
      *

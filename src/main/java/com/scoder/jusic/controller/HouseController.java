@@ -132,6 +132,7 @@ public class HouseController {
         house.setCreateTime(System.currentTimeMillis());
         house.setSessionId(sessionId);
         house.setRemoteAddress(ip);//IPUtils.getRemoteAddress(request);
+        house.setAdminPwd(jusicProperties.getRoleAdminPassword());
         houseContainer.add(house);
         oldSession.getAttributes().put("houseId",sessionId);
         sessionService.putSession(oldSession,sessionId);
