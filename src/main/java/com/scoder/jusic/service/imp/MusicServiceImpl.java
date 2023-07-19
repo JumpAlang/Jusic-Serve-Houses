@@ -9,6 +9,7 @@ import com.scoder.jusic.model.*;
 import com.scoder.jusic.repository.*;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.util.FileOperater;
+import com.scoder.jusic.util.KWTrackUrlReq;
 import com.scoder.jusic.util.StringUtils;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
@@ -513,7 +514,7 @@ public class MusicServiceImpl implements MusicService {
     }
 
     private String getKwXmUrlIterator(String keyword){
-        String result = this.getKwXmUrl(keyword,"kuwo");
+        String result = this.getKwUrl(keyword);//this.getKwXmUrl(keyword,"kuwo");
 //        if(result == null || result.indexOf("http") == -1){
 //            result = this.getKwXmUrl(keyword,"xiami");
 //        }
@@ -538,6 +539,17 @@ public class MusicServiceImpl implements MusicService {
                 log.error("酷狗虾米音乐获取异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
             }
 
+        return null;
+    }
+
+    private String getKwUrl(String keyword) {
+        KWTrackUrlReq kwTrackUrlReq = new KWTrackUrlReq();
+        try {
+            return kwTrackUrlReq.getMusicUrlByKeyWord(keyword);
+
+        }catch (Exception e){
+            log.error("酷狗虾米音乐获取异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+        }
         return null;
     }
 
@@ -1233,18 +1245,48 @@ public class MusicServiceImpl implements MusicService {
                         .asString();
 
                 if (response.getStatus() != 200) {
+//                    QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
+//                    try{
+//                       String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
+//                       return url;
+//                    }catch (Exception e){
+//                        failCount++;
+//                    }
                     failCount++;
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(response.getBody());
 //                    log.info("获取音乐链接结果：{}", jsonObject);
                     if (jsonObject.get("result").equals(100)) {
                         result = jsonObject.getJSONObject("data").getString(musicId);
+//                        if(result == null || "".equals(result)){
+//                            QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
+//                            try{
+//                                String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
+//                                return url;
+//                            }catch (Exception e){
+//                                failCount++;
+//                            }
+//                        }
                         break;
                     }else{
+//                        QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
+//                        try{
+//                            String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
+//                            return url;
+//                        }catch (Exception e){
+//                            failCount++;
+//                        }
                         return null;
                     }
                 }
             } catch (Exception e) {
+//                QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
+//                try{
+//                    String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
+//                    return url;
+//                }catch (Exception e2){
+//                    failCount++;
+//                }
                 failCount++;
                 log.error("qq音乐链接获取异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
             }

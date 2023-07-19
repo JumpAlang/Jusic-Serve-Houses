@@ -16,15 +16,15 @@ spring:
       password: ${APIPWD:1}
 
   redis:
-    host: ${RedisHost:localhost}
+    host: ${RedisHost:redis}
     port: 6379
     database: 1
     password:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: 18759478272@139.com
-    password: xxx
+    username: xx@139.com
+    password: xxxx
     test-connection: false
     port: 465
     default-encoding: UTF-8
