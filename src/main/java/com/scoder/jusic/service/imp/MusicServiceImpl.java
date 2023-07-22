@@ -1765,7 +1765,7 @@ public class MusicServiceImpl implements MusicService {
                         JSONObject album = new JSONObject();
                         album.put("picture_url","");
                         String albumid = albumObject.getString("id");
-                        String albumname = jsonObject.getString("name");
+                        String albumname = albumObject.getString("name");
                         album.put("id",albumid);
                         album.put("name",albumname);
                         buildJSONObject.put("album",album);
