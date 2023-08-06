@@ -57,6 +57,9 @@ public class JusicInitializing implements InitializingBean {
                 while ((musicId = bufferedReader.readLine()) != null) {
                     musicList.add(musicId);
                 }
+            }
+            if(musicList == null || musicList.isEmpty()){
+                musicList = new ArrayList<>();
                 musicList.add("512359558");
                 musicList.add("316686");
                 musicList.add("25718007");

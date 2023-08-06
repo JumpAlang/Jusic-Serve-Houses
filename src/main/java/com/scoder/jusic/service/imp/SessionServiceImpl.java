@@ -63,7 +63,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public User putSession(WebSocketSession session,String houseId) {
+    public User  putSession(WebSocketSession session,String houseId) {
         jusicProperties.getSessions(houseId).put(session.getId(), session);
         User user = User.builder()
                 .sessionId(session.getId())

@@ -32,7 +32,7 @@ public class JusicWebSocketHandshakeInterceptor implements HandshakeInterceptor 
         attributes.put("remoteAddress", IPUtils.getRemoteAddress(request));
         HttpServletRequest httpRequest = ((ServletServerHttpRequest) request).getServletRequest();
         String houseId = httpRequest.getParameter("houseId");
-        if(houseId == null || houseId == ""){
+        if(houseId == null || "".equals(houseId)){
             houseId = JusicProperties.HOUSE_DEFAULT_ID;
             attributes.put("houseId",houseId);
             return true;

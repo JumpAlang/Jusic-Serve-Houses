@@ -52,7 +52,7 @@ public class MusicJob {
     private void sendIfSufficient() {
         CopyOnWriteArrayList<House> houses = houseContainer.getHouses();
         for(House house : houses){
-            if(jusicProperties.getSessions(house.getId()).size() > 0){//没人就不推送
+            if(!jusicProperties.getSessions(house.getId()).isEmpty()){//没人就不推送
 //                log.info("houseName:{},houseId:{}",house.getName(),house.getId());
                 try{
                     if (this.isPlayingNull(house.getId())) {
@@ -97,6 +97,8 @@ public class MusicJob {
                     }
                     log.error("houseName:{},houseId:{},message:[{}]",house.getName(),house.getId(),e.getMessage());
                 }
+            }else if(!JusicProperties.HOUSE_DEFAULT_ID.equals(house.getId()) && house != null && (house.getEnableStatus() == null || !house.getEnableStatus()) && (System.currentTimeMillis()-house.getCreateTime() > 60000)){
+                    houseContainer.destroy(house.getId());
             }
 //
 

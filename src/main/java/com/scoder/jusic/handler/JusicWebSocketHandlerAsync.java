@@ -79,12 +79,15 @@ public class JusicWebSocketHandlerAsync {
 //                playing = musicPlayingRepository.getPlaying(houseId);
 //            }
 //        }
-        while(playing  == null || playing.getPushTime() == null || playing.getDuration() == null || ((playing.getPushTime() + playing.getDuration()) - System.currentTimeMillis() <= 0)){
+        int failCount = 0;
+        while(failCount++ < 8 &&(playing  == null || playing.getPushTime() == null || playing.getDuration() == null || ((playing.getPushTime() + playing.getDuration()) - System.currentTimeMillis() <= 0))){
             Thread.sleep(500);
             playing = musicPlayingRepository.getPlaying(houseId);
         }
-        musicService.updateMusicUrl(playing);
-        sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
+        if(playing != null){
+            musicService.updateMusicUrl(playing);
+            sessionService.send(session, MessageType.MUSIC, Response.success(playing, "正在播放"));
+        }
         // 3. send pick list
         LinkedList<Music> pickList = musicService.getPickList(houseId);
         if(configService.getGoodModel(houseId) != null && configService.getGoodModel(houseId)) {
@@ -92,8 +95,9 @@ public class JusicWebSocketHandlerAsync {
         }else{
             sessionService.send(session, MessageType.PICK, Response.success(pickList, "播放列表"));
         }
-        log.info("发现有客户端连接, 已向该客户端: {} 发送正在播放的音乐: {}, 以及播放列表, 共 {} 首", session.getId(), playing.getName(), pickList.size());
-
+        if(playing != null && pickList != null){
+            log.info("发现有客户端连接, 已向该客户端: {} 发送正在播放的音乐: {}, 以及播放列表, 共 {} 首", session.getId(), playing.getName(), pickList.size());
+        }
     }
 
 

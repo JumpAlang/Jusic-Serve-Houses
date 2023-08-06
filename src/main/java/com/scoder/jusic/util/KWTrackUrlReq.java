@@ -302,7 +302,7 @@ public class KWTrackUrlReq {
 
     public static void main(String[] args) {
         KWTrackUrlReq kwTrackUrlReq = new KWTrackUrlReq();
-        String mid = kwTrackUrlReq.searchByKeyWord("周杰伦+晴天");
+        String mid = kwTrackUrlReq.searchByKeyWord("王力宏心中的日月");
         //new KWTrackUrlReq().getTrackUrl("228908","320k");
         System.out.println(mid);
         System.out.println(kwTrackUrlReq.getTrackUrl(mid,"320k"));

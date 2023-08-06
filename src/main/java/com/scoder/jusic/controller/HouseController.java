@@ -252,7 +252,7 @@ public class HouseController {
             }
         }
         // 4.设置当前用户角色
-        if(user.getRole() == "admin"){
+        if("admin".equals(user.getRole())){
             sessionService.send(oldSession,
                     MessageType.AUTH_ADMIN,
                     Response.success((Object) null, "欢迎主人"));

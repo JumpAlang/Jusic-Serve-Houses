@@ -8,6 +8,7 @@ package com.scoder.jusic.job;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.scoder.jusic.configuration.JusicProperties;
+import com.scoder.jusic.repository.MusicDefaultRepository;
 import com.scoder.jusic.util.FileOperater;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
@@ -27,6 +28,8 @@ public class MusicTopJob {
     private JusicProperties jusicProperties;
     @Autowired
     private  ResourceLoader resourceLoader;
+    @Autowired
+    private MusicDefaultRepository musicDefaultRepository;
 
 //    public static void main(String[] args) {
 //        getData(topUrl);
@@ -36,6 +39,8 @@ public class MusicTopJob {
     @Scheduled(cron = "0 33 0 * * ? ")//fixedRate = 10800000)//表示每隔3小时
     public void getMusicTopJob(){
         JusicProperties.setDefaultListByJob(getData());
+        musicDefaultRepository.initialize("");
+
     }
 
     public ArrayList<String> getMusicTop(){

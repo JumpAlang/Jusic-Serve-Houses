@@ -98,7 +98,15 @@ public class JusicProperties {
         }
     }
     public static List<String> getDefaultListForRepository(){
-        return defaultList;
+        if(defaultList.isEmpty()){
+            List<String> defaults = new LinkedList<>();
+            defaults.add("512359558");
+            defaults.add("316686");
+            defaults.add("25718007");
+            return  defaults;
+        }else{
+            return defaultList;
+        }
     }
     /**
      * root 密码
