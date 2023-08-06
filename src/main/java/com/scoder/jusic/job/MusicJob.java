@@ -97,7 +97,7 @@ public class MusicJob {
                     }
                     log.error("houseName:{},houseId:{},message:[{}]",house.getName(),house.getId(),e.getMessage());
                 }
-            }else if(!JusicProperties.HOUSE_DEFAULT_ID.equals(house.getId()) && house != null && (house.getEnableStatus() == null || !house.getEnableStatus()) && (System.currentTimeMillis()-house.getCreateTime() > 60000)){
+            }else if(!JusicProperties.HOUSE_DEFAULT_ID.equals(house.getId()) && house != null && (house.getEnableStatus() == null || !house.getEnableStatus()) && (System.currentTimeMillis()-house.getCreateTime() > 20000)){
                     houseContainer.destroy(house.getId());
             }
 //

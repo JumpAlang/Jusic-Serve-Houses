@@ -3,11 +3,19 @@ package com.scoder.jusic.repository.impl;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.repository.HousesRespository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -15,6 +23,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @create 2020-06-21 22:18
  */
 @Repository
+@Slf4j
 public class HousesRepositoryImpl implements HousesRespository {
 
     @Autowired
@@ -100,5 +109,30 @@ public class HousesRepositoryImpl implements HousesRespository {
             houses.add(house);
         }
         return houses;
+    }
+
+    @Override
+    public Set<String> allKeys() {
+        Set<String> keys = new HashSet();
+        RedisConnectionFactory connectionFactory = redisTemplate.getConnectionFactory();
+        RedisConnection redisConnection = connectionFactory.getConnection();
+        Cursor<byte[]> scan = redisConnection.scan(ScanOptions.scanOptions().match("*").count(33333).build());
+        while (scan.hasNext()) {
+            //找到一次就添加一次
+            keys.add(new String(scan.next()));
+        }
+        try{
+            if (scan != null) {
+                scan.close();
+            }
+        } catch (IOException e) {
+            log.error("scan遍历key关闭游标异常", e);
+        }
+        return keys;
+    }
+
+    @Override
+    public void delKey(String keyName) {
+        redisTemplate.delete(keyName);
     }
 }

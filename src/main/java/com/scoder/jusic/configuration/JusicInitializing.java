@@ -8,10 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -50,7 +47,7 @@ public class JusicInitializing implements InitializingBean {
         try{
             ArrayList<String> musicList = musicTopJob.getMusicTop();
             if(musicList == null || musicList.size() == 0){
-                InputStream inputStream = resourceLoader.getResource(jusicProperties.getDefaultMusicFile()).getInputStream();
+                InputStream inputStream = resourceLoader.getResource("file:"+System.getProperty("user.dir")+File.separator+"default.txt").getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String musicId = "";
                 // 逐行读取

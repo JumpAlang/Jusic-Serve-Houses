@@ -3,6 +3,7 @@ package com.scoder.jusic.repository;
 import com.scoder.jusic.model.House;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author JumpAlang
@@ -24,4 +25,8 @@ public interface HousesRespository {
     Long add(Object... value);
 
     List<House> get();
+
+    Set<String> allKeys();
+
+    void delKey(String keyName);
 }

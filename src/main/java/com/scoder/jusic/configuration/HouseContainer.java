@@ -7,8 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -123,18 +125,22 @@ public class HouseContainer {
     public void destroy(String id){
         try{
             this.remove(id);
-            jusicProperties.removeSessions(id);
-            sessionRepository.destroy(id);
-            configRepository.destroy(id);
-            musicPlayingRepository.destroy(id);
-            musicPickRepository.destroy(id);
-            musicVoteRepository.destroy(id);
-            musicBlackRepository.destroy(id);
-            sessionBlackRepository.destroy(id);
-            musicDefaultRepository.destroy(id);
+            this.destroyRedis(id);
         }catch(Exception e){
             log.error("houseId{},message:[{}]",id,e.getMessage());
         }
+    }
+
+    public void destroyRedis(String id){
+        jusicProperties.removeSessions(id);
+        sessionRepository.destroy(id);
+        configRepository.destroy(id);
+        musicPlayingRepository.destroy(id);
+        musicPickRepository.destroy(id);
+        musicVoteRepository.destroy(id);
+        musicBlackRepository.destroy(id);
+        sessionBlackRepository.destroy(id);
+        musicDefaultRepository.destroy(id);
     }
 
     public void destroy(){
@@ -180,7 +186,9 @@ public class HouseContainer {
         log.info("清理工作开始");
         CopyOnWriteArrayList<House> housesRedis = (CopyOnWriteArrayList<House>) housesRespository.initialize();
         musicDefaultRepository.destroy("");
+        List<String> houseIds = new ArrayList<>();
         for(House house : housesRedis){
+            houseIds.add(house.getId());
             sessionRepository.destroy(house.getId());
 //            sessionBlackRepository.destroy(house.getId());
 //            configRepository.destroy(house.getId());
@@ -188,6 +196,21 @@ public class HouseContainer {
 //            musicPickRepository.destroy(house.getId());
             musicVoteRepository.destroy(house.getId());
 //            musicBlackRepository.destroy(house.getId());
+        }
+        /**
+         * 清理不是永久房的redis key
+         */
+        Set<String> keys = housesRespository.allKeys();
+        if(!keys.isEmpty() && !houseIds.isEmpty()){
+            for(String key : keys){
+                int index;
+                if((index=key.lastIndexOf("_")) != -1 && index < key.length()-1){
+                    String houseId = key.substring(index+1);
+                    if(!houseIds.contains(houseId)){
+                        housesRespository.delKey(key);
+                    }
+                }
+            }
         }
         log.info("清理工作完成");
         return housesRedis;

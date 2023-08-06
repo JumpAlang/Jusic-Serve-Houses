@@ -38,8 +38,8 @@ public class QQTrackUrlReq {
         byte[] encodedBytes = CryptoUtil2.byte2hex(s8.getBytes(StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
         byte[] compressedBytes = CryptoUtil2.compress(encodedBytes);
         String[] urls = {
-                "http://app.kzti.top:1030/client/cgi-bin/api.fcg",
-                "http://119.91.134.171:1030/client/cgi-bin/api.fcg",
+//                "http://app.kzti.top:1030/client/cgi-bin/api.fcg",
+//                "http://119.91.134.171:1030/client/cgi-bin/api.fcg",
                 "http://106.52.68.150:1030/client/cgi-bin/api.fcg"
         };
         String url = urls[0];

@@ -18,6 +18,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -196,7 +197,7 @@ public class MusicTopJob {
         }
         if(allMusicIdsStr != ""){
             try {
-                FileOperater.writefileinfo(allMusicIdsStr, resourceLoader.getResource(jusicProperties.getDefaultMusicFile()));
+                FileOperater.writefileinfo(allMusicIdsStr, resourceLoader.getResource("file:"+System.getProperty("user.dir")+ File.separator+"default.txt"));
             } catch (IOException e) {
                 log.error("写入热门歌曲id失败，IOException:[{}]",e.getMessage());
             }
