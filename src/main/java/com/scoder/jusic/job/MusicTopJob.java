@@ -40,6 +40,7 @@ public class MusicTopJob {
     @Scheduled(cron = "0 33 0 * * ? ")//fixedRate = 10800000)//表示每隔3小时
     public void getMusicTopJob(){
         JusicProperties.setDefaultListByJob(getData());
+        musicDefaultRepository.destroy("");
         musicDefaultRepository.initialize("");
 
     }

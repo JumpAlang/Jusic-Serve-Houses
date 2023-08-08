@@ -47,9 +47,14 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
 
     @Override
     public String randomMember(String houseId) {
-        String s = (String) redisTemplate.opsForSet()
+        Object obj = redisTemplate.opsForSet()
                 .randomMember(redisKeys.getDefaultSet()+"_"+houseId);
-        return s;
+        if(obj != null){
+            return (String) obj;
+        }else{
+            return "25718007";
+        }
+
     }
 
     @Override

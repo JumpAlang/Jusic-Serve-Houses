@@ -23,8 +23,8 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: x@139.com
-    password: xxxx
+    username: xxxx@139.com
+    password: xxxxxxxxx
     test-connection: false
     port: 465
     default-encoding: UTF-8

@@ -1,5 +1,6 @@
 package com.scoder.jusic.service.imp;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
@@ -29,20 +30,20 @@ public class ChatServiceImpl implements ChatService {
 //                .append(hulkPage.getPageSize())
 //                .append("&offset=")
 //                .append(hulkPage.getPageIndex() - 1);
-                .append("https://doutu.lccyy.com/doutu")
-                .append("/items")
+                .append("https://api.doutub.com/api/bq/search")
                 .append("?keyword=")
                 .append(keyword)
                 .append("&pageSize=")
                 .append(hulkPage.getPageSize())
-                .append("&pageNum=")
+                .append("&curPage=")
                 .append(hulkPage.getPageIndex());
         HttpResponse<String> response = null;
         try {
-            response = Unirest.post(url.toString()).header("User-Agent","PostmanRuntime/7.26.8").header("Cookie","JSESSIONID=6E7B4196A0E717CC308241DC786BE027")
+            response = Unirest.get(url.toString()).header("User-Agent","PostmanRuntime/7.26.8").header("Cookie","JSESSIONID=6E7B4196A0E717CC308241DC786BE027")
                     .asString();
 
             JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+            JSONObject data = jsonObject.getJSONObject("data");
 
 //            Pattern pattern = compile("(\\d+)");
 //            Matcher matcher = pattern.matcher(jsonObject.getString("total"));
@@ -51,8 +52,13 @@ public class ChatServiceImpl implements ChatService {
 //            }
 //
 //            hulkPage.setData(jsonObject.getJSONArray("rows"));
-            hulkPage.setTotalSize(jsonObject.getInteger("totalSize"));
-            hulkPage.setData(jsonObject.getJSONArray("items"));
+            hulkPage.setTotalSize(data.getInteger("count"));
+            JSONArray jsonArray = data.getJSONArray("rows");
+            for(int i = 0; i < jsonArray.size(); i++){
+                JSONObject item = jsonArray.getJSONObject(i);
+                item.put("url",item.getString("path"));
+            }
+            hulkPage.setData(jsonArray);
         } catch (UnirestException e) {
             e.printStackTrace();
         }
@@ -60,4 +66,11 @@ public class ChatServiceImpl implements ChatService {
         return hulkPage;
     }
 
+    public static void main(String[] args) {
+        ChatServiceImpl chatService = new ChatServiceImpl();
+        HulkPage page = new HulkPage();
+        page.setCurrentPage(1);
+        page.setPageSize(20);
+        chatService.pictureSearch("高兴",page);
+    }
 }
