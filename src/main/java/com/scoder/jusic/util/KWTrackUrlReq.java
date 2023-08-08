@@ -172,7 +172,7 @@ public class KWTrackUrlReq {
     }
 
     public String searchByKeyWord(String keyWord) {
-        String url = "http://www.kuwo.cn/api/www/search/searchMusicBykeyWord?key="+keyWord+"&pn=1&rn=20&httpsStatus=1&reqId=a47f76b0-1c12-11ee-93a9-af6c69693772&plat=web_www&from=";
+        String url = "https://search.kuwo.cn/r.s?pn=0&rn=1&all="+keyWord+"&ft=music&newsearch=1&alflac=1&itemset=web_2013&client=kt&cluster=0&vermerge=1&rformat=json&encoding=utf8&show_copyright_off=1&pcmp4=1&ver=mbox&plat=pc&vipver=MUSIC_9.2.0.0_W6&devid=11404450&newver=1&issubtitle=1&pcjson=1";//"http://www.kuwo.cn/api/www/search/searchMusicBykeyWord?key="+keyWord+"&pn=1&rn=20&httpsStatus=1&reqId=a47f76b0-1c12-11ee-93a9-af6c69693772&plat=web_www&from=";
         HttpResponse resp = Unirest.get(url)
                 .header("user_agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)" +
                         " Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.50")
@@ -183,7 +183,7 @@ public class KWTrackUrlReq {
                 .header("Cross","e5191b2eb629a3da9dc6868755a3e779")
                 .header("Cookie","ga=GA1.2.1860922824.1635265329; Hm_lvt_cdb524f42f0ce19b169a8071123a4797=1663159268; gid=9ed7ed0b-8d4b-4167-8c9d-f1f2c55642f7; Hm_token=et7csP3xeQfeadZsDEazXEpEXhmjTC4k; Hm_Iuvt_cdb524f42f0ce19b169b8072123a4727=Mzfa6zAAcAfszyHFdREYF7KfBRNmAEi4")
                 .asString();
-        String mid = ReUtil.get("\"musicrid\":\"MUSIC_(.*?)\"", resp.getBody().toString(), 1);
+        String mid = ReUtil.get("\"MUSICRID\":\"MUSIC_(.*?)\"", resp.getBody().toString(), 1);
         return mid;
     }
 
@@ -293,16 +293,20 @@ public class KWTrackUrlReq {
     }
 
     public String getMusicUrlByKeyWord(String keyWord,String... quality){
+        String mid =this.searchByKeyWord(keyWord);
+        if(mid == null){
+            return null;
+        }
         if(quality == null || quality.length == 0){
-            return this.getTrackUrl(this.searchByKeyWord(keyWord),"320k");
+            return this.getTrackUrl(mid,"320k");
         }else{
-            return this.getTrackUrl(this.searchByKeyWord(keyWord),quality[0]);
+            return this.getTrackUrl(mid,quality[0]);
         }
     }
 
     public static void main(String[] args) {
         KWTrackUrlReq kwTrackUrlReq = new KWTrackUrlReq();
-        String mid = kwTrackUrlReq.searchByKeyWord("王力宏心中的日月");
+        String mid = kwTrackUrlReq.searchByKeyWord("周杰伦晴天");
         //new KWTrackUrlReq().getTrackUrl("228908","320k");
         System.out.println(mid);
         System.out.println(kwTrackUrlReq.getTrackUrl(mid,"320k"));
