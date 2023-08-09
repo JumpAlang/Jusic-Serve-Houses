@@ -105,7 +105,8 @@ public class MusicServiceImpl implements MusicService {
                 }else{
                     result = this.getWYMusicById(keyword);
                 }
-                while(result == null || result.getUrl() == null){
+                int failCount = 0;
+                while(failCount++ < 8 && result == null || "".equals(result.getUrl())){
                     musicDefaultRepository.remove(keyword,defaultPlayListHouse);
                     log.info("该歌曲url为空:{}", keyword);
                     if(musicDefaultRepository.size(houseId) == 0){
@@ -118,6 +119,9 @@ public class MusicServiceImpl implements MusicService {
                     }else{
                         result = this.getWYMusicById(keyword);
                     }
+                }
+                if(result == null || "".equals(result.getUrl())){
+                    result = this.getLZMusic(251);
                 }
                 result.setPickTime(System.currentTimeMillis());
                 result.setNickName("system");

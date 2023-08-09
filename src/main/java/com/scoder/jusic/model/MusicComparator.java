@@ -19,6 +19,12 @@ public class MusicComparator implements Comparator<Music> {
             if(o1.getGoodTime() == null && o2.getGoodTime() == null){
                 return (int)(o2.getPickTime() - o1.getPickTime());
             }
+            if(o1.getGoodTime() == null){
+                return -1;
+            }
+            if(o2.getGoodTime() == null){
+                return 1;
+            }
             return (int) (o2.getGoodTime() - o1.getGoodTime());
         }else{
             return o1.getIps().size() - o2.getIps().size();
