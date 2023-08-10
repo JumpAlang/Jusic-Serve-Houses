@@ -2,6 +2,7 @@ package com.scoder.jusic.configuration;
 
 import com.scoder.jusic.job.MusicTopJob;
 import com.scoder.jusic.model.House;
+import com.scoder.jusic.service.MusicService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class JusicInitializing implements InitializingBean {
 
     @Autowired
     private MusicTopJob musicTopJob;
+
+    @Autowired
+    private MusicService musicService;
 
 
     public JusicInitializing(JusicProperties jusicProperties, ResourceLoader resourceLoader,HouseContainer houseContainer) {
@@ -75,6 +79,7 @@ public class JusicInitializing implements InitializingBean {
         log.info("初始化工作开始");
         this.initDefaultMusicId();
         houseContainer.initialize(houses);
+        musicService.netEaseAutoLogin();
         log.info("初始化工作完成");
     }
 

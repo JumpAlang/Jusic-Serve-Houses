@@ -1,0 +1,58 @@
+spring:
+  security:
+    user:
+      name: ${APIUSER:admin}
+      password: ${APIPWD:1}
+
+  redis:
+    host: ${RedisHost:localhost}
+    port: 6379
+    database: 1
+    password:
+  # JavaMailSender 邮件发送的配置
+  mail:
+    host: smtp.139.com
+    username: xxx@139.com
+    password: xx
+    test-connection: false
+    port: 465
+    default-encoding: UTF-8
+    properties:
+      mail:
+        imap:
+          ssl:
+            socketFactory:
+              fallback: false
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: true
+            socketFactory:
+              class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
+music-api: ${MusicApi:http://localhost}
+jusic:
+  music-expire-time: ${MusicExpireTime:1200000}
+  retry-count: ${ReTryCount:2}
+  vote-rate: ${VoteRate:0.3}
+  default-music-file: 'classpath:music/default-list.txt'#'file:/usr/local/nginx/html/default-list.txt' # ## #
+  wy-top-url: ${WyTopUrl:3778678}
+  music-json: 'classpath:lizhimusic.json'#'file:/usr/local/nginx/html/lizhimusic.json'##json格式歌曲列表（for禁歌） # #
+  music-serve-domain: ${music-api}:3000 #'http://www.alang.run:8888'
+  music-serve-domain-qq: ${music-api}:3300 #'http://www.alang.run:3300'
+  music-serve-domain-mg: ${music-api}:3400 #'http://www.alang.run:3400'#
+  music-serve-domain-kw-xm: ${music-api}:8081 #'http://www.alang.run:8081'#'
+  mail-send-from: ${MailFrom:18759478272@139.com}
+  mail-send-to: ${MailTo:1040927107@qq.com}
+  serverJUrl: ${ServerJUrl:https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send}
+  ip_house: ${IpHouse:128}
+  house_size: ${HouseSize:128}
+  mini_id: ${MiniId:xxxxxxx}
+  mini_secrect: ${MiniSecrect:xxx}
+  role_root_password: ${RoleRootPassword:654321}
+  wy_account: ${WyAccount:xxx@163.com}
+  wy_password: ${WyPassword:xxx}
+  playlist_size: ${PlaylistSize:23}
+  foreverlist_size: ${$ForeverlistSize:66}

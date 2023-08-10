@@ -43,13 +43,19 @@
     </appender>
 
     <springProfile name="dev">
-        <logger name="com.scoder" level="DEBUG" />
+        <logger name="com.scoder" level="DEBUG">
+            <appender-ref ref="COMMON" />
+        </logger>
+        <logger name="org.springframework" level="DEBUG">
+            <appender-ref ref="COMMON"/>
+        </logger>
     </springProfile>
-    <springProfile name="test">
-        <logger name="com.scoder" level="DEBUG" />
+    <springProfile name="prod">
+        <logger name="com.scoder" level="ERROR">
+            <appender-ref ref="ERROR" />
+        </logger>
+        <logger name="org.springframework" level="ERROR">
+            <appender-ref ref="ERROR"/>
+        </logger>
     </springProfile>
-    <springProfile name="online">
-        <logger name="com.scoder" level="INFO" />
-    </springProfile>
-
 </configuration>
