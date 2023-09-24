@@ -134,6 +134,7 @@ public class HomeController {
             houseSimple.setCreateTime(house.getCreateTime());
             houseSimple.setNeedPwd(house.getNeedPwd());
             houseSimple.setPopulation(jusicProperties.getSessions(house.getId()).size());
+            houseSimple.setAnnounce(house.getAnnounce());
             housesSimple.add(houseSimple);
         }
         return Response.success(housesSimple, "房间列表");

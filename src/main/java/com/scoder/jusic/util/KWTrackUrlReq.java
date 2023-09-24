@@ -306,7 +306,8 @@ public class KWTrackUrlReq {
 
     public static void main(String[] args) {
         KWTrackUrlReq kwTrackUrlReq = new KWTrackUrlReq();
-        String mid = kwTrackUrlReq.searchByKeyWord("周杰伦晴天");
+//        String mid = kwTrackUrlReq.searchByKeyWord("周杰伦晴天");
+        String mid = kwTrackUrlReq.searchByKeyWord("Last Dance+伍佰 & China Blue");
         //new KWTrackUrlReq().getTrackUrl("228908","320k");
         System.out.println(mid);
         System.out.println(kwTrackUrlReq.getTrackUrl(mid,"320k"));

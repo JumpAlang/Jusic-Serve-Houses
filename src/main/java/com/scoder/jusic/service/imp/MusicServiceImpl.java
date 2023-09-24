@@ -10,6 +10,7 @@ import com.scoder.jusic.repository.*;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.util.FileOperater;
 import com.scoder.jusic.util.KWTrackUrlReq;
+import com.scoder.jusic.util.QQTrackUrlReq;
 import com.scoder.jusic.util.StringUtils;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
@@ -166,7 +167,7 @@ public class MusicServiceImpl implements MusicService {
                 musicUrl = this.getMusicUrl(result.getId());
             }
             if(musicUrl == null){
-                musicUrl = this.getKwXmUrlIterator(result.getArtist()+"+"+result.getName());
+                musicUrl = this.getKwXmUrlIterator(result.getName()+"+"+result.getArtist());
             }
             if (Objects.nonNull(musicUrl)) {
                 result.setUrl(musicUrl);
@@ -489,7 +490,7 @@ public class MusicServiceImpl implements MusicService {
                         music.setDuration(duration);
                         String url = data.getString("url");
                         if(url == null){
-                            url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
+                            url = this.getKwXmUrlIterator(music.getName()+"+"+music.getArtist());
                         }
                         music.setUrl(url);
 
@@ -710,7 +711,7 @@ public class MusicServiceImpl implements MusicService {
                         music.setArtist(singerNames);
                         String url = data.getString("128k");
                         if(url == null){
-                            url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
+                            url = this.getKwXmUrlIterator(music.getName()+"+"+music.getArtist());
                         }
                         music.setUrl(url);
 
@@ -872,7 +873,7 @@ public class MusicServiceImpl implements MusicService {
                         music.setDuration(duration);
                         String url = getQQMusicUrl(id);
                         if(url == null){
-                            url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
+                            url = this.getKwXmUrlIterator(music.getName()+"+"+music.getArtist());
                         }
                         music.setUrl(url);
                         Album album = new Album();
@@ -943,7 +944,7 @@ public class MusicServiceImpl implements MusicService {
 
                         long duration = song.getLong("dt");
                         if(url == null){
-                            url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
+                            url = this.getKwXmUrlIterator(music.getName()+"+"+music.getArtist());
                         }
                         music.setUrl(url);
                         music.setDuration(duration);
@@ -1170,7 +1171,7 @@ public class MusicServiceImpl implements MusicService {
                         music.setArtist(singerNames);
                         String url = data.getString("128k");
                         if(url == null){
-                            url = this.getKwXmUrlIterator(music.getArtist()+"+"+music.getName());
+                            url = this.getKwXmUrlIterator(music.getName()+"+"+music.getArtist());
                         }
                         music.setUrl(url);
 
@@ -1249,50 +1250,53 @@ public class MusicServiceImpl implements MusicService {
                         .asString();
 
                 if (response.getStatus() != 200) {
-//                    QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
-//                    try{
-//                       String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
-//                       return url;
-//                    }catch (Exception e){
-//                        failCount++;
-//                    }
-                    failCount++;
+                    QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
+                    try{
+                       String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
+                       return url;
+                    }catch (Exception e){
+                        failCount++;
+                        continue;
+                    }
+//                    failCount++;
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(response.getBody());
 //                    log.info("获取音乐链接结果：{}", jsonObject);
                     if (jsonObject.get("result").equals(100)) {
                         result = jsonObject.getJSONObject("data").getString(musicId);
-//                        if(result == null || "".equals(result)){
-//                            QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
-//                            try{
-//                                String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
-//                                return url;
-//                            }catch (Exception e){
-//                                failCount++;
-//                            }
-//                        }
+                        if(result == null || "".equals(result)){
+                            QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
+                            try{
+                                String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
+                                return url;
+                            }catch (Exception e){
+                                failCount++;
+                            }
+                        }
                         break;
                     }else{
-//                        QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
-//                        try{
-//                            String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
-//                            return url;
-//                        }catch (Exception e){
-//                            failCount++;
-//                        }
-                        return null;
+                        QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
+                        try{
+                            String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
+                            return url;
+                        }catch (Exception e){
+                            failCount++;
+                            continue;
+                        }
+//                        return null;
                     }
                 }
             } catch (Exception e) {
-//                QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
-//                try{
-//                    String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
-//                    return url;
-//                }catch (Exception e2){
-//                    failCount++;
-//                }
-                failCount++;
                 log.error("qq音乐链接获取异常, 请检查音乐服务; Exception: [{}]", e.getMessage());
+                QQTrackUrlReq qqTrackUrlReq = new QQTrackUrlReq();
+                try{
+                    String url = qqTrackUrlReq.getTrackUrl(musicId,"320k");
+                    return url;
+                }catch (Exception e2){
+                    failCount++;
+                    continue;
+                }
+//                failCount++;
             }
         }
 
