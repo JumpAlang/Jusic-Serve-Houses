@@ -89,7 +89,13 @@ public class MusicController {
                 pick = musicService.getMGMusic(music.getName());
             }
         }else if("lz".equals(music.getSource())){
-            pick = musicService.getLZMusic(Integer.valueOf(music.getId()));
+            if(StringUtils.isQQMusicId(music.getId())){
+                pick = musicService.getQQMusicById(music.getId());
+            }else if(StringUtils.isWYMusicId(music.getId())){
+                pick = musicService.getWYMusicById(music.getId());
+            }else{
+                pick = musicService.getLZMusic(Integer.valueOf(music.getId()));
+            }
         }else if("wydt".equals(music.getSource())){
             if(music.getId() != null){
                 pick = musicService.getWYDTMusicById(music.getId());

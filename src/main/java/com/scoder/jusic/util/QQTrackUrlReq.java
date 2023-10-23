@@ -45,15 +45,14 @@ public class QQTrackUrlReq {
         };
         String url = urls[0];
 
-        try {
             HttpResponse<byte[]> resp = Unirest.post(url).body(compressedBytes).asBytes();
             byte[] decompressed = CryptoUtil2.decompress(resp.getBody(),0,resp.getBody().length);
             String body = new String(decompressed, StandardCharsets.UTF_8);
             String trackUrl = JSONObject.parseObject(body).getString("data");
+            if(trackUrl == null || "".equals(trackUrl.trim())){
+                throw new RuntimeException(body);
+            }
             return trackUrl;
-        } catch (Exception e) {
-            return "";
-        }
     }
 
     public static void main(String[] args) throws Exception {
