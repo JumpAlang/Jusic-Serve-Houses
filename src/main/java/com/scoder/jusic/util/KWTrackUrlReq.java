@@ -168,6 +168,37 @@ public class KWTrackUrlReq {
             csrf = kwToken;
         }
         String trackUrl = ReUtil.get("url=(.*?)\r\n", resp.getBody().toString(), 1);
+        if(trackUrl.indexOf("/4141006416.mp3") != -1){
+            trackUrl = getTrackUrl2(mid,quality);
+        }
+        return trackUrl;
+    }
+
+    public String getTrackUrl2(String mid, String quality) {
+        String params = mid+"?isMv=0&format=%s&br=%s&level=";
+        switch (quality) {
+            case "128k":
+                params = String.format(params,"mp3","128kmp3");
+                break;
+            case "320k":
+                params = String.format(params,"mp3","320kmp3");
+                break;
+            case "flac":
+                params = String.format(params,"flac","2000kflac");
+                break;
+        }
+        String url = "https://bd-api.kuwo.cn/api/service/music/downloadInfo/" + params;
+        HttpResponse resp = Unirest.get(url)
+                .header("user_agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)" +
+                        " Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.50")
+                .header("channel", "qq")
+                .header("plat","ar")
+                .header("net","wifi")
+                .header("ver","3.1.2")
+                .header("uid","")
+                .header("devId","0")
+                .asString();
+        String trackUrl = ReUtil.get("\"url\":\"(.*?)\"", resp.getBody().toString(), 1);
         return trackUrl;
     }
 
@@ -307,9 +338,12 @@ public class KWTrackUrlReq {
     public static void main(String[] args) {
         KWTrackUrlReq kwTrackUrlReq = new KWTrackUrlReq();
 //        String mid = kwTrackUrlReq.searchByKeyWord("周杰伦晴天");
-        String mid = kwTrackUrlReq.searchByKeyWord("Last Dance+伍佰 & China Blue");
+//        String mid = kwTrackUrlReq.searchByKeyWord("Last Dance+伍佰 & China Blue");
+        String mid = kwTrackUrlReq.searchByKeyWord("学不会遗忘+庄东茹");
         //new KWTrackUrlReq().getTrackUrl("228908","320k");
         System.out.println(mid);
         System.out.println(kwTrackUrlReq.getTrackUrl(mid,"320k"));
+//        String url = kwTrackUrlReq.getTrackUrl2("94239","320k");
+//        System.out.println(url);
     }
 }

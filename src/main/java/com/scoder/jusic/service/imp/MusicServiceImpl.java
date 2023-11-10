@@ -1225,6 +1225,9 @@ public class MusicServiceImpl implements MusicService {
                     if (jsonObject.get("code").equals(200)) {
                         JSONObject data = jsonObject.getJSONArray("data").getJSONObject(0);
                         result = data.getString("url");
+                        if(result.indexOf("/ymusic/") != -1){
+                            result = "https://music.163.com/song/media/outer/url?id="+musicId+".mp3";
+                        }
                         return result;
                     }
                 }
