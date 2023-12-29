@@ -353,5 +353,29 @@ public class HomeController {
         }
     }
 
+    @RequestMapping("/bili/room_init/{id}")
+    @ResponseBody
+    public Response room_init(@PathVariable String id, HttpServletRequest accessor) {
+        HttpResponse<String> response = Unirest.get("https://api.live.bilibili.com/room/v1/Room/room_init?id="+id).asString();
+        JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+        return Response.success(jsonObject,"直播间初始信息");
+    }
+
+    @RequestMapping("/bili/getConf/{id}")
+    @ResponseBody
+    public Response getConf(@PathVariable String id, HttpServletRequest accessor) {
+        HttpResponse<String> response = Unirest.get("https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id="+id+"&platform=pc&player=web").asString();
+        JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+        return Response.success(jsonObject,"直播间配置信息");
+    }
+
+    @RequestMapping("/bili/getDanmuInfo/{id}")
+    @ResponseBody
+    public Response getDanmuInfo(@PathVariable String id, HttpServletRequest accessor) {
+        HttpResponse<String> response = Unirest.get("https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+id+"&type=0").asString();
+        JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+        return Response.success(jsonObject,"直播间弹幕信息");
+    }
+
 
 }

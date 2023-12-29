@@ -37,6 +37,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 //                .and().csrf().disable();;// .authenticated(); //任何请求,登录后可以访问
         http.csrf().disable().authorizeRequests().antMatchers(HttpMethod.POST,"/house/add").permitAll()
                 .antMatchers(HttpMethod.POST,"/house/enter").permitAll()
+                .antMatchers(HttpMethod.GET,"/bili/**").permitAll()
                 .antMatchers(HttpMethod.POST,"/house/get").permitAll()
                 .antMatchers(HttpMethod.POST,"/house/search").permitAll()
                 .antMatchers(HttpMethod.POST,"/house/getMiniCode").permitAll()

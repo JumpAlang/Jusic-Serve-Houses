@@ -25,7 +25,7 @@ public class ConfigController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String name = setting.getName();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
-        if (name == null || "".equals(name)) {
+        if (name == null || "".equals(name) || name.length() > 33) {
             sessionService.send(sessionId, MessageType.SETTING_NAME, Response.failure((Object) null, "昵称设置失败"),houseId);
         } else {
             log.info("设置用户名: {}", name);

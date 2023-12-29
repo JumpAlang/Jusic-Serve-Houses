@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <title>weixin</title>
+</head>
+<style>
+    body {
+        background-color: white;
+    }
+
+    h1,
+    .h1 {
+        font-size: 22px;
+        font-family: PingFang SC;
+        font-weight: 500;
+        color: #000000;
+        text-align: center;
+        margin-top: 16%;
+    }
+
+    h2,
+    .h2 {
+        font-size: 17px;
+        font-family: PingFang SC;
+        font-weight: 400;
+        color: #000000;
+        text-align: center;
+        margin-top: 1em;
+        margin-left: 24px;
+        margin-right: 24px;
+    }
+
+    #captcha-view {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    #weixin_logo {
+        margin-left: auto;
+        margin-right: auto;
+        width: 99px;
+        height: 20px;
+        background-image: url('https://gtimg.wechatpay.cn/resource/xres/img/202209/d7848659d4f4bdd60411c1ade223c4f7_297x60.png');
+        background-size: cover;
+        position: absolute;
+        top: 92%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>
+
+<body>
+    <h1>请进行微信支付安全验证</h1>
+    <h2>向转转付款<nobr>￥13.50</nobr></h2>
+    <div id="captcha-view"></div>
+    <div id="weixin_logo"></div>
+    <script src="https://t.captcha.qq.com/TCaptcha.js"></script>
+    <script type="text/javascript">
+        // 是否采用 postMessage 模式
+        const is_postmsg = "";
+
+        function displayErrmsg(errmsg) {
+            if (is_postmsg === "1") {
+                parent.postMessage(JSON.stringify({
+                    action: "send_deeplink_fail",
+                    error: {
+                        error_msg: errmsg,
+                    }
+                }), "");
+            } else {
+                alert(errmsg);
+                window.history.back();
+            }
+        }
+
+        // 验证成功回调
+        function callback(res) {
+            if (res.ret !== 0) {
+                displayErrmsg("系统繁忙，请稍后重试");
+                return;
+            }
+
+            if (!res.ticket) {
+                displayErrmsg("系统繁忙，请稍后重试");
+                return;
+            }
+
+            if (is_postmsg === "1") {
+                // 通知商户可以隐藏iframe
+                parent.postMessage(JSON.stringify({
+                    action : "hide_captcha",
+                }), "");
+            }
+
+            var xhr = new XMLHttpRequest();
+            var params = "ticket=" + res.ticket + "&randstr=" + res.randstr + "&prepayid=" + "wx05192742360236aa64c421bbb8750f0000" + "&package=" + "3121462423";
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status !== 200) {
+                        displayErrmsg("系统繁忙，请稍后重试");
+                        return;
+                    }
+
+                    var resp = JSON.parse(xhr.response);
+                    if (resp.retcode !== 1) {
+                        displayErrmsg("系统繁忙，请稍后重试");
+                        return;
+                    }
+
+                    if (is_postmsg === "1") {
+                        parent.postMessage(JSON.stringify({
+                            action : "send_deeplink",
+                            data : {
+                                deeplink : resp.deeplink
+                            }
+                        }), "");
+                    } else {
+                        top.location.href = resp.deeplink;
+                        var redirect_url = "https://m.zhuanzhuan.com/open/ZZBActivity/index.html#/pay-complete?needHideHead=3&orderId=1709893114445450668";
+                        if (redirect_url) {
+                            setTimeout(
+                                function () {
+                                    top.location.href = redirect_url;
+                                },
+                                5000
+                            );
+                        } else {
+                            setTimeout(
+                                function () {
+                                    window.history.back();
+                                },
+                                5000);
+                        }
+                    }
+                }
+            }
+            xhr.open("GET", "https://tx.alang.run/wxpay/checkcaptcha?" + params, true);
+            xhr.send();
+        }
+
+        try {
+            if(is_postmsg === "1") {
+                parent.postMessage(JSON.stringify({
+                    action : "show_captcha",
+                }), "");
+            }
+
+            // 生成一个验证码对象
+            var captcha = new TencentCaptcha(document.getElementById('captcha-view'),
+                '2093769752',
+                callback,
+                {
+                    ready: function () { },
+                    needFeedBack: false,
+                    type: "embed",
+                    enableDarkMode: "force"
+                }
+            );
+            // 显示验证码
+            captcha.show();
+        } catch (error) {
+            displayErrmsg("验证码加载失败，请稍后重试");
+        }
+    </script>
+</body>
+
+</html>
