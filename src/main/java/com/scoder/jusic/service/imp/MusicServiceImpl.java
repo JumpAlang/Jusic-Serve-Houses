@@ -8,7 +8,6 @@ import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.*;
 import com.scoder.jusic.repository.*;
 import com.scoder.jusic.service.MusicService;
-import com.scoder.jusic.util.FileOperater;
 import com.scoder.jusic.util.KWTrackUrlReq;
 import com.scoder.jusic.util.QQTrackUrlReq;
 import com.scoder.jusic.util.StringUtils;
@@ -20,7 +19,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
 
@@ -631,8 +629,8 @@ public class MusicServiceImpl implements MusicService {
         Music music = null;
         String listStr = null;
         try {
-            listStr = FileOperater.commonReadFile(resourceLoader.getResource(jusicProperties.getMusicJson()));
-        } catch (IOException e) {
+            listStr = Unirest.get(jusicProperties.getMusicJson()).asString().getBody();//FileOperater.commonReadFile(resourceLoader.getResource(jusicProperties.getMusicJson()));
+        } catch (Exception e) {
             log.error("读取文件失败，message:[{}]",e.getMessage());
         }
         if(listStr == null || "".equals(listStr)) {
@@ -2360,8 +2358,8 @@ public class MusicServiceImpl implements MusicService {
     private HulkPage searchLZ(Music music,HulkPage hulkPage) {
         String listStr = null;
         try {
-            listStr = FileOperater.commonReadFile(resourceLoader.getResource(jusicProperties.getMusicJson()));
-        } catch (IOException e) {
+            listStr = Unirest.get(jusicProperties.getMusicJson()).asString().getBody();//FileOperater.commonReadFile(resourceLoader.getResource(jusicProperties.getMusicJson()));
+        } catch (Exception e) {
             log.error("读取文件失败，message:[{}]",e.getMessage());
         }
         if(listStr == null || "".equals(listStr)) {

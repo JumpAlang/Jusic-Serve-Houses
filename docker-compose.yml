@@ -24,7 +24,7 @@ services:
     restart: always
   service_jusicServeHouses:
     container_name: jusicServeHouses
-    image: jumpalang/jusic_serve_houses:4.2
+    image: jumpalang/jusic_serve_houses:4.3
     environment:
       - MusicApi=http://jusicMusicApi  #必须与service_jusicMusicApi的container_name一致
       - APIUSER=admin  #api认证接口用户名
