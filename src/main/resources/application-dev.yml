@@ -12,8 +12,8 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: xxx@139.com
-    password: xxxyyy
+    username: ss@139.com
+    password: xx
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -32,14 +32,14 @@ spring:
             enable: true
             socketFactory:
               class: com.fintech.modules.base.util.mail.MailSSLSocketFactor
-music-api: ${MusicApi:http://82.156.0.30}
+music-api: ${MusicApi:http://tx.alang.run}
 jusic:
   music-expire-time: ${MusicExpireTime:1200000}
   retry-count: ${ReTryCount:2}
   vote-rate: ${VoteRate:0.3}
   default-music-file: 'classpath:music/default-list.txt'#'file:/usr/local/nginx/html/default-list.txt' # ## #
   wy-top-url: ${WyTopUrl:3778678}
-  music-json: 'classpath:lizhimusic.json'#'file:/usr/local/nginx/html/lizhimusic.json'##json格式歌曲列表（for禁歌） # #
+  music-json: 'https://alang-srt.oss-cn-beijing.aliyuncs.com/lizhimusic.json'#'classpath:lizhimusic.json'#'file:/usr/local/nginx/html/lizhimusic.json'##json格式歌曲列表（for禁歌） # #
   music-serve-domain: ${music-api}:3000 #'http://www.alang.run:8888'
   music-serve-domain-qq: ${music-api}:3300 #'http://www.alang.run:3300'
   music-serve-domain-mg: ${music-api}:3400 #'http://www.alang.run:3400'#
@@ -51,7 +51,7 @@ jusic:
   house_size: ${HouseSize:128}
   mini_id: ${MiniId:xxxxxxx}
   mini_secrect: ${MiniSecrect:xxx}
-  role_root_password: ${RoleRootPassword:654321}
+  role_root_password: ${RoleRootPassword:xx}
   wy_account: ${WyAccount:xxx@163.com}
   wy_password: ${WyPassword:xxx}
   playlist_size: ${PlaylistSize:23}
