@@ -147,8 +147,7 @@ public class KWTrackUrlReq {
                 params = "corp=kuwo&p2p=1&type=convert_url2&format=mp3&rid=" + mid;
                 break;
             case "320k":
-                params = String.format("user=0&android_id=0&prod=kwplayer_ar_9.3.1.3&corp=kuwo&newver=3&vipver=9.3.1.3&source=kwplayer_ar_9.3.1.3" +
-                        "_qq.apk&p2p=1&notrace=0&type=convert_url2&format=flac|mp3|aac&sig=0&rid=%s&priority=bitrate&loginUid=0&network=WIFI&loginSid=0&mode=download", mid);
+                params = String.format(" params = String.format(\"user=0&android_id=0&prod=kwplayer_ar_9.3.1.3&corp=kuwo&newver=3&vipver=9.3.1.3&source=oppo&p2p=1&notrace=0&type=convert_url2&format=flac|mp3|aac&sig=0&rid=%s&priority=bitrate&loginUid=0&network=WIFI&loginSid=0&mode=download", mid);
                 break;
             case "flac":
                 params = "corp=kuwo&p2p=1&type=convert_url2&format=flac&rid=" + mid;
@@ -168,9 +167,38 @@ public class KWTrackUrlReq {
             csrf = kwToken;
         }
         String trackUrl = ReUtil.get("url=(.*?)\r\n", resp.getBody().toString(), 1);
-        if(trackUrl.indexOf("/4141006416.mp3") != -1){
-            trackUrl = getTrackUrl2(mid,quality);
+        if(trackUrl.indexOf("/4141006416.mp3") != -1 || trackUrl.indexOf("/2272659253.mp3") != -1){
+            trackUrl = getTrackUrl3(mid,quality);
         }
+        return trackUrl;
+    }
+    public String getTrackUrl3(String mid, String quality) {
+        String params = "";
+        switch (quality) {
+            case "128k":
+                params = "128kmp3";
+                break;
+            case "320k":
+                params = "320kmp3";
+                break;
+            case "flac":
+                params = "2000kflac";
+                break;
+        }
+        String url = "https://mobi.kuwo.cn/mobi.s?f=web&source=kwplayer_ar_1.1.9_oppo_118980_320.apk&type=convert_url_with_sign&rid="+mid+"&br="+params;
+        HttpResponse resp = Unirest.get(url)
+                .header("user_agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)" +
+                        " Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.50")
+                .header("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+                .header("referer", "https://www.kuwo.cn/search/list?key=")
+                .header("csrf", csrf)
+                .asString();
+        String setCookie = resp.getCookies().toString();
+        if (setCookie != null && !"".equals(setCookie)) {
+            String kwToken = ReUtil.get("kw_token=(.*?);", setCookie, 1);
+            csrf = kwToken;
+        }
+        String trackUrl = ReUtil.get("\"url\":\"(.*?)\"", resp.getBody().toString(), 1);
         return trackUrl;
     }
 
@@ -201,6 +229,7 @@ public class KWTrackUrlReq {
         String trackUrl = ReUtil.get("\"url\":\"(.*?)\"", resp.getBody().toString(), 1);
         return trackUrl;
     }
+
 
     public String searchByKeyWord(String keyWord) {
         String url = "https://search.kuwo.cn/r.s?pn=0&rn=1&all="+keyWord+"&ft=music&newsearch=1&alflac=1&itemset=web_2013&client=kt&cluster=0&vermerge=1&rformat=json&encoding=utf8&show_copyright_off=1&pcmp4=1&ver=mbox&plat=pc&vipver=MUSIC_9.2.0.0_W6&devid=11404450&newver=1&issubtitle=1&pcjson=1";//"http://www.kuwo.cn/api/www/search/searchMusicBykeyWord?key="+keyWord+"&pn=1&rn=20&httpsStatus=1&reqId=a47f76b0-1c12-11ee-93a9-af6c69693772&plat=web_www&from=";
@@ -338,8 +367,8 @@ public class KWTrackUrlReq {
     public static void main(String[] args) {
         KWTrackUrlReq kwTrackUrlReq = new KWTrackUrlReq();
 //        String mid = kwTrackUrlReq.searchByKeyWord("周杰伦晴天");
-        String mid = kwTrackUrlReq.searchByKeyWord("泪桥+伍佰 & China Blue");
-//        String mid = kwTrackUrlReq.searchByKeyWord("学不会遗忘+庄东茹");
+//        String mid = kwTrackUrlReq.searchByKeyWord("可爱女人+周杰伦");
+        String mid = kwTrackUrlReq.searchByKeyWord("学不会遗忘+庄东茹");
         //new KWTrackUrlReq().getTrackUrl("228908","320k");
         System.out.println(mid);
         System.out.println(kwTrackUrlReq.getTrackUrl(mid,"320k"));
