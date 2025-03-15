@@ -187,6 +187,7 @@ public interface MusicService {
     Long noDefaultPlaylistSize(String houseId);
 
    void netEaseAutoLogin();
+   void neteaseRefreshCookie();
 
 
 }

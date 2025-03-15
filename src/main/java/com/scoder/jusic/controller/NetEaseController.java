@@ -5,9 +5,12 @@ import com.scoder.jusic.service.MusicService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.Map;
 
 /**
  * @author JumpAlang
@@ -45,6 +48,13 @@ public class NetEaseController {
     @ResponseBody
     public Response setCookie(String cookie) {
         musicService.setNetEaseCookie(cookie);
+        return Response.success();
+    }
+
+    @RequestMapping("/netease/setCookiePost")
+    @ResponseBody
+    public Response setCookiePost(@RequestBody Map<String,Object> cookie) {
+        musicService.setNetEaseCookie(cookie.get("cookie").toString());
         return Response.success();
     }
 }

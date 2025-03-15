@@ -83,7 +83,8 @@ public class JusicInitializing implements InitializingBean {
         log.info("初始化工作开始");
         this.initDefaultMusicId();
         houseContainer.initialize(houses);
-        musicService.netEaseAutoLogin();
+//        musicService.netEaseAutoLogin();
+        musicService.neteaseRefreshCookie();
         log.info("初始化工作完成");
 //        configService.setQqMusicCookieToProperties();
         log.info("初始化qq cookie");

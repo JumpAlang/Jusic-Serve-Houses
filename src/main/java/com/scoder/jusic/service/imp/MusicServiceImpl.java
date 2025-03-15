@@ -10,6 +10,7 @@ import com.scoder.jusic.model.*;
 import com.scoder.jusic.repository.*;
 import com.scoder.jusic.service.MusicService;
 import com.scoder.jusic.util.KWTrackUrlReq;
+import com.scoder.jusic.util.NeteaseMusicLoginRefresher;
 import com.scoder.jusic.util.QQTrackUrlReq2;
 import com.scoder.jusic.util.StringUtils;
 import kong.unirest.HttpResponse;
@@ -55,6 +56,9 @@ public class MusicServiceImpl implements MusicService {
 
     @Autowired
     private QQTrackUrlReq2 qqTrackUrlReq2;
+
+    @Autowired
+    private RetainKeyRepository retainKeyRepository;
     /**
      * 把音乐放进点歌列表
      */
@@ -184,13 +188,26 @@ public class MusicServiceImpl implements MusicService {
     }
 
 //    @Scheduled(fixedRate = 3600000)//表示每隔1小时
-    @Scheduled(cron = "0 0 * * * ?")//每个整点
+//    @Scheduled(cron = "0 0 * * * ?")//每个整点
     public void netEaseAutoLogin(){
         if(jusicProperties.getWyAccount().indexOf("@") != -1){
             this.netEaseLoginByEmail(jusicProperties.getWyAccount(),jusicProperties.getWyPassword(),null);
         }else{
             this.netEaseLoginByPhone(jusicProperties.getWyAccount(),jusicProperties.getWyPassword(),null,null);
         }
+    }
+
+    //24小时
+    @Scheduled(fixedRate = 86400000)
+    public void neteaseRefreshCookie(){
+            RetainKey retainKey = retainKeyRepository.getRetainKey(jusicProperties.getWyAccount());
+            if(retainKey != null && !org.springframework.util.StringUtils.isEmpty(retainKey.getNeteaseCookie())){
+                String tempCookie = ReUtil.get("MUSIC_U=(.*?);", retainKey.getNeteaseCookie(), 0);
+                if(!org.springframework.util.StringUtils.isEmpty(tempCookie)){
+                    NETEASE_COOKIE = tempCookie;
+                }
+                NeteaseMusicLoginRefresher.refresh(retainKey.getNeteaseCookie());
+            }
     }
 
     @Override
@@ -263,7 +280,16 @@ public class MusicServiceImpl implements MusicService {
                     if (jsonObject.get("code").equals(200)) {
                         String cookie = jsonObject.getString("cookie");
                         if(!org.springframework.util.StringUtils.isEmpty(cookie)){
-                            NETEASE_COOKIE = ReUtil.get("MUSIC_U=(.*?);", cookie.toString(), 0);
+                            String tempCOOKIE = ReUtil.get("MUSIC_U=(.*?);", cookie.toString(), 0);
+                            if(!org.springframework.util.StringUtils.isEmpty(tempCOOKIE)){
+                                NETEASE_COOKIE = tempCOOKIE;
+                            }
+                            RetainKey retainKeyNew = new RetainKey();
+                            retainKeyNew.setIsUsed(true);
+                            retainKeyNew.setCreateTime(System.currentTimeMillis());
+                            retainKeyNew.setKey(jusicProperties.getWyAccount());
+                            retainKeyNew.setNeteaseCookie(cookie);
+                            retainKeyRepository.addRetainKey(retainKeyNew);
                         }
                         return cookie;
                     }else{
@@ -300,7 +326,16 @@ public class MusicServiceImpl implements MusicService {
 
     @Override
     public void setNetEaseCookie(String cookie) {
-        NETEASE_COOKIE = cookie;
+        String tempCookie = ReUtil.get("MUSIC_U=(.*?);", cookie, 0);
+        if(!org.springframework.util.StringUtils.isEmpty(tempCookie)){
+            NETEASE_COOKIE = tempCookie;
+        }
+        RetainKey retainKeyNew = new RetainKey();
+        retainKeyNew.setIsUsed(true);
+        retainKeyNew.setCreateTime(System.currentTimeMillis());
+        retainKeyNew.setKey(jusicProperties.getWyAccount());
+        retainKeyNew.setNeteaseCookie(cookie);
+        retainKeyRepository.addRetainKey(retainKeyNew);
     }
 
     @Override

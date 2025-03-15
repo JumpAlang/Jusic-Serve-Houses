@@ -26,6 +26,8 @@ public class RetainKey implements Serializable {
     private Long expireTime;
 
     private String houseId;
+
+    private String neteaseCookie;
     /**
      * ip 地址
      */

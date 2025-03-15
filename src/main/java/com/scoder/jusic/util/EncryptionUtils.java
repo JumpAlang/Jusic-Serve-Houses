@@ -1,124 +1,152 @@
 package com.scoder.jusic.util;
 
-/**
- * @author JumpAlang
- * @create 2023-11-12 15:17
- */
-
+import org.apache.tomcat.util.buf.HexUtils;
+import org.springframework.lang.NonNull;
+import org.springframework.util.DigestUtils;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class EncryptionUtils {
 
-    private static final String MODULUS =
-            "00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7"
-                    + "b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280"
-                    + "104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932"
-                    + "575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b"
-                    + "3ece0462db0a22b8e7";
-    private static final String PUBKEY = "010001";
-    private static final byte[] NONCE = "0CoJUm6Qyw8W8jud".getBytes();
-    private static final byte[] LINUXKEY = "rFgB&h#%2?^eDg:Q".getBytes();
-    private static final String EAPIKEY = "e82ckenh8dichen8";
+    private static final String presetKey = "0CoJUm6Qyw8W8jud";
+    private static final String pubKey = "010001";
+    private static final String modulus = "00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7";
+    private static final String iv = "0102030405060708";
+    private static final String eapiKey = "e82ckenh8dichen8";
 
-    public static String MD5(String value) throws NoSuchAlgorithmException {
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
-        byte[] digest = md5.digest(value.getBytes());
-        StringBuilder result = new StringBuilder();
-        for (byte b : digest) {
-            result.append(String.format("%02x", b));
+
+    /**
+     * 产生16位的随机字符串
+     */
+    public static String createSecretKey() {
+
+        String keys = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder key = new StringBuilder();
+        for (int i = 0; i < 16; i++) {
+            double index = Math.floor(Math.random() * keys.length());
+            key.append(keys.charAt((int) index));
         }
-        return result.toString();
-    }
-//
-//    public static String weEncrypt(String text) throws Exception {
-//        String data = text;
-//        byte[] secret = createKey(16);
-//        byte[] params = aes(aes(data.getBytes("UTF-8"), NONCE, true, true), secret, true, true);
-//        String encSecKey = rsa(secret, PUBKEY, MODULUS);
-//        return "{\"params\":\"" + new String(Base64.getEncoder().encode(params)) +
-//                "\",\"encSecKey\":\"" + encSecKey + "\"}";
-//    }
-//
-//    public static String linuxEncrypt(String text) throws Exception {
-//        byte[] data = aes(text.getBytes(), LINUXKEY, false, true);
-//        return "{\"eparams\":\"" + new String(Base64.getEncoder().encode(data)) + "\"}";
-//    }
-
-    public static String eapiEncrypt(String url, String text) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        text = String.valueOf(text);
-        String digest = MD5("nobody" + url + "use" + text + "md5forencrypt");
-        String data = url + "-36cd479b6b5-" + text + "-36cd479b6b5-" + digest;
-        return "{\"params\":\"" + aesEncrypt(data, EAPIKEY.getBytes("UTF-8")) + "\"}";
+        return key.toString();
     }
 
-    public static String aesEncrypt(String text, byte[] key) {
+    /**
+     * aes加密
+     *
+     */
+    private static String aesEncrypt(@NonNull String content, @NonNull String key, AesEncryptEnum aesEncryptEnum, String iv) {
+
+        String result = null;
         try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-            byte[] encrypted = cipher.doFinal(addPadding(text.getBytes("UTF-8")));
-            return bytesToHex(encrypted);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
-        }
+            Cipher cipher = Cipher.getInstance("AES/" + aesEncryptEnum.getType() + "/PKCS5Padding");
+            byte[] bytes;
 
-    }
-
-    public static byte[] addPadding(byte[] text) {
-        int pad = 16 - text.length % 16;
-        byte[] paddedText = Arrays.copyOf(text, text.length + pad);
-        Arrays.fill(paddedText, text.length, paddedText.length, (byte) pad);
-        return paddedText;
-    }
-
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : bytes) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) hexString.append('0');
-            hexString.append(hex);
-        }
-        return hexString.toString().toUpperCase();
-    }
-
-    private static String rsa(byte[] text, String pubkey, String modulus) {
-        StringBuilder reversedText = new StringBuilder(new String(text)).reverse();
-        long rs = modPow(Long.parseLong(hexlify(reversedText.toString()), 16),
-                Long.parseLong(pubkey, 16), Long.parseLong(modulus, 16));
-        return String.format("%256s", Long.toHexString(rs)).replace(' ', '0');
-    }
-
-    private static byte[] createKey(int size) {
-        byte[] key = new byte[size];
-        new SecureRandom().nextBytes(key);
-        return key;
-    }
-
-    private static long modPow(long base, long exponent, long modulus) {
-        long result = 1;
-        while (exponent > 0) {
-            if (exponent % 2 == 1) {
-                result = (result * base) % modulus;
+            switch (aesEncryptEnum) {
+                case CBC:
+                    cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES"),
+                            new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8)));
+                    bytes = cipher.doFinal(content.getBytes(StandardCharsets.UTF_8));
+                    result = Base64.getEncoder().encodeToString(bytes);
+                    break;
+                case ECB:
+                    cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES"));
+                    bytes = cipher.doFinal(content.getBytes(StandardCharsets.UTF_8));
+                    result = HexUtils.toHexString(bytes);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported encryption mode: " + aesEncryptEnum);
             }
-            base = (base * base) % modulus;
-            exponent /= 2;
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return result;
+
+    }
+
+    /**
+     * 长度不够前面补充0
+     */
+    private static String zFill(String str) {
+        StringBuilder strBuilder = new StringBuilder(str);
+        while (strBuilder.length() < 256) {
+            strBuilder.insert(0, "0");
+        }
+        str = strBuilder.toString();
+        return str;
+    }
+
+    /**
+     * rsa加密
+     */
+    private static String rsaEncrypt(String text) {
+
+        // 反转字符串
+        text = new StringBuffer(text).reverse().toString();
+
+        BigInteger biText = new BigInteger(strToHex(text), 16);
+        BigInteger biEx = new BigInteger(EncryptionUtils.pubKey, 16);
+        BigInteger biMod = new BigInteger(EncryptionUtils.modulus, 16);
+        BigInteger biRet = biText.modPow(biEx, biMod);
+
+        return zFill(biRet.toString(16));
+
+    }
+
+    /**
+     * 字符串转成16进制字符串
+     */
+    public static String strToHex(String s) {
+        StringBuilder str = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            int ch = s.charAt(i);
+            String s4 = Integer.toHexString(ch);
+            str.append(s4);
+        }
+        return str.toString();
+    }
+
+    /**
+     * 5 加密方法
+     */
+    public static String eapiEncrypt(String url,String content) {
+
+        String message = "nobody" + url + "use" + content + "md5forencrypt";
+        String digest = getMd5(message);
+        String data = url + "-36cd479b6b5-" + content + "-36cd479b6b5-" + digest;
+        return aesEncrypt(data, eapiKey, AesEncryptEnum.ECB, "").toUpperCase();
+    }
+
+    /**
+     * 5 加密方法
+     */
+    public static String[] weapiEncrypt(String content) {
+        String[] result = new String[2];
+        String key = createSecretKey();
+
+        String encText = aesEncrypt(aesEncrypt(content, presetKey, AesEncryptEnum.CBC, iv), key, AesEncryptEnum.CBC,
+                iv);
+        String encSecKey = rsaEncrypt(key);
+        result[0] = encText;
+        result[1] = encSecKey;
         return result;
     }
 
-    private static String hexlify(String value) {
-        StringBuilder hexString = new StringBuilder();
-        for (char c : value.toCharArray()) {
-            hexString.append(Integer.toHexString(c));
+    /**
+     * MD5加密
+     *
+     */
+    public static String getMd5(String content) {
+        String result = null;
+        try {
+            result = DigestUtils.md5DigestAsHex(content.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return hexString.toString();
+        return result;
     }
 }
