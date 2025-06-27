@@ -1,4 +1,7 @@
-[![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg) ](https://edgeone.ai/pages/new?=https%3A%2F%2Fgithub.com%2Fjumpalang%2FJusic-Serve-Houses%2Ftree%2Fjusic_serve_houses&root-directory=%2Fsrc%2Fmain%2Fresources%2Fstatic)https://github.com/JumpAlang/Jusic-Serve-Houses
+## 使用edgeOne 全球加速，一键部署
+[![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?=https%3A%2F%2Fgithub.com%2Fjumpalang%2FJusic-Serve-Houses%2Ftree%2Fjusic_serve_houses&root-directory=%2Fsrc%2Fmain%2Fresources%2Fstatic&repository-name=Jusic-Serve-Houses)
+
+
 > 热烈庆祝一起听歌吧微信小程序上架成功，搜索：***灵魂自习室***
 
 > 使用docker一键部署一起听歌吧应用，从此你也拥有了自己的点歌台，docker部署详见下方
