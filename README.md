@@ -1,5 +1,5 @@
 ## 使用edgeOne 全球加速，一键部署点击下方一键加速
-[![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?repository-url=https%3A%2F%2Fgithub.com%2FJumpAlang%2FJusic-Serve-Houses%2Ftree%2Fjusic_serve_houses%2Fsrc%2Fmain%2Fresources&root-directory=src%2Fmain%2Fresources&output-directory=.)
+[![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?repository-url=https%3A%2F%2Fgithub.com%2FJumpAlang%2FJusic-Serve-Houses%2Ftree%2Fjusic_serve_houses%2Fsrc%2Fmain%2Fresources%2Fstatic&root-directory=src%2Fmain%2Fresources&output-directory=.)
 
 
 > 热烈庆祝一起听歌吧微信小程序上架成功，搜索：***灵魂自习室***
