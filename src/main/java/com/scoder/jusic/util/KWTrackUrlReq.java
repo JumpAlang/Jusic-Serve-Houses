@@ -172,7 +172,72 @@ public class KWTrackUrlReq {
 
         return trackUrl;
     }
+    public String getTrackUrl5(String mid, String quality) {
+        String params = "";
+        switch (quality) {
+            case "128k":
+                params = "128kmp3";
+                break;
+            case "320k":
+                params = "320kmp3";
+                break;
+            case "flac":
+                params = "2000kflac";
+                break;
+        }
+        String url = "https://mobi.kuwo.cn/mobi.s?f=web&source=jiakong&type=convert_url_with_sign&rid="+mid+"&&br="+params;
+        HttpResponse resp = Unirest.get(url)
+                .header("user_agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)" +
+                        " Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.50")
+                .header("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+                .header("referer", "https://www.kuwo.cn/search/list?key=")
+                .header("csrf", csrf)
+                .header("X-Forwarded-For", "120.24.243.237")
+                .asString();
+        String setCookie = resp.getCookies().toString();
+        if (setCookie != null && !"".equals(setCookie)) {
+            String kwToken = ReUtil.get("kw_token=(.*?);", setCookie, 1);
+            csrf = kwToken;
+        }
+        String trackUrl = ReUtil.get("\"url\":\"(.*?)\"", resp.getBody().toString(), 1);
+        if(trackUrl == null || trackUrl.indexOf("/4141006416.mp3") != -1 || trackUrl.indexOf("/2272659253.mp3") != -1 || trackUrl.indexOf("/2015636967.aac") != -1){
+            trackUrl = getTrackUrl2(mid,quality);
+        }
+        return trackUrl;
+    }
     public String getTrackUrl(String mid, String quality) {
+        String params = "";
+        switch (quality) {
+            case "128k":
+                params = "128kmp3";
+                break;
+            case "320k":
+                params = "320kmp3";
+                break;
+            case "flac":
+                params = "2000kflac";
+                break;
+        }
+        String url = "https://mobi.kuwo.cn/mobi.s?f=web&user=0&source=kwplayer_ar_5.0.0.0_B_jiakong_vh.apk&type=convert_url_with_sign&rid="+mid+"&br="+params;
+        HttpResponse resp = Unirest.get(url)
+                .header("user_agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/ 537.36 (KHTML, like Gecko)" +
+                        " Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.50")
+                .header("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+                .header("referer", "https://www.kuwo.cn/search/list?key=")
+                .header("csrf", csrf)
+                .asString();
+        String setCookie = resp.getCookies().toString();
+        if (setCookie != null && !"".equals(setCookie)) {
+            String kwToken = ReUtil.get("kw_token=(.*?);", setCookie, 1);
+            csrf = kwToken;
+        }
+        String trackUrl = ReUtil.get("\"url\":\"(.*?)\"", resp.getBody().toString(), 1);
+        if(trackUrl == null || trackUrl.indexOf("/4141006416.mp3") != -1 || trackUrl.indexOf("/2272659253.mp3") != -1 || trackUrl.indexOf("/2015636967.aac") != -1){
+            trackUrl = getTrackUrl3(mid,quality);
+        }
+        return trackUrl;
+    }
+    public String getTrackUrl2(String mid, String quality) {
         String params = "";
         switch (quality) {
             case "128k":
@@ -204,8 +269,9 @@ public class KWTrackUrlReq {
         }
         return trackUrl;
     }
+    //
 
-    public String getTrackUrl2(String mid, String quality) {
+    public String getTrackUrl4(String mid, String quality) {
         String params = mid+"?isMv=0&format=%s&br=%s&level=";
         switch (quality) {
             case "128k":
@@ -369,8 +435,10 @@ public class KWTrackUrlReq {
 
     public static void main(String[] args) {
         KWTrackUrlReq kwTrackUrlReq = new KWTrackUrlReq();
+        String mid22 = kwTrackUrlReq.searchByKeyWord("佛说 何晟铭");
+        String url22 = kwTrackUrlReq.getTrackUrl(mid22,"128k");
 //        String mid = kwTrackUrlReq.searchByKeyWord("吉时行乐一条龙"+"&笑喜人集团;小喜精灵;李毅杰PISSY;邓典果DDG;JarStick");
-        String mid = kwTrackUrlReq.searchByKeyWord("若月亮没来(若是月亮还没来) 王宇宙Leto&乔浚丞");
+        String mid = kwTrackUrlReq.searchByKeyWord("若月亮没来 王宇宙Leto&乔浚丞");
         String url = kwTrackUrlReq.getTrackUrl(mid,"320k");
 
 //        String mid2 = kwTrackUrlReq.searchByKeyWord("吉时行乐一条龙"+"+笑人集团,小精灵,李毅杰PISSY,邓典果DDG,JarStick");
@@ -388,7 +456,7 @@ public class KWTrackUrlReq {
         String url3 = kwTrackUrlReq.getTrackUrl(mid3,"320k");
 
 
-        String mid4 = kwTrackUrlReq.searchByKeyWord("晴天 周杰伦");
+        String mid4 = kwTrackUrlReq.searchByKeyWord("外婆 周杰伦");
         String url4 = kwTrackUrlReq.getTrackUrl(mid4,"320k");
 
 
@@ -398,6 +466,9 @@ public class KWTrackUrlReq {
         String mid6 = kwTrackUrlReq.searchByKeyWord(
                 "别怕我伤心 七元");
         String url6 = kwTrackUrlReq.getTrackUrl(mid6,"320k");
+
+        String mid7= kwTrackUrlReq.searchByKeyWord("面会菜 林生祥");
+        String url7 = kwTrackUrlReq.getTrackUrl(mid7,"320k");
 
         System.out.println("若月亮没来(若是月亮还没来) 王宇宙Leto;乔浚丞"+":"+mid);
         System.out.println(url);
@@ -412,6 +483,9 @@ public class KWTrackUrlReq {
 
         System.out.println("别怕我伤心 七元"+":"+mid6);
         System.out.println(url6);
+
+        System.out.println("面会菜 林生祥"+":"+mid7);
+        System.out.println(url7);
         //        System.out.println(kwTrackUrlReq.getTrackUrl(mid3,"flac"));
 
 //        String url = kwTrackUrlReq.getTrackUrl2("94239","320k");

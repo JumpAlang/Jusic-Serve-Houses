@@ -372,7 +372,7 @@ public class HomeController {
     @RequestMapping("/bili/getDanmuInfo/{id}")
     @ResponseBody
     public Response getDanmuInfo(@PathVariable String id, HttpServletRequest accessor) {
-        HttpResponse<String> response = Unirest.get("https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+id+"&type=0").asString();
+        HttpResponse<String> response = Unirest.get("https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+id+"&type=0&web_location=444.8&w_rid=98797b2ff09c3c95135d89227ec4e223&wts=1752924684").asString();
         JSONObject jsonObject = JSONObject.parseObject(response.getBody());
         return Response.success(jsonObject,"直播间弹幕信息");
     }

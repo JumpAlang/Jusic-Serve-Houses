@@ -12,8 +12,8 @@ spring:
   # JavaMailSender 邮件发送的配置
   mail:
     host: smtp.139.com
-    username: xx@139.com
-    password: xx
+    username: 18759478272@139.com
+    password: 54288Wlj
     test-connection: false
     port: 465
     default-encoding: UTF-8
@@ -45,7 +45,7 @@ jusic:
   music-serve-domain-qq: ${music-api}:3300 #'http://www.alang.run:3300'
   music-serve-domain-mg: ${music-api}:3400 #'http://www.alang.run:3400'#
   music-serve-domain-kw-xm: ${music-api}:8081 #'http://www.alang.run:8081'#'
-  mail-send-from: ${MailFrom:xxx@139.com}
+  mail-send-from: ${MailFrom:18759478272@139.com}
   mail-send-to: ${MailTo:1040927107@qq.com}
   serverJUrl: ${ServerJUrl:https://sc.ftqq.com/SCU64668T909ada7955daadfb64d5e7652b93fb135dad06e659369.send}
   ip_house: ${IpHouse:128}
@@ -58,7 +58,7 @@ jusic:
   playlist_size: ${PlaylistSize:23}
   foreverlist_size: ${$ForeverlistSize:128}
   qq_uin: ${QqUin:1040927107}
-  qq_music_key: ${QqMusicKey:Q_H_L_63k3NWYfBRq1KV0rBZ4ySa7vYK6XS5803Q23v35s4abc0rela9BzP6jBXv5Fgk9hsk4FLXXXXXX} #qq音乐cookie找到qqMusicKey,需要会员
+  qq_music_key: ${QqMusicKey:Q_H_L_63k3NWYfBRq1KV0rBZ4ySa7vYK6XS5803Q23v35s4abc0rela9BzP6jBXv5Fgk9hsk4FLxxxxxx} #qq音乐cookie找到qqMusicKey,需要会员
   qq_music_guid: ${QqMusicGuid:114514}
   qq_cdn_addr: ${QqCdnAddr:http://ws.stream.qqmusic.qq.com/}
   qq_refresh_interval: ${QqRefreshInterval:86000000} #毫秒

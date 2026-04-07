@@ -17,10 +17,18 @@ import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.yaml.snakeyaml.util.UriEncoder;
 
+import javax.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,6 +67,13 @@ public class MusicServiceImpl implements MusicService {
 
     @Autowired
     private RetainKeyRepository retainKeyRepository;
+
+    private final RestTemplate restTemplate;
+
+    public MusicServiceImpl(RestTemplateBuilder restTemplateBuilder) {
+        this.restTemplate = restTemplateBuilder.build();
+    }
+
     /**
      * 把音乐放进点歌列表
      */
@@ -73,6 +88,15 @@ public class MusicServiceImpl implements MusicService {
         log.info("点歌成功, 音乐: {}, 已放入点歌列表", music.getName());
         return music;
     }
+    public Music toPickByIp(String ip, Music music,String houseId,String source) {
+        music.setSessionId(ip);
+        music.setPickTime(System.currentTimeMillis());
+        music.setSource(source);
+        music.setNickName(ip);
+        musicPickRepository.leftPush(music,houseId);
+        log.info("点歌成功, 音乐: {}, 已放入点歌列表", music.getName());
+        return music;
+    }
 
     @Override
     public Music toPick(Music music,String houseId) {
@@ -81,6 +105,42 @@ public class MusicServiceImpl implements MusicService {
         return music;
     }
 
+    public ResponseEntity<?> proxyGet(HttpServletRequest request) {
+        // 构造目标 URL
+        String targetUrl = jusicProperties.getMusicServeDomain() + request.getRequestURI().replace("/school/netease", "");
+
+        // 拼接查询参数
+        String queryString = request.getQueryString();
+        if (queryString != null) {
+            targetUrl += "?" + UriEncoder.decode(queryString);
+        }
+
+        // 构造请求头
+        HttpHeaders headers = new HttpHeaders();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            headers.set(headerName, request.getHeader(headerName));
+        }
+
+        // 创建 HttpEntity
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // 发起 GET 请求
+        ResponseEntity<String> response = restTemplate.exchange(
+                targetUrl, HttpMethod.GET, entity, String.class);
+        // 构造新的响应头，手动移除 Access-Control-Allow-Origin
+        HttpHeaders filteredHeaders = new HttpHeaders();
+        response.getHeaders().forEach((key, values) -> {
+            if (!key.equalsIgnoreCase("Access-Control-Allow-Origin")) {
+                filteredHeaders.put(key, values);
+            }
+        });
+        // 返回响应
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(filteredHeaders)
+                .body(response.getBody());
+    }
     /**
      * 音乐切换
      *

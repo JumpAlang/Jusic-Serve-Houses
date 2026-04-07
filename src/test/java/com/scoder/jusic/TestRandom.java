@@ -1,6 +1,6 @@
 package com.scoder.jusic;
 
-import com.scoder.jusic.util.RandomUtils;
+import kong.unirest.Unirest;
 
 /**
  * @author JumpAlang
@@ -8,8 +8,6 @@ import com.scoder.jusic.util.RandomUtils;
  */
 public class TestRandom {
     public static void main(String[] args) {
-        for(int i = 0; i < 10; i++){
-            System.out.println(RandomUtils.getRandNumber(10));
-        }
+        System.out.println(Unirest.get("https://alang-srt.oss-cn-beijing.aliyuncs.com/lizhimusic.json").asString().getBody());
     }
 }
