@@ -1,1 +1,216 @@
-<!DOCTYPE html><html lang=en><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=icon href=favicon.ico><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic"><link href=https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.min.css rel=stylesheet><title>一起听歌吧</title><link href=css/music.40418138.css rel=prefetch><link href=js/music.e6d7dc12.js rel=prefetch><link href=css/app.c96cdf2c.css rel=preload as=style><link href=css/chunk-vendors.1380d430.css rel=preload as=style><link href=js/app.e615c8b3.js rel=preload as=script><link href=js/chunk-vendors.7625ce53.js rel=preload as=script><link href=css/chunk-vendors.1380d430.css rel=stylesheet><link href=css/app.c96cdf2c.css rel=stylesheet></head><body><noscript><strong>We're sorry but jusic-ui doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id=app></div><script src=js/chunk-vendors.7625ce53.js></script><script src=js/app.e615c8b3.js></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#03050d">
+  <script>try{if(localStorage.getItem('JUSIC_HOME_MODE')==='galaxy')document.documentElement.classList.add('stored-galaxy-mode','home-mode-pending')}catch(_){}</script>
+  <style>html,body{background:#03050d}body.entry-pending .topbar,body.entry-pending .mobile-nav{display:none!important}body.entry-pending .app{min-height:100dvh;padding-bottom:0!important;background:#03050d!important}html.stored-galaxy-mode.home-mode-pending .simple-home-announcement,html.stored-galaxy-mode.home-mode-pending .simple-home-header{display:none!important}</style>
+  <script>
+    // Relative assets require a directory URL. Normalize /modern-ui to /modern-ui/
+    // so the same build works both at the website root and in any subdirectory.
+    (() => {
+      const path = location.pathname;
+      const lastPart = path.split('/').pop() || '';
+      if (!path.endsWith('/') && !lastPart.includes('.')) {
+        location.replace(`${path}/${location.search}${location.hash}`);
+      }
+    })();
+  </script>
+  <title>一起听歌吧</title>
+  <link rel="icon" type="image/x-icon" href="./public/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Libre+Caslon+Display&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./design-v2.css?v=room-desc-limit-6">
+</head>
+<body class="entry-pending">
+  <div class="app" id="app" data-mobile-view="player">
+    <audio id="audio-player" preload="auto" autoplay playsinline></audio>
+    <header class="topbar">
+      <button class="icon-button menu-trigger" type="button" data-panel="more" aria-label="打开全部功能"><span class="material-symbols-rounded">menu</span></button>
+      <a class="brand" href="#" aria-label="一起听歌吧首页">
+        <span class="brand-mark"><img src="./public/favicon.ico" alt="一起听歌吧图标"></span>
+        <span class="brand-name">一起听歌吧</span>
+      </a>
+      <button class="room-switcher" type="button" data-panel="rooms">
+        <i id="connection-dot"></i><span id="current-room-name">正在读取房间</span><small id="online-count">离线</small><span class="material-symbols-rounded">expand_more</span>
+      </button>
+      <div class="topbar-actions">
+        <button class="icon-button focus-mode-trigger" type="button" data-action="toggle-focus" aria-label="进入简洁模式"><span class="material-symbols-rounded">fullscreen</span></button>
+        <button class="icon-button" type="button" data-action="toggle-chat-panel" aria-label="显示或隐藏聊天"><span class="material-symbols-rounded">chat_bubble</span></button>
+        <button class="icon-button" type="button" data-panel="search" aria-label="搜索点歌"><span class="material-symbols-rounded">search</span></button>
+        <button class="text-button" type="button" data-panel="share"><span class="material-symbols-rounded">ios_share</span><span>分享</span></button>
+        <button class="avatar-button" type="button" data-panel="profile" aria-label="个人设置"><span class="material-symbols-rounded">person</span></button>
+      </div>
+    </header>
+
+    <section class="focus-player" id="focus-player" aria-label="简洁播放模式" hidden>
+      <div class="focus-aurora" aria-hidden="true"></div>
+      <header class="focus-header"><span><img src="./public/favicon.ico" alt=""> 简洁模式</span><button class="focus-exit" type="button" data-action="toggle-focus" aria-label="退出简洁模式"><span class="material-symbols-rounded">fullscreen_exit</span><span>退出简洁模式</span></button></header>
+      <div class="focus-stage">
+        <div class="focus-record-wrap"><div class="focus-record" id="focus-album-cover" role="img" aria-label="当前歌曲封面"></div></div>
+        <div class="focus-copy">
+          <div class="focus-track-meta"><span>NOW PLAYING</span><h2 id="focus-track-title">选择房间开始听歌</h2><p><span id="focus-track-artist">一起听歌吧</span><i></i><span id="focus-track-album">音乐房间</span></p></div>
+          <div class="focus-lyrics" aria-live="polite" aria-atomic="true"><p id="focus-previous-lyric"></p><p class="focus-current-lyric" id="focus-current-lyric">进入房间后自动同步歌词</p><p id="focus-next-lyric"></p></div>
+          <div class="focus-controls"><button class="focus-play" type="button" data-action="toggle-play" aria-label="播放"><span class="material-symbols-rounded">play_arrow</span></button><button class="focus-skip" type="button" data-action="skip-vote" aria-label="投票切歌"><span class="material-symbols-rounded">skip_next</span><span>切歌</span></button><button class="focus-pick" type="button" data-panel="search" aria-label="打开点歌页面"><span class="material-symbols-rounded">music_note</span><span>点歌</span></button><div class="focus-volume"><button type="button" data-action="toggle-mute" aria-label="关闭声音"><span class="material-symbols-rounded">volume_up</span></button><input id="focus-volume" type="range" min="0" max="100" value="72" aria-label="简洁模式音量"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="galaxy-home simple-home" id="galaxy-home" aria-label="发现听歌房">
+      <header class="simple-home-header">
+        <div><span>一起听歌吧</span><h1>选择一个房间</h1><p>找到喜欢的房间，和大家一起听歌。</p></div>
+        <div class="simple-home-actions">
+          <button class="simple-random-room" type="button" data-action="time-warp" aria-label="随机进入一个免密房间"><span aria-hidden="true">🎲</span>随机进入</button>
+          <button class="simple-create-room" type="button" data-panel="create-room" aria-label="创建听歌房"><span class="material-symbols-rounded">add</span>创建房间</button>
+          <div class="home-mode-switch" role="group" aria-label="首页显示模式">
+            <button class="active" type="button" data-home-mode="simple" aria-pressed="true"><span class="material-symbols-rounded">grid_view</span>简洁模式</button>
+            <button type="button" data-home-mode="galaxy" aria-pressed="false"><span class="material-symbols-rounded">public</span>星球模式</button>
+          </div>
+        </div>
+      </header>
+      <aside class="simple-home-announcement home-announcement"><span>一起听歌吧公告</span><strong>正在读取公告…</strong></aside>
+      <div class="simple-meteor-field" aria-hidden="true"><i style="--meteor-x:4%;--meteor-y:10%;--meteor-delay:-1s;--meteor-time:6.5s"></i><i style="--meteor-x:24%;--meteor-y:3%;--meteor-delay:-4.8s;--meteor-time:8s"></i><i style="--meteor-x:47%;--meteor-y:18%;--meteor-delay:-2.6s;--meteor-time:7.2s"></i><i style="--meteor-x:70%;--meteor-y:7%;--meteor-delay:-6.2s;--meteor-time:9s"></i><i style="--meteor-x:82%;--meteor-y:34%;--meteor-delay:-3.7s;--meteor-time:7.8s"></i><i style="--meteor-x:12%;--meteor-y:48%;--meteor-delay:-7.4s;--meteor-time:9.5s"></i><i style="--meteor-x:38%;--meteor-y:64%;--meteor-delay:-5.3s;--meteor-time:8.6s"></i><i style="--meteor-x:67%;--meteor-y:76%;--meteor-delay:-8.1s;--meteor-time:10s"></i></div>
+      <div class="galaxy-stars" aria-hidden="true"></div>
+      <div class="twinkle-star-field" aria-hidden="true"><i style="--star-x:4%;--star-y:8%;--star-size:2px;--star-delay:-.2s;--star-time:1.7s"></i><i style="--star-x:12%;--star-y:23%;--star-size:3px;--star-delay:-1.1s;--star-time:2.3s"></i><i style="--star-x:19%;--star-y:14%;--star-size:2px;--star-delay:-.7s;--star-time:1.4s"></i><i style="--star-x:27%;--star-y:38%;--star-size:2px;--star-delay:-1.8s;--star-time:2.6s"></i><i style="--star-x:34%;--star-y:7%;--star-size:3px;--star-delay:-.9s;--star-time:1.9s"></i><i style="--star-x:41%;--star-y:27%;--star-size:2px;--star-delay:-2.1s;--star-time:2.8s"></i><i style="--star-x:49%;--star-y:12%;--star-size:2px;--star-delay:-.4s;--star-time:1.6s"></i><i style="--star-x:56%;--star-y:42%;--star-size:3px;--star-delay:-1.4s;--star-time:2.2s"></i><i style="--star-x:63%;--star-y:18%;--star-size:2px;--star-delay:-.8s;--star-time:1.5s"></i><i style="--star-x:71%;--star-y:31%;--star-size:3px;--star-delay:-2.3s;--star-time:2.7s"></i><i style="--star-x:79%;--star-y:9%;--star-size:2px;--star-delay:-1.2s;--star-time:2s"></i><i style="--star-x:88%;--star-y:24%;--star-size:3px;--star-delay:-.5s;--star-time:1.8s"></i><i style="--star-x:95%;--star-y:44%;--star-size:2px;--star-delay:-1.7s;--star-time:2.4s"></i><i style="--star-x:8%;--star-y:57%;--star-size:3px;--star-delay:-2s;--star-time:2.5s"></i><i style="--star-x:17%;--star-y:73%;--star-size:2px;--star-delay:-.6s;--star-time:1.6s"></i><i style="--star-x:29%;--star-y:62%;--star-size:3px;--star-delay:-1.3s;--star-time:2.1s"></i><i style="--star-x:38%;--star-y:87%;--star-size:2px;--star-delay:-2.4s;--star-time:2.9s"></i><i style="--star-x:47%;--star-y:69%;--star-size:3px;--star-delay:-.3s;--star-time:1.8s"></i><i style="--star-x:58%;--star-y:81%;--star-size:2px;--star-delay:-1.5s;--star-time:2.3s"></i><i style="--star-x:68%;--star-y:58%;--star-size:3px;--star-delay:-.9s;--star-time:1.7s"></i><i style="--star-x:77%;--star-y:76%;--star-size:2px;--star-delay:-2.2s;--star-time:2.6s"></i><i style="--star-x:86%;--star-y:64%;--star-size:3px;--star-delay:-.7s;--star-time:2s"></i><i style="--star-x:93%;--star-y:84%;--star-size:2px;--star-delay:-1.6s;--star-time:2.4s"></i><i style="--star-x:53%;--star-y:94%;--star-size:3px;--star-delay:-1s;--star-time:1.9s"></i></div>
+      <div class="twinkle-star-field twinkle-star-field-extra" aria-hidden="true"><i style="--star-x:2%;--star-y:36%;--star-size:1px;--star-delay:-1.9s;--star-time:2.7s"></i><i style="--star-x:15%;--star-y:91%;--star-size:2px;--star-delay:-.4s;--star-time:2.1s"></i><i style="--star-x:23%;--star-y:51%;--star-size:1px;--star-delay:-2.5s;--star-time:3s"></i><i style="--star-x:32%;--star-y:21%;--star-size:2px;--star-delay:-1.2s;--star-time:2.4s"></i><i style="--star-x:44%;--star-y:48%;--star-size:1px;--star-delay:-.8s;--star-time:2.8s"></i><i style="--star-x:52%;--star-y:59%;--star-size:2px;--star-delay:-2.1s;--star-time:2.5s"></i><i style="--star-x:61%;--star-y:4%;--star-size:1px;--star-delay:-.3s;--star-time:2.9s"></i><i style="--star-x:73%;--star-y:48%;--star-size:2px;--star-delay:-1.6s;--star-time:2.2s"></i><i style="--star-x:81%;--star-y:93%;--star-size:1px;--star-delay:-2.4s;--star-time:3.1s"></i><i style="--star-x:90%;--star-y:53%;--star-size:2px;--star-delay:-.6s;--star-time:2.6s"></i><i style="--star-x:97%;--star-y:13%;--star-size:1px;--star-delay:-1.5s;--star-time:2.9s"></i><i style="--star-x:6%;--star-y:82%;--star-size:2px;--star-delay:-2.2s;--star-time:2.3s"></i></div>
+      <div class="galaxy-copy">
+        <span class="galaxy-kicker">FIND YOUR FREQUENCY ACROSS THE GALAXY</span>
+        <h1>穿越孤独银河，<br>找到与你同频的星球。</h1>
+        <p>每一间听歌房，都是漂浮在银河中的温暖信号。循着旋律穿过星尘，在浩瀚宇宙里遇见此刻与你同频的人。</p>
+        <div class="galaxy-actions"><button class="galaxy-primary" type="button" data-panel="rooms">探索宇宙</button><button class="galaxy-warp" type="button" data-action="time-warp" aria-label="乘坐飞船随机穿梭到免密房间"><span aria-hidden="true">🚀</span>时光穿梭</button><button class="galaxy-secondary" type="button" data-panel="create-room">创建我的星球</button></div>
+        <aside class="galaxy-announcement home-announcement" id="home-announcement"><span>一起听歌吧公告</span><strong>正在读取公告…</strong></aside>
+      </div>
+      <div class="globe-explorer">
+        <div class="globe-toolbar"><label><span class="material-symbols-rounded">search</span><input id="galaxy-room-search" placeholder="搜索房间" aria-label="搜索地球上的房间"></label><div class="globe-filters" role="group" aria-label="筛选房间"><button class="active" type="button" data-galaxy-filter="all">全部</button><button type="button" data-galaxy-filter="lively">有人</button><button type="button" data-galaxy-filter="unlocked">免密</button><button type="button" data-galaxy-filter="locked">密码房</button></div></div>
+        <div class="galaxy-system simple-room-grid" id="galaxy-system" aria-live="polite"></div>
+        <div class="globe-pagination"><button type="button" data-galaxy-page="prev" aria-label="上一页房间"><span class="material-symbols-rounded">arrow_back</span></button><span id="galaxy-page-label">第 1 / 1 页</span><button type="button" data-galaxy-page="next" aria-label="下一页房间"><span class="material-symbols-rounded">arrow_forward</span></button></div>
+        <div class="planet-legend" aria-label="太阳系八大行星" hidden><strong>八大行星</strong><span><i class="mercury-dot"></i>水星</span><span><i class="venus-dot"></i>金星</span><span><i class="earth-dot"></i>地球</span><span><i class="mars-dot"></i>火星</span><span><i class="jupiter-dot"></i>木星</span><span><i class="saturn-dot"></i>土星</span><span><i class="uranus-dot"></i>天王星</span><span><i class="neptune-dot"></i>海王星</span></div>
+      </div>
+      <div class="galaxy-hint"><span class="material-symbols-rounded">swipe</span>拖动星球穿梭到下一片房间星域</div>
+    </section>
+
+    <div class="workspace" id="room-workspace" hidden>
+      <aside class="sidebar" aria-label="主导航">
+        <nav class="primary-nav">
+          <button class="nav-item active" type="button" data-view="player"><span class="material-symbols-rounded">album</span><span>正在播放</span></button>
+          <button class="nav-item" type="button" data-panel="search"><span class="material-symbols-rounded">search</span><span>搜索点歌</span></button>
+          <button class="nav-item" type="button" data-panel="playlist"><span class="material-symbols-rounded">queue_music</span><span>平台歌单</span></button>
+          <button class="nav-item" type="button" data-panel="favorites"><span class="material-symbols-rounded">favorite</span><span>我的收藏</span></button>
+          <button class="nav-item" type="button" data-panel="history"><span class="material-symbols-rounded">history</span><span>点歌历史</span></button>
+        </nav>
+        <button class="nav-item" type="button" data-panel="rooms"><span class="material-symbols-rounded">meeting_room</span><span>发现听歌房</span></button>
+        <button class="create-room-button" type="button" data-panel="create-room"><span class="material-symbols-rounded">add</span>创建房间</button>
+        <div class="sidebar-footer">
+          <button type="button" data-panel="guide"><span class="material-symbols-rounded">person</span><span>用户控制台</span></button>
+          <button type="button" data-panel="admin"><span class="material-symbols-rounded">admin_panel_settings</span><span>房管控制台</span></button>
+          <a href="https://tx.alang.run/sponsor" target="_blank" rel="noopener"><span class="material-symbols-rounded">favorite</span><span>赞赏支持</span></a>
+          <a href="https://tx.alang.run/release" target="_blank" rel="noopener"><span class="material-symbols-rounded">download</span><span>下载客户端</span></a>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="now-playing" aria-labelledby="track-title">
+          <div class="cover-stage">
+            <div class="cover-shadow"></div>
+            <div id="album-cover" class="album-cover" role="img" aria-label="当前歌曲抽象渐变封面"></div>
+            <button class="cover-play" type="button" data-action="toggle-play" aria-label="暂停"><span class="material-symbols-rounded">pause</span></button>
+          </div>
+          <div class="track-detail">
+            <div class="eyebrow"><span>NOW PLAYING</span><b>HI-FI</b></div>
+            <div class="player-theme-switch" role="group" aria-label="播放页主题"><button type="button" data-player-theme="light" aria-pressed="true" title="浅色主题">浅色</button><button type="button" data-player-theme="night" aria-pressed="false" title="深色主题">深色</button><button type="button" data-player-theme="black" aria-pressed="false" title="暗黑主题">暗黑</button></div>
+            <div class="track-title-line"><h1 id="track-title">夜空中最亮的星</h1><button id="current-song-id" class="song-id-copy" type="button" data-copy-song-id="" aria-label="复制当前歌曲 ID" hidden></button></div>
+            <p class="track-meta"><span id="track-artist">逃跑计划</span><i></i><span id="track-album">世界</span></p>
+            <button class="lyric-preview" type="button" data-action="show-lyrics">
+              <span id="current-lyric">等待歌曲歌词…</span>
+              <small id="next-lyric">进入房间后自动同步</small>
+            </button>
+            <div class="progress-wrap">
+              <input id="seek" type="range" min="0" max="100" value="0" aria-label="播放进度">
+              <div class="time-row"><span id="current-time">00:00</span><span>00:00</span></div>
+            </div>
+            <div id="room-state-summary" class="room-state-summary" role="status" aria-live="polite">连接房间后显示切歌率与播放模式</div>
+            <div class="player-controls">
+              <button class="icon-button favorite-toggle" type="button" data-action="favorite" aria-label="收藏歌曲"><span class="material-symbols-rounded">favorite</span></button>
+              <button class="icon-button" type="button" data-action="skip-vote" aria-label="投票切歌"><span class="material-symbols-rounded">skip_next</span></button>
+              <button class="play-button" type="button" data-action="toggle-play" aria-label="暂停"><span class="material-symbols-rounded">pause</span></button>
+              <button class="quick-pick-button" type="button" data-panel="search" aria-label="打开点歌页面"><span class="material-symbols-rounded">music_note</span><span>点歌</span></button>
+              <div class="volume-control"><button type="button" data-action="toggle-mute" aria-label="关闭声音"><span class="material-symbols-rounded">volume_up</span></button><input id="volume" type="range" min="0" max="100" value="72" aria-label="音量"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="library-panel">
+          <header class="section-tabs" role="tablist">
+            <button class="active" type="button" role="tab" data-library="queue" aria-selected="true">待播队列 <span id="queue-count">0</span></button>
+            <button type="button" role="tab" data-library="lyrics" aria-selected="false">歌词</button>
+            <button type="button" role="tab" data-panel="favorites" aria-selected="false">收藏</button>
+            <button type="button" role="tab" data-panel="hot" aria-selected="false">热歌榜</button>
+            <button type="button" role="tab" data-panel="default-list" aria-selected="false">默认列表</button>
+            <div class="section-actions" id="queue-settings-actions" hidden>
+              <button id="queue-settings-button" class="icon-button" type="button" data-panel="queue-settings" aria-label="队列设置"><span class="material-symbols-rounded">tune</span></button>
+            </div>
+          </header>
+          <div class="queue-view" id="queue-view"></div>
+          <div class="lyrics-view" id="lyrics-view" hidden>
+            <p>每当我迷失在黑夜里</p><p class="current">我祈祷拥有一颗透明的心灵</p><p>和会流泪的眼睛</p><p>给我再去相信的勇气</p><p>越过谎言去拥抱你</p>
+          </div>
+        </section>
+      </main>
+
+      <aside class="chat-panel" aria-label="房间聊天">
+        <header class="chat-header">
+          <div><h2>房间聊天</h2><span><i></i><b id="chat-online-count">0</b> 人在线</span></div>
+          <button class="icon-button" type="button" data-panel="members" aria-label="在线成员"><span class="material-symbols-rounded">group</span></button>
+          <button class="icon-button" type="button" data-action="clear-chat" aria-label="清空聊天"><span class="material-symbols-rounded">delete_sweep</span></button>
+          <button class="icon-button" type="button" data-action="toggle-chat-panel" aria-label="隐藏聊天"><span class="material-symbols-rounded">close</span></button>
+        </header>
+        <div class="chat-filters" role="group" aria-label="消息筛选">
+          <button class="active" type="button" data-filter="all">全部</button><button type="button" data-filter="chat">普通聊天</button><button type="button" data-filter="music">点歌动态</button>
+        </div>
+        <div class="messages" id="messages" aria-live="polite"></div>
+        <form class="composer" id="composer">
+          <textarea id="message-input" rows="2" placeholder="说点什么，Enter 发送…" aria-label="聊天消息"></textarea>
+          <div class="composer-tools">
+            <button class="source-switch" type="button" data-action="switch-source"><b id="chat-source">网易</b><span>切换音源</span></button>
+            <button class="icon-button" type="button" data-panel="emoji" aria-label="表情"><span class="material-symbols-rounded">sentiment_satisfied</span></button>
+            <button class="icon-button" type="button" data-panel="picture" aria-label="斗图"><span class="material-symbols-rounded">image</span></button>
+            <button class="send-button" type="submit"><span class="material-symbols-rounded">send</span><span>发送</span></button>
+          </div>
+        </form>
+        <div class="quick-actions">
+          <button type="button" data-panel="search"><span class="material-symbols-rounded">music_note</span>点歌</button>
+          <button type="button" data-panel="playlist"><span class="material-symbols-rounded">queue_music</span>歌单</button>
+          <button type="button" data-action="skip-vote"><span class="material-symbols-rounded">skip_next</span>切歌</button>
+          <button type="button" data-panel="more"><span class="material-symbols-rounded">apps</span>更多</button>
+        </div>
+      </aside>
+    </div>
+
+    <nav class="mobile-nav" aria-label="手机端主导航">
+      <button class="active" type="button" data-mobile-view="player"><span class="material-symbols-rounded">album</span><span>播放</span></button>
+      <button type="button" data-mobile-view="queue"><span class="material-symbols-rounded">queue_music</span><span>队列</span></button>
+      <button type="button" data-mobile-view="chat"><span class="material-symbols-rounded">chat_bubble</span><span>聊天</span></button>
+      <button type="button" data-panel="rooms"><span class="material-symbols-rounded">meeting_room</span><span>房间</span></button>
+      <button type="button" data-panel="more"><span class="material-symbols-rounded">apps</span><span>更多</span></button>
+    </nav>
+
+    <div class="modal-layer" id="modal-layer" hidden>
+      <button class="modal-backdrop" type="button" data-close-modal aria-label="关闭弹窗"></button>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <header class="modal-header"><div><span id="modal-kicker">一起听歌吧</span><h2 id="modal-title">功能面板</h2><p id="modal-description"></p></div><button class="icon-button" type="button" data-close-modal aria-label="关闭"><span class="material-symbols-rounded">close</span></button></header>
+        <div class="modal-body" id="modal-body"></div>
+      </section>
+    </div>
+    <div class="center-notice-stack" id="center-notices" aria-live="assertive"></div>
+    <div class="warp-transition" id="warp-transition" role="status" aria-live="polite" hidden><div class="warp-tunnel" aria-hidden="true"></div><div class="warp-speed-lines" aria-hidden="true"></div><div class="warp-spacecraft" aria-hidden="true">🚀</div><div class="warp-copy"><span>HYPERSPACE JUMP</span><strong>正在星际漫游</strong><small id="warp-destination">航线计算中…</small></div></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script src="./node_modules/sockjs-client/dist/sockjs.min.js?pagehide=1"></script>
+  <script src="./node_modules/stompjs/lib/stomp.min.js"></script>
+  <script src="./node_modules/vue/dist/vue.min.js"></script>
+  <script src="./node_modules/qrcode.vue/dist/qrcode.vue.min.js"></script>
+  <script type="module" src="./app.js?v=room-desc-limit-6"></script>
+</body>
+</html>

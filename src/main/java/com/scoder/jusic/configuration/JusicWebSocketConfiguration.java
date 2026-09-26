@@ -5,7 +5,9 @@ import com.scoder.jusic.interceptor.JusicWebSocketHandshakeInterceptor;
 import com.scoder.jusic.interceptor.JusicWebSocketInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.simp.config.ChannelRegistration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -25,6 +27,9 @@ public class JusicWebSocketConfiguration implements WebSocketMessageBrokerConfig
     private JusicWebSocketHandshakeInterceptor jusicWebSocketHandshakeInterceptor;
     @Autowired
     private JusicWebSocketHandlerDecoratorFactory jusicWebSocketHandlerDecoratorFactory;
+    @Autowired
+    @Qualifier("jusicClientInboundExecutor")
+    private ThreadPoolTaskExecutor clientInboundExecutor;
 
     /**
      * 有关客户端建立连接的部分
@@ -73,11 +78,15 @@ public class JusicWebSocketConfiguration implements WebSocketMessageBrokerConfig
      */
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.taskExecutor(clientInboundExecutor);
         registration.interceptors(jusicWebSocketInterceptor);
     }
 
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
+        registry.setMessageSizeLimit(64 * 1024);
+        registry.setSendTimeLimit(15_000);
+        registry.setSendBufferSizeLimit(512 * 1024);
         // 加入自定义的 handler
         registry.addDecoratorFactory(jusicWebSocketHandlerDecoratorFactory);
     }

@@ -4,13 +4,17 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
+import com.scoder.jusic.configuration.PictureSearchProperties;
+import com.scoder.jusic.security.ProviderIsolated;
+import com.scoder.jusic.security.ProviderWorkload;
 import com.scoder.jusic.service.ChatService;
-import kong.unirest.HttpResponse;
-import kong.unirest.Unirest;
-import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -19,58 +23,142 @@ import java.util.List;
 @Service
 @Slf4j
 public class ChatServiceImpl implements ChatService {
+
+    private static final int MAX_PROVIDER_PAGE_SIZE = 20;
+
+    private final RestTemplate restTemplate;
+    private final PictureSearchProperties properties;
+
+    public ChatServiceImpl(@Qualifier("providerRestTemplate") RestTemplate restTemplate,
+                           PictureSearchProperties properties) {
+        this.restTemplate = restTemplate;
+        this.properties = properties;
+    }
+
     @Override
+    @ProviderIsolated(ProviderWorkload.SEARCH)
     public Page<List> pictureSearch(String keyword, HulkPage hulkPage) {
-        StringBuilder url = new StringBuilder()
-//                .append("https://www.52doutu.cn")
-//                .append("/api")
-//                .append("?types=search&action=searchpic&wd=")
-//                .append(keyword)
-//                .append("&limit=")
-//                .append(hulkPage.getPageSize())
-//                .append("&offset=")
-//                .append(hulkPage.getPageIndex() - 1);
-                .append("https://api.doutub.com/api/bq/search")
-                .append("?keyword=")
-                .append(keyword)
-                .append("&pageSize=")
-                .append(hulkPage.getPageSize())
-                .append("&curPage=")
-                .append(hulkPage.getPageIndex());
-        HttpResponse<String> response = null;
+        // APIHZ documents a hard limit of 20 items. Reflect the normalized
+        // value in the returned page so clients do not calculate overlapping
+        // pages when they submit a larger generic search page size.
+        if (hulkPage.getPageSize() > MAX_PROVIDER_PAGE_SIZE) {
+            hulkPage.setPageSize(MAX_PROVIDER_PAGE_SIZE);
+        }
         try {
-            response = Unirest.get(url.toString()).header("User-Agent","PostmanRuntime/7.26.8").header("Cookie","JSESSIONID=6E7B4196A0E717CC308241DC786BE027")
-                    .asString();
-
-            JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-            JSONObject data = jsonObject.getJSONObject("data");
-
-//            Pattern pattern = compile("(\\d+)");
-//            Matcher matcher = pattern.matcher(jsonObject.getString("total"));
-//            while (matcher.find()) {
-//                hulkPage.setTotalSize(Integer.parseInt(matcher.group()));
-//            }
-//
-//            hulkPage.setData(jsonObject.getJSONArray("rows"));
-            hulkPage.setTotalSize(data.getInteger("count"));
-            JSONArray jsonArray = data.getJSONArray("rows");
-            for(int i = 0; i < jsonArray.size(); i++){
-                JSONObject item = jsonArray.getJSONObject(i);
-                item.put("url",item.getString("path"));
-            }
-            hulkPage.setData(jsonArray);
-        } catch (UnirestException e) {
-            e.printStackTrace();
+            return searchApiHz(keyword, hulkPage);
+        } catch (RuntimeException ex) {
+            log.warn("APIHZ picture search failed; using QQ picture fallback: {}", ex.getMessage());
         }
 
+        try {
+            return searchQqPictures(keyword, hulkPage);
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("all picture providers failed", ex);
+        }
+    }
+
+    private Page<List> searchApiHz(String keyword, HulkPage hulkPage) {
+        URI uri = UriComponentsBuilder.fromHttpUrl(properties.getApiUrl())
+                .queryParam("id", properties.getApiId())
+                .queryParam("key", properties.getApiKey())
+                .queryParam("type", 2)
+                .queryParam("words", keyword)
+                .queryParam("page", hulkPage.getPageIndex())
+                .queryParam("limit", hulkPage.getPageSize())
+                .build()
+                .encode()
+                .toUri();
+
+        JSONObject root = getJson(uri, "APIHZ");
+        if (root.getIntValue("code") != 200) {
+            throw new IllegalStateException("APIHZ rejected the request: " + root.getString("msg"));
+        }
+        JSONArray results = root.getJSONArray("res");
+        if (results == null) {
+            throw new IllegalStateException("APIHZ response has no results");
+        }
+
+        JSONArray rows = new JSONArray();
+        for (int i = 0; i < results.size(); i++) {
+            String url = results.getString(i);
+            if (url != null && !url.isEmpty()) {
+                rows.add(toCompatibleRow(Integer.toHexString(url.hashCode()), keyword, url));
+            }
+        }
+
+        int totalSize = root.getIntValue("count");
+        if (totalSize == 0 && !rows.isEmpty()) {
+            totalSize = hulkPage.getLimitStart() + rows.size();
+        }
+        applyPage(hulkPage, rows, totalSize);
         return hulkPage;
     }
 
-    public static void main(String[] args) {
-        ChatServiceImpl chatService = new ChatServiceImpl();
-        HulkPage page = new HulkPage();
-        page.setCurrentPage(1);
-        page.setPageSize(20);
-        chatService.pictureSearch("高兴",page);
+    private Page<List> searchQqPictures(String keyword, HulkPage hulkPage) {
+        URI uri = UriComponentsBuilder.fromHttpUrl(properties.getFallbackUrl())
+                .queryParam("msg", keyword)
+                .queryParam("page", hulkPage.getPageIndex())
+                .queryParam("num", hulkPage.getPageSize())
+                .build()
+                .encode()
+                .toUri();
+        JSONObject root = getJson(uri, "QQ picture search");
+        if (root.getIntValue("code") != 0) {
+            throw new IllegalStateException("QQ picture search rejected the request: "
+                    + root.getString("msg"));
+        }
+
+        JSONArray data = root.getJSONArray("data");
+        if (data == null) {
+            throw new IllegalStateException("QQ picture search response has no data");
+        }
+
+        JSONArray rows = new JSONArray();
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject source = data.getJSONObject(i);
+            String url = source.getString("sticker_url");
+            if (url != null && !url.isEmpty()) {
+                JSONObject row = toCompatibleRow(Integer.toHexString(url.hashCode()), keyword, url);
+                row.put("format", source.getString("sticker_format"));
+                row.put("size", source.getString("sticker_size"));
+                rows.add(row);
+            }
+        }
+
+        int totalSize = hulkPage.getLimitStart() + rows.size();
+        if (root.getBooleanValue("hasMorePage")) {
+            totalSize += hulkPage.getPageSize();
+        }
+        applyPage(hulkPage, rows, totalSize);
+        return hulkPage;
+    }
+
+    private JSONObject getJson(URI uri, String provider) {
+        try {
+            String body = restTemplate.getForObject(uri, String.class);
+            if (body == null || body.trim().isEmpty()) {
+                throw new IllegalStateException(provider + " returned an empty response");
+            }
+            return JSONObject.parseObject(body);
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException(provider + " request failed", ex);
+        }
+    }
+
+    private JSONObject toCompatibleRow(String id, String title, String url) {
+        JSONObject row = new JSONObject();
+        row.put("id", id);
+        row.put("title", title == null ? "" : title);
+        row.put("url", url);
+        row.put("path", url);
+        return row;
+    }
+
+    private void applyPage(HulkPage hulkPage, JSONArray rows, int totalSize) {
+        hulkPage.setCurrentPage(hulkPage.getPageIndex());
+        hulkPage.setTotalSize(totalSize);
+        hulkPage.setTotalPage(totalSize == 0 ? 0
+                : (totalSize + hulkPage.getPageSize() - 1) / hulkPage.getPageSize());
+        hulkPage.setData(rows);
     }
 }

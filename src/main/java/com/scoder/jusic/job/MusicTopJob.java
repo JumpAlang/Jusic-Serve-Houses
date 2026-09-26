@@ -9,6 +9,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.repository.MusicDefaultRepository;
+import com.scoder.jusic.security.ProviderIsolated;
+import com.scoder.jusic.security.ProviderCallExecutor;
+import com.scoder.jusic.security.ProviderWorkload;
 import com.scoder.jusic.util.FileOperater;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
@@ -38,13 +41,20 @@ public class MusicTopJob {
 
     //每天0时33分更新
     @Scheduled(cron = "0 33 0 * * ? ")//fixedRate = 10800000)//表示每隔3小时
+    @ProviderIsolated(ProviderWorkload.BACKGROUND)
     public void getMusicTopJob(){
-        JusicProperties.setDefaultListByJob(getData());
+        ArrayList<String> latest = getData();
+        if (latest == null || latest.isEmpty()) {
+            log.warn("热门歌曲供应商未返回有效数据，保留上一次可用歌单");
+            return;
+        }
+        JusicProperties.setDefaultListByJob(latest);
         musicDefaultRepository.destroy("");
         musicDefaultRepository.initialize("");
 
     }
 
+    @ProviderIsolated(ProviderWorkload.BACKGROUND)
     public ArrayList<String> getMusicTop(){
         return getData();
     }
@@ -109,7 +119,7 @@ public class MusicTopJob {
 //        }
 //        return new TopMusic(topList,musicIds);
         HttpResponse<String> response = null;
-        String musicIds = "";
+        StringBuilder musicIds = new StringBuilder();
         ArrayList<String> topList = new ArrayList<>();
         Integer failCount = 0;
 
@@ -117,6 +127,10 @@ public class MusicTopJob {
                 .append(jusicProperties.getMusicServeDomain())
                 .append("/playlist/detail");
         while (failCount < jusicProperties.getRetryCount()) {
+            if (ProviderCallExecutor.shouldAbortCurrentCall()) {
+                log.warn("Provider deadline reached while refreshing NetEase top songs");
+                break;
+            }
             try {
                 response = Unirest.post(url.toString()).queryString("id",jusicProperties.getWyTopUrl())
                         .asString();
@@ -126,11 +140,10 @@ public class MusicTopJob {
                 } else {
                     JSONArray data = responseJsonObject.getJSONObject("playlist").getJSONArray("trackIds");
                     int size = data.size();
-                    String musicId = "";
                     for(int i = 0; i < size; i++) {
-                            musicId = data.getJSONObject(i).getString("id");
-                            if (musicId != null && musicId != "") {
-                                musicIds += musicId+"\n";
+                            String musicId = data.getJSONObject(i).getString("id");
+                            if (musicId != null && !musicId.isEmpty()) {
+                                musicIds.append(musicId).append('\n');
                                 topList.add(musicId);
                             }
                     }
@@ -142,15 +155,19 @@ public class MusicTopJob {
             }
         }
 
-        return new TopMusic(topList,musicIds);
+        return new TopMusic(topList,musicIds.toString());
     }
     private TopMusic getTopMusicQQ() {
         HttpResponse<String> response = null;
-        String musicIds = "";
+        StringBuilder musicIds = new StringBuilder();
         ArrayList<String> topList = new ArrayList<>();
         Integer failCount = 0;
 
         while (failCount < jusicProperties.getRetryCount()) {
+            if (ProviderCallExecutor.shouldAbortCurrentCall()) {
+                log.warn("Provider deadline reached while refreshing QQ top songs");
+                break;
+            }
             try {
                 response = Unirest.get(jusicProperties.getMusicServeDomainQq() + "/top?id=26&pageSize=300")
                         .asString();
@@ -162,11 +179,10 @@ public class MusicTopJob {
                     if (jsonObject.get("result").equals(100)) {
                         JSONArray data = jsonObject.getJSONObject("data").getJSONArray("list");
                         int size = data.size();
-                        String musicId = "";
                         for(int i = 0; i < size; i++) {
-                            musicId = data.getJSONObject(i).getString("mid");
-                            if (musicId != null && musicId != "") {
-                                musicIds += musicId+"___qq" + "\n";
+                            String musicId = data.getJSONObject(i).getString("mid");
+                            if (musicId != null && !musicId.isEmpty()) {
+                                musicIds.append(musicId).append("___qq\n");
                                 topList.add(musicId+"___qq");
                             }
                         }
@@ -181,24 +197,27 @@ public class MusicTopJob {
             }
         }
 
-        return new TopMusic(topList,musicIds);
+        return new TopMusic(topList,musicIds.toString());
     }
+    @ProviderIsolated(ProviderWorkload.BACKGROUND)
     public ArrayList<String> getData() {
         TopMusic topMusicWy = getTopMusicWy();
         TopMusic topMusicQq = getTopMusicQQ();
-        String allMusicIdsStr = "";
+        StringBuilder allMusicIds = new StringBuilder();
         ArrayList<String> allMusicIdsList = new ArrayList<>();
-        if (topMusicWy.getTopMusicStrings() != "") {
-            allMusicIdsStr += topMusicWy.getTopMusicStrings();
+        if (topMusicWy.getTopMusicStrings() != null
+                && !topMusicWy.getTopMusicStrings().isEmpty()) {
+            allMusicIds.append(topMusicWy.getTopMusicStrings());
             allMusicIdsList.addAll(topMusicWy.getTopMusicList());
         }
-        if(topMusicQq.getTopMusicStrings() != ""){
-            allMusicIdsStr += topMusicQq.getTopMusicStrings();
+        if(topMusicQq.getTopMusicStrings() != null
+                && !topMusicQq.getTopMusicStrings().isEmpty()){
+            allMusicIds.append(topMusicQq.getTopMusicStrings());
             allMusicIdsList.addAll(topMusicQq.getTopMusicList());
         }
-        if(allMusicIdsStr != ""){
+        if(allMusicIds.length() > 0){
             try {
-                FileOperater.writefileinfo(allMusicIdsStr, resourceLoader.getResource("file:"+System.getProperty("user.dir")+ File.separator+"default.txt"));
+                FileOperater.writefileinfo(allMusicIds.toString(), resourceLoader.getResource("file:"+System.getProperty("user.dir")+ File.separator+"default.txt"));
             } catch (IOException e) {
                 log.error("写入热门歌曲id失败，IOException:[{}]",e.getMessage());
             }

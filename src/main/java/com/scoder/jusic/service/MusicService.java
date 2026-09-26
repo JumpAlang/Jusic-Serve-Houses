@@ -111,12 +111,21 @@ public interface MusicService {
      * @param music music
      */
     boolean deletePickMusic(Music music,String houseId);
+
+    /**
+     * Removes every pending song queued by one WebSocket session in a room.
+     *
+     * @return number of queue entries actually removed
+     */
+    long removeQueuedMusicBySession(String sessionId, String houseId);
+
     /**
      * top pick music
      *
      * @param music -
+     * @return whether the queued entry was actually moved
      */
-    void topPickMusic(Music music,String houseId);
+    boolean topPickMusic(Music music,String houseId);
 
     /**
      * black

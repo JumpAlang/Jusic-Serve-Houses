@@ -3,11 +3,9 @@ package com.scoder.jusic.repository.impl;
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.repository.HousesRespository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Repository;
@@ -23,11 +21,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @create 2020-06-21 22:18
  */
 @Repository
-@Slf4j
 public class HousesRepositoryImpl implements HousesRespository {
 
-    @Autowired
-    private JusicProperties jusicProperties;
     @Autowired
     private JusicProperties.RedisKeys redisKeys;
     @Autowired
@@ -42,12 +37,11 @@ public class HousesRepositoryImpl implements HousesRespository {
 
     @Override
     public CopyOnWriteArrayList<House> initialize() {
-        if(this.size() == 0){
-            CopyOnWriteArrayList<House> houses = new CopyOnWriteArrayList<House>();
+        CopyOnWriteArrayList<House> houses = this.get();
+        if(houses.isEmpty()){
             houses.add(defaultHouse());
             return houses;
         }else{
-            CopyOnWriteArrayList<House> houses = this.get();
             House house = defaultHouse();
             if(houses.contains(house)){
                 return houses;
@@ -99,36 +93,39 @@ public class HousesRepositoryImpl implements HousesRespository {
 
     @Override
     public CopyOnWriteArrayList<House> get() {
-        Long size = this.size();
-        size = size == null ? 0 : size;
         CopyOnWriteArrayList<House> houses = new CopyOnWriteArrayList<>();
 
         List<House> houseOrigin = (List<House>) redisTemplate.opsForList()
-                .range(redisKeys.getHouses(), 0, size);
-        for(House house : houseOrigin){
-            houses.add(house);
+                .range(redisKeys.getHouses(), 0, -1);
+        if (houseOrigin != null) {
+            houses.addAll(houseOrigin);
         }
         return houses;
     }
 
     @Override
     public Set<String> allKeys() {
-        Set<String> keys = new HashSet();
-        RedisConnectionFactory connectionFactory = redisTemplate.getConnectionFactory();
-        RedisConnection redisConnection = connectionFactory.getConnection();
-        Cursor<byte[]> scan = redisConnection.scan(ScanOptions.scanOptions().match("*").count(33333).build());
-        while (scan.hasNext()) {
-            //找到一次就添加一次
-            keys.add(new String(scan.next()));
-        }
-        try{
-            if (scan != null) {
-                scan.close();
+        Set<String> keys = (Set<String>) redisTemplate.execute(
+                (RedisCallback<Set<String>>) connection -> {
+            Set<String> discovered = new HashSet<>();
+            ScanOptions options = ScanOptions.scanOptions()
+                    .match("*")
+                    .count(33333)
+                    .build();
+            try (Cursor<byte[]> scan = connection.scan(options)) {
+                while (scan.hasNext()) {
+                    Object decoded = redisTemplate.getKeySerializer()
+                            .deserialize(scan.next());
+                    if (decoded != null) {
+                        discovered.add(decoded.toString());
+                    }
+                }
+            } catch (IOException ex) {
+                throw new IllegalStateException("failed to close Redis key scan", ex);
             }
-        } catch (IOException e) {
-            log.error("scan遍历key关闭游标异常", e);
-        }
-        return keys;
+            return discovered;
+        });
+        return keys == null ? new HashSet<>() : keys;
     }
 
     @Override

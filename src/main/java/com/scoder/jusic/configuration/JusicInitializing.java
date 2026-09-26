@@ -1,6 +1,5 @@
 package com.scoder.jusic.configuration;
 
-import com.scoder.jusic.job.MusicTopJob;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.service.ConfigService;
 import com.scoder.jusic.service.MusicService;
@@ -11,6 +10,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -24,9 +24,7 @@ public class JusicInitializing implements InitializingBean {
     private final JusicProperties jusicProperties;
     private final ResourceLoader resourceLoader;
     private final HouseContainer houseContainer;
-
-    @Autowired
-    private MusicTopJob musicTopJob;
+    private final LifecycleProperties lifecycleProperties;
 
     @Autowired
     private MusicService musicService;
@@ -35,15 +33,26 @@ public class JusicInitializing implements InitializingBean {
     private ConfigService configService;
 
 
-    public JusicInitializing(JusicProperties jusicProperties, ResourceLoader resourceLoader,HouseContainer houseContainer) {
+    public JusicInitializing(JusicProperties jusicProperties,
+                             ResourceLoader resourceLoader,
+                             HouseContainer houseContainer,
+                             LifecycleProperties lifecycleProperties) {
         this.jusicProperties = jusicProperties;
         this.resourceLoader = resourceLoader;
         this.houseContainer = houseContainer;
+        this.lifecycleProperties = lifecycleProperties;
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        initialize(houseContainer.clearSurvive());
+        CopyOnWriteArrayList<House> houses;
+        if (lifecycleProperties.isCleanupLegacyStateOnStartup()) {
+            log.warn("legacy startup cleanup is enabled; do not use this mode with multiple nodes");
+            houses = houseContainer.clearSurvive();
+        } else {
+            houses = houseContainer.loadSurvive();
+        }
+        initialize(houses);
     }
 
     /**
@@ -51,28 +60,31 @@ public class JusicInitializing implements InitializingBean {
      *
      * @throws IOException -
      */
-    private void initDefaultMusicId() throws IOException {
-        try{
-            ArrayList<String> musicList = musicTopJob.getMusicTop();
-            if(musicList == null || musicList.size() == 0){
-                InputStream inputStream = resourceLoader.getResource("file:"+System.getProperty("user.dir")+File.separator+"default.txt").getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                String musicId = "";
-                // 逐行读取
-                while ((musicId = bufferedReader.readLine()) != null) {
-                    musicList.add(musicId);
+    private void initDefaultMusicId() {
+        // 节点启动不能依赖外部音乐源。在线榜单由 MusicTopJob 在启动后按计划刷新。
+        ArrayList<String> musicList = new ArrayList<>();
+        String path = "file:" + System.getProperty("user.dir")
+                + File.separator + "default.txt";
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                resourceLoader.getResource(path).getInputStream(), StandardCharsets.UTF_8))) {
+            String musicId;
+            while ((musicId = reader.readLine()) != null) {
+                String normalized = musicId.trim();
+                if (!normalized.isEmpty()) {
+                    musicList.add(normalized);
                 }
             }
-            if(musicList == null || musicList.isEmpty()){
-                musicList = new ArrayList<>();
-                musicList.add("512359558");
-                musicList.add("316686");
-                musicList.add("25718007");
-            }
-            JusicProperties.setDefaultListByJob(musicList);
-        }catch (Exception e){
-
+        } catch (IOException ex) {
+            log.warn("Unable to read the local default playlist {}; using built-in defaults: {}",
+                    path, ex.getMessage());
+            log.debug("Local default playlist failure", ex);
         }
+        if (musicList.isEmpty()) {
+            musicList.add("512359558");
+            musicList.add("316686");
+            musicList.add("25718007");
+        }
+        JusicProperties.setDefaultListByJob(musicList);
     }
 
     /**
@@ -84,7 +96,15 @@ public class JusicInitializing implements InitializingBean {
         this.initDefaultMusicId();
         houseContainer.initialize(houses);
 //        musicService.netEaseAutoLogin();
-        musicService.neteaseRefreshCookie();
+        try {
+            musicService.neteaseRefreshCookie();
+        } catch (RuntimeException ex) {
+            // Provider availability must not decide whether the node can
+            // start. The scheduled refresh retains the same bounded retry
+            // path after startup.
+            log.warn("网易云 Cookie 启动刷新失败，节点继续启动: {}", ex.getMessage());
+            log.debug("网易云 Cookie 启动刷新异常", ex);
+        }
         log.info("初始化工作完成");
 //        configService.setQqMusicCookieToProperties();
         log.info("初始化qq cookie");

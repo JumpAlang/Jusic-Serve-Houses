@@ -6,6 +6,7 @@ import com.scoder.jusic.model.Auth;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.User;
+import com.scoder.jusic.security.RoomRolePolicy;
 import com.scoder.jusic.service.AuthService;
 import com.scoder.jusic.service.SessionService;
 import com.scoder.jusic.util.StringUtils;
@@ -15,9 +16,6 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author H
@@ -32,11 +30,6 @@ public class AuthController {
     private AuthService authService;
     @Autowired
     private SessionService sessionService;
-
-    private static final List<String> roles = new ArrayList<String>() {{
-        add("root");
-        add("admin");
-    }};
 
     @MessageMapping("/auth/root")
     public void authRoot(Auth auth, StompHeaderAccessor accessor) {
@@ -64,15 +57,15 @@ public class AuthController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId,houseId);
-        if (password == null || password == "") {
+        if (password == null || password.isEmpty()) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "密码不能为空"),houseId);
             return;
         }
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         }else{
             House house = houseContainer.get(houseId);
-            if(house.getForbiddenModiPwd() != null && house.getForbiddenModiPwd() && !roles.get(0).equals(role)){
+            if (Boolean.TRUE.equals(house.getForbiddenModiPwd()) && !RoomRolePolicy.isRoot(role)) {
                 sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "房间不支持修改密码"),houseId);
                 return;
             }
@@ -87,11 +80,11 @@ public class AuthController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId,houseId);
-        if (password == null || password == "") {
+        if (password == null || password.isEmpty()) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "密码不能为空"),houseId);
             return;
         }
-        if (!roles.get(0).equals(role)) {
+        if (!RoomRolePolicy.isRoot(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         }else{
             authService.setRootPassword(password,houseId);
@@ -104,7 +97,7 @@ public class AuthController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId, houseId);
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
             if(StringUtils.isSessionId(userId)){
@@ -130,7 +123,7 @@ public class AuthController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId, houseId);
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
             if(StringUtils.isSessionId(userId)){
@@ -156,7 +149,7 @@ public class AuthController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId, houseId);
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
             if(StringUtils.isSessionId(userId)){
@@ -182,7 +175,7 @@ public class AuthController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId, houseId);
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
             if(StringUtils.isSessionId(userId)){

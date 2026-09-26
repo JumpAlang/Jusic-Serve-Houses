@@ -1,10 +1,12 @@
 package com.scoder.jusic.common.page;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author H
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class HulkPage<T> implements Page<T> {
 
     @JsonProperty("pageIndex")

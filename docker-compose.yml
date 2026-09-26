@@ -2,45 +2,51 @@ version: "3"
 services:
   service_redis:
     restart: always
-    #    ports:
-    #      - 6379:6379
+    #ports:
+    #  - 6379:6379
     image: redis
     container_name: redis
     environment:
       - TZ=Asia/Shanghai
     command: redis-server
     volumes:
-      - D:\docker\redis\data:/data  #redis数据挂载到本地
+      - /root/docker/redis/data:/data  #redis数据挂载到本地
   service_jusicMusicApi:
     image: jumpalang/jusic_music_api:2.1
     environment:
       - QQ=1040927107 #qq号
     container_name: jusicMusicApi
-    ports:
-      #      - "3000:3000"
-      - "3300:3300"
+    #    ports:
+    #      - "3000:3000"
+    #      - "3300:3300"
     #      - "3400:3400"
     #      - "8081:8081"
     restart: always
+    logging:
+      options:
+        max-size: "1g"
+        max-file: "3"
   service_jusicServeHouses:
     container_name: jusicServeHouses
     image: jumpalang/jusic_serve_houses:5.4
     environment:
       - MusicApi=http://jusicMusicApi  #必须与service_jusicMusicApi的container_name一致
       - APIUSER=admin  #api认证接口用户名
-      - APIPWD=xx  #api认证接口密码
-      - ServerJUrl=https://sc.ftqq.com/xxx.send #server酱消息接口，用户@管理员时会通知微信
-      - MiniId=yyy
-      - MiniSecrect=xx
-      - RoleRootPassword=654321
-      - WyAccount=xxx@163.com
-      - WyPassword=xxxx
-      - PlaylistSize=23
-      - ForeverlistSize=66
+      - APIPWD=tgb654321  #api认证接口密码
+      - ServerJUrl=https://sctapi.ftqq.com/SCT257916TyuGUWtEdlqzOtEzYO04opBQ7.send  #server酱消息接口，用户@管理员时会通知微信
+      - IpHouse=32
+      - HouseSize=288
+      - MiniId=wx693312f83f255cf3
+      - MiniSecrect=1126f3ad12fcca4a522dd95a10df70be
+      - RoleRootPassword=tgb123456
+      - WyAccount=a22cloud@163.com
+      - WyPassword=Abcd1234
+      - PlaylistSize=66
+      - ForeverlistSize=299
       - ReTryCount=2
       - RedisHost=redis
       - QqUin=1040927107
-      - QqMusicKey=Q_H_L_63k3NWYfBRq1KV0rBZ4ySa7vYK6XS5803Q23v35s4abc0rela9BzP6jBXv5Fgk9hsk4FLXXXXXX
+      - QqMusicKey=Q_H_L_63k3NWYfBRq1KV0rBZ4ySa7vYK6XS5803Q23v35s4abc0rela9BzP6jBXv5Fgk9hsk4FLhwXX4w
       - QqMusicGuid=114514
       - QqCdnAddr=http://ws.stream.qqmusic.qq.com/
       - QqRefreshInterval=86000000
@@ -50,3 +56,7 @@ services:
       - service_redis
       - service_jusicMusicApi
     restart: always
+    logging:
+      options:
+        max-size: "2g"
+        max-file: "3"

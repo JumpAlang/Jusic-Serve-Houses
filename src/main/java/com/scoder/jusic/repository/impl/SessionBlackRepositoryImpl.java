@@ -52,9 +52,13 @@ public class SessionBlackRepositoryImpl implements SessionBlackRepository {
 
     @Override
     public Long removeSession(String sessionId,String houseId) {
-        if(sessionId != null || !"".equals(sessionId)){
+        if(sessionId != null && !sessionId.trim().isEmpty()){
             String[] sessionIds = sessionId.split(",");
             for(String session : sessionIds){
+                if (session == null || session.trim().isEmpty()) {
+                    continue;
+                }
+                session = session.trim();
                 User user = (User) redisTemplate.opsForHash()
                         .get(redisKeys.getSessionBlackHash()+houseId, session);
                 if(user != null){

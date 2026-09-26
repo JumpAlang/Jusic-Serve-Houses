@@ -48,6 +48,10 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 antMatchers("/js/**").permitAll().
                 antMatchers("/index.html").permitAll().
                 antMatchers("/favicon.ico").permitAll().
+                antMatchers("/node_modules/**").permitAll().
+                antMatchers("/*.js").permitAll().
+                antMatchers("/*.css").permitAll().
+                antMatchers("/public/**").permitAll().
                 antMatchers(HttpMethod.GET,"/").permitAll().
                 anyRequest().authenticated().and().httpBasic().and().cors();
     }

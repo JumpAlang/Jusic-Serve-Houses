@@ -26,22 +26,33 @@ public class NetEaseController {
     @RequestMapping("/netease/loginByPhone")
     @ResponseBody
     public Response loginByPhone(String phone, @RequestParam(required = false) String pwd, @RequestParam(required = false) String md5Pwd, @RequestParam(required = false) String countryCode) {
-        String rs = musicService.netEaseLoginByPhone(phone,pwd,md5Pwd,countryCode);
-        return Response.success(rs);
+        try {
+            String rs = musicService.netEaseLoginByPhone(phone,pwd,md5Pwd,countryCode);
+            return Response.success(rs);
+        } catch (RuntimeException ex) {
+            return providerFailure("手机号登录", ex);
+        }
     }
 
     @RequestMapping("/netease/loginByEmail")
     @ResponseBody
     public Response loginByEmail(String email, @RequestParam(required = false) String pwd, @RequestParam(required = false) String md5Pwd) {
-
-        return Response.success(musicService.netEaseLoginByEmail(email,pwd,md5Pwd));
+        try {
+            return Response.success(musicService.netEaseLoginByEmail(email,pwd,md5Pwd));
+        } catch (RuntimeException ex) {
+            return providerFailure("邮箱登录", ex);
+        }
     }
 
     @RequestMapping("/netease/loginRefresh")
     @ResponseBody
     public Response loginRefresh() {
-        musicService.netEaseLoginRefresh();
-        return Response.success();
+        try {
+            musicService.netEaseLoginRefresh();
+            return Response.success();
+        } catch (RuntimeException ex) {
+            return providerFailure("登录刷新", ex);
+        }
     }
 
     @RequestMapping("/netease/setCookie")
@@ -56,5 +67,11 @@ public class NetEaseController {
     public Response setCookiePost(@RequestBody Map<String,Object> cookie) {
         musicService.setNetEaseCookie(cookie.get("cookie").toString());
         return Response.success();
+    }
+
+    private Response providerFailure(String operation, RuntimeException ex) {
+        log.warn("网易云{}调用失败: {}", operation, ex.getMessage());
+        log.debug("网易云 provider 调用异常", ex);
+        return Response.failure((Object) null, "音乐服务暂不可用，请稍后重试");
     }
 }

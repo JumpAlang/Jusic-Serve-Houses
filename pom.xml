@@ -16,6 +16,7 @@
 
     <properties>
         <java.version>1.8</java.version>
+        <lombok.version>1.18.30</lombok.version>
     </properties>
 
     <dependencies>
@@ -24,8 +25,16 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-data-redis</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -50,7 +59,10 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.31</version>
+            <!-- Last 1.x security-fix release; a fastjson2 API migration is a
+                 separate compatibility project because Redis payload parsing
+                 and provider DTOs still use the 1.x package. -->
+            <version>1.2.83</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.mashape.unirest/unirest-java -->
 <!--        <dependency>-->
@@ -63,16 +75,17 @@
             <artifactId>unirest-java</artifactId>
             <version>3.13.8</version>
         </dependency>
+        <!-- Used by the legacy standalone music-import utilities under tests. -->
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.6.1</version>
+            <version>1.17.2</version>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>javazoom.jl</groupId>-->
 <!--            <artifactId>jl1</artifactId>-->
 <!--            <version>1.0.1</version>-->
-<!--            &lt;!&ndash; 下面两个是使用system在pom.xml中导入jar &ndash;&gt;-->
+<!--            &lt;!&ndash; 下面两个是使用system in pom.xml中导入jar &ndash;&gt;-->
 <!--            <scope>system</scope>-->
 <!--            <systemPath>${project.basedir}/src/main/resources/jl1.0.1.jar</systemPath>-->
 <!--        </dependency>-->

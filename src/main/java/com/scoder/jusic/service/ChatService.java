@@ -12,7 +12,8 @@ public interface ChatService {
 
     /**
      * picture search
-     * https://www.52doutu.cn
+     * Uses domestic Chinese picture-provider APIs while retaining the legacy
+     * page/row shape.
      *
      * @param content  keyword
      * @param hulkPage page

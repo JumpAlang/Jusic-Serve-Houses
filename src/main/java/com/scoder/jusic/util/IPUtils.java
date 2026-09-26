@@ -20,12 +20,12 @@ public class IPUtils {
 
     public static String getRemoteAddress(HttpServletRequest request) {
         String ip = request.getHeader("x-forwarded-for");
-        System.out.println("x-forwarded-for ip: " + ip);
         if (ip != null && ip.length() != 0 && !"unknown".equalsIgnoreCase(ip)) {
             // 多次反向代理后会有多个ip值，第一个ip才是真实ip
             if (ip.indexOf(",") != -1) {
                 ip = ip.split(",")[0];
             }
+            ip = ip.trim();
         }
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("Proxy-Client-IP");

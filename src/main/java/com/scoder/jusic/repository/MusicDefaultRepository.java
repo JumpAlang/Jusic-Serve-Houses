@@ -4,6 +4,8 @@ package com.scoder.jusic.repository;
  * @author H
  */
 public interface MusicDefaultRepository {
+    Long addSongs(java.util.List<com.scoder.jusic.model.DefaultPlaylistSong> songs, String houseId);
+    java.util.List<com.scoder.jusic.model.DefaultPlaylistSong> page(String houseId, long offset, int limit);
 
     /**
      * destroy

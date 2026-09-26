@@ -1,4 +1,4 @@
-FROM java:8
+FROM eclipse-temurin:8-jre
 EXPOSE 8888
 WORKDIR /app
 ADD target/jusic-serve.jar ./jusic-serve.jar

@@ -53,9 +53,21 @@ public class MailController {
                     .append(houseContainer.get(user.getHouseId()))
                     .append("\n\n\n\n")
                     .append(chat.getContent());
-            boolean rs = mailService.sendServerJ("一起听歌有人@你了[远方:"+user.getRemoteAddress() + ":"+user.getNickName()+"]",content.toString());
+            boolean rs = false;
+            try {
+                rs = mailService.sendServerJ("一起听歌有人@你了[远方:"+user.getRemoteAddress() + ":"+user.getNickName()+"]",content.toString());
+            } catch (RuntimeException ex) {
+                log.warn("Server酱通知被拒绝或超时: {}", ex.getMessage());
+                log.debug("Server酱通知异常", ex);
+            }
             if(!rs){
-                boolean result = mailService.sendSimpleMail("music.scoder.club@管理员[" + user.getRemoteAddress() + "]", content.toString());
+                boolean result = false;
+                try {
+                    result = mailService.sendSimpleMail("music.scoder.club@管理员[" + user.getRemoteAddress() + "]", content.toString());
+                } catch (RuntimeException ex) {
+                    log.warn("邮件通知被拒绝或超时: {}", ex.getMessage());
+                    log.debug("邮件通知异常", ex);
+                }
                 if (result) {
                     log.info("session id: {}, @管理员, 邮件发送成功", sessionId);
                     sessionService.send(sessionId, MessageType.NOTICE, Response.success((Object) null, "@管理员 成功"),houseId);

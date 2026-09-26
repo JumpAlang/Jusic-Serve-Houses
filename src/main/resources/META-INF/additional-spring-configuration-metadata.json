@@ -1,0 +1,232 @@
+{
+  "properties": [
+    {
+      "name": "jusic.room-command.mode",
+      "type": "java.lang.String",
+      "defaultValue": "legacy-local",
+      "description": "Room command adapter. Only 'legacy-local' is supported until all Redis v2 readers, writers, playback jobs and event consumers are migrated; any other value intentionally leaves startup without a RoomCommandService."
+    },
+    {
+      "name": "jusic.room-command.redis-v2.migration-store-enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Registers an unused Redis v2 migration/prototyping store only. This does not switch Controller traffic to Redis v2 and must not be treated as a production activation flag."
+    },
+    {
+      "name": "jusic.websocket.capacity.node",
+      "type": "java.lang.Integer",
+      "defaultValue": 2000,
+      "description": "Maximum number of WebSocket sessions registered on one application node. This is a node-local post-handshake limit, not a cluster-wide admission limit."
+    },
+    {
+      "name": "jusic.websocket.capacity.room",
+      "type": "java.lang.Integer",
+      "defaultValue": 1000,
+      "description": "Maximum number of WebSocket sessions registered for one room on one application node."
+    },
+    {
+      "name": "jusic.websocket.capacity.ip",
+      "type": "java.lang.Integer",
+      "defaultValue": 100,
+      "description": "Maximum number of WebSocket sessions registered for one resolved client IP on one application node."
+    },
+    {
+      "name": "jusic.websocket.reaper.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables periodic removal of locally retained WebSocket sessions whose transport is already closed. This is not an inactivity timeout."
+    },
+    {
+      "name": "jusic.websocket.reaper.fixed-delay",
+      "type": "java.lang.Long",
+      "defaultValue": 15000,
+      "description": "Delay in milliseconds between completed scans for locally retained closed WebSocket sessions."
+    },
+    {
+      "name": "jusic.websocket.inbound.core-pool-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 16,
+      "description": "Core workers for the bounded WebSocket client-inbound executor."
+    },
+    {
+      "name": "jusic.websocket.inbound.max-pool-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 64,
+      "description": "Maximum workers for the bounded WebSocket client-inbound executor."
+    },
+    {
+      "name": "jusic.websocket.inbound.queue-capacity",
+      "type": "java.lang.Integer",
+      "defaultValue": 512,
+      "description": "Maximum number of WebSocket inbound messages waiting for an application worker."
+    },
+    {
+      "name": "jusic.websocket.inbound.keep-alive-seconds",
+      "type": "java.lang.Integer",
+      "defaultValue": 60,
+      "description": "Idle keep-alive for WebSocket inbound executor workers."
+    },
+    {
+      "name": "jusic.provider.pick.core-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 4,
+      "description": "Core workers reserved for point-song provider calls."
+    },
+    {
+      "name": "jusic.provider.pick.max-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 16,
+      "description": "Maximum workers reserved for point-song provider calls."
+    },
+    {
+      "name": "jusic.provider.pick.queue-capacity",
+      "type": "java.lang.Integer",
+      "defaultValue": 32,
+      "description": "Maximum queued point-song provider calls before fail-fast rejection."
+    },
+    {
+      "name": "jusic.provider.pick.timeout-ms",
+      "type": "java.lang.Long",
+      "defaultValue": 8000,
+      "description": "End-to-end point-song provider budget in milliseconds."
+    },
+    {
+      "name": "jusic.provider.search.core-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 8,
+      "description": "Core workers reserved for provider search calls."
+    },
+    {
+      "name": "jusic.provider.search.max-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 24,
+      "description": "Maximum workers reserved for provider search calls."
+    },
+    {
+      "name": "jusic.provider.search.queue-capacity",
+      "type": "java.lang.Integer",
+      "defaultValue": 64,
+      "description": "Maximum queued provider search calls before fail-fast rejection."
+    },
+    {
+      "name": "jusic.provider.search.timeout-ms",
+      "type": "java.lang.Long",
+      "defaultValue": 10000,
+      "description": "End-to-end provider search budget in milliseconds."
+    },
+    {
+      "name": "jusic.provider.playback.core-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 2,
+      "description": "Core workers reserved exclusively for playback selection and URL refresh."
+    },
+    {
+      "name": "jusic.provider.playback.max-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 8,
+      "description": "Maximum workers reserved exclusively for playback provider calls."
+    },
+    {
+      "name": "jusic.provider.playback.queue-capacity",
+      "type": "java.lang.Integer",
+      "defaultValue": 16,
+      "description": "Maximum queued playback provider calls before fail-fast rejection."
+    },
+    {
+      "name": "jusic.provider.playback.timeout-ms",
+      "type": "java.lang.Long",
+      "defaultValue": 12000,
+      "description": "End-to-end playback provider budget in milliseconds."
+    },
+    {
+      "name": "jusic.provider.background.core-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 2,
+      "description": "Core workers reserved for scheduled and maintenance provider calls."
+    },
+    {
+      "name": "jusic.provider.background.max-size",
+      "type": "java.lang.Integer",
+      "defaultValue": 8,
+      "description": "Maximum workers reserved for scheduled and maintenance provider calls."
+    },
+    {
+      "name": "jusic.provider.background.queue-capacity",
+      "type": "java.lang.Integer",
+      "defaultValue": 16,
+      "description": "Maximum queued background provider calls before fail-fast rejection."
+    },
+    {
+      "name": "jusic.provider.background.timeout-ms",
+      "type": "java.lang.Long",
+      "defaultValue": 12000,
+      "description": "End-to-end background provider budget in milliseconds."
+    },
+    {
+      "name": "jusic.provider.http.connect-timeout-ms",
+      "type": "java.lang.Integer",
+      "defaultValue": 3000,
+      "description": "Hard TCP connection timeout for music provider HTTP calls."
+    },
+    {
+      "name": "jusic.provider.http.read-timeout-ms",
+      "type": "java.lang.Integer",
+      "defaultValue": 5000,
+      "description": "Hard socket/read timeout for music provider HTTP calls."
+    },
+    {
+      "name": "jusic.provider.http.max-connections",
+      "type": "java.lang.Integer",
+      "defaultValue": 64,
+      "description": "Global maximum concurrent Unirest connections."
+    },
+    {
+      "name": "jusic.provider.http.max-connections-per-route",
+      "type": "java.lang.Integer",
+      "defaultValue": 16,
+      "description": "Maximum concurrent Unirest connections to one provider route."
+    },
+    {
+      "name": "jusic.presence.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable expiring Redis markers for legacy room-session hash fields."
+    },
+    {
+      "name": "jusic.presence.namespace",
+      "type": "java.lang.String",
+      "defaultValue": "jusic:presence:v1",
+      "description": "Namespace for additive per-WebSocket presence lease keys."
+    },
+    {
+      "name": "jusic.presence.ttl",
+      "type": "java.lang.Long",
+      "defaultValue": 60000,
+      "description": "Presence marker TTL in milliseconds; must exceed two heartbeat intervals."
+    },
+    {
+      "name": "jusic.presence.heartbeat-delay",
+      "type": "java.lang.Long",
+      "defaultValue": 15000,
+      "description": "Delay in milliseconds between node-local presence lease renewals."
+    },
+    {
+      "name": "jusic.presence.cleanup-delay",
+      "type": "java.lang.Long",
+      "defaultValue": 30000,
+      "description": "Delay in milliseconds between Redis ghost-user cleanup scans."
+    },
+    {
+      "name": "jusic.presence.candidate-grace",
+      "type": "java.lang.Long",
+      "defaultValue": 60000,
+      "description": "Minimum time an absent lease must remain a cleanup candidate before its legacy HASH field can be deleted; must cover at least two heartbeat intervals."
+    },
+    {
+      "name": "jusic.presence.candidate-ttl",
+      "type": "java.lang.Long",
+      "defaultValue": 180000,
+      "description": "Safety TTL for cleanup candidates; must exceed the grace period and cover at least two cleanup intervals."
+    }
+  ]
+}

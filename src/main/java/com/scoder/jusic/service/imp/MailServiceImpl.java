@@ -1,6 +1,9 @@
 package com.scoder.jusic.service.imp;
 
 import com.scoder.jusic.configuration.JusicProperties;
+import com.scoder.jusic.configuration.ProviderIsolationProperties;
+import com.scoder.jusic.security.ProviderIsolated;
+import com.scoder.jusic.security.ProviderWorkload;
 import com.scoder.jusic.service.MailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,19 +11,14 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author H
@@ -33,85 +31,54 @@ public class MailServiceImpl implements MailService {
     private JusicProperties jusicProperties;
     @Autowired
     private JavaMailSender javaMailSender;
+    @Autowired
+    private ProviderIsolationProperties providerIsolationProperties;
 
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, KeyManagementException {
-        boolean result = commonSendJ("https://sctapi.ftqq.com/xxx.send","你好啊","大杀四方");
+    public static boolean commonSendJ(String webUrl, String title, String desc)
+            throws IOException {
+        return commonSendJ(webUrl, title, desc, 3_000, 5_000);
     }
-    public static boolean commonSendJ(String webUrl,String title,String desc) throws IOException, NoSuchAlgorithmException, KeyManagementException {
-        String postData = "text=" + URLEncoder.encode(title, "UTF-8") + "&desp=" + URLEncoder.encode(desc, "UTF-8");
 
-        HttpsURLConnection conn = null;
+    static boolean commonSendJ(String webUrl, String title, String desc,
+                               int connectTimeoutMs, int readTimeoutMs)
+            throws IOException {
+        String encoded = "text=" + URLEncoder.encode(title, "UTF-8")
+                + "&desp=" + URLEncoder.encode(desc, "UTF-8");
+        byte[] postData = encoded.getBytes(StandardCharsets.UTF_8);
+        HttpURLConnection connection = (HttpURLConnection) new URL(webUrl).openConnection();
+        try {
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type",
+                    "application/x-www-form-urlencoded; charset=UTF-8");
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(Math.max(1, connectTimeoutMs));
+            connection.setReadTimeout(Math.max(1, readTimeoutMs));
+            connection.setFixedLengthStreamingMode(postData.length);
+            try (OutputStream output = connection.getOutputStream()) {
+                output.write(postData);
+            }
 
-        URL url = new URL(webUrl);
-        DataOutputStream wr;
-
-        if (webUrl.contains("https:")){
-            //是https
-            //绕过证书
-            SSLContext context = createIgnoreVerifySSL();
-            conn = (HttpsURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-            conn.setDoOutput(true);
-            conn.setSSLSocketFactory(context.getSocketFactory());
-            wr = new DataOutputStream(conn.getOutputStream());
-        }else {
-            conn = (HttpsURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-            conn.setDoOutput(true);
-            //当前链接是http
-            wr = new DataOutputStream(conn.getOutputStream());
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(
+                    connection.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = input.readLine()) != null) {
+                    response.append(line);
+                }
+            }
+            return response.indexOf("\"errno\":0") >= 0;
+        } finally {
+            connection.disconnect();
         }
-
-
-        wr.writeBytes(postData);
-        wr.flush();
-        wr.close();
-
-        int responseCode = conn.getResponseCode();
-        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
-
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        in.close();
-        return response.toString().indexOf("\"errno\":0") != -1;
     }
-    //绕过SSL、TLS证书
-    public static SSLContext createIgnoreVerifySSL() throws NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sc = SSLContext.getInstance("TLS");
-        // 实现一个X509TrustManager接口，用于绕过验证，不用修改里面的方法
-        X509TrustManager trustManager = new X509TrustManager() {
-            @Override
-            public void checkClientTrusted(
-                    java.security.cert.X509Certificate[] paramArrayOfX509Certificate,
-                    String paramString) throws CertificateException {
-            }
-
-            @Override
-            public void checkServerTrusted(
-                    java.security.cert.X509Certificate[] paramArrayOfX509Certificate,
-                    String paramString) throws CertificateException {
-            }
-
-            @Override
-            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
-        };
-
-        sc.init(null, new TrustManager[]{trustManager}, null);
-        return sc;
-    }
+    @ProviderIsolated(ProviderWorkload.BACKGROUND)
     public boolean sendServerJ(String text,String desc){
         try{
             String url = jusicProperties.getServerJUrl();
-            return commonSendJ(url,text,desc);
+            ProviderIsolationProperties.Http http =
+                    providerIsolationProperties.getHttp();
+            return commonSendJ(url, text, desc, http.getConnectTimeoutMs(),
+                    http.getReadTimeoutMs());
         }catch(Exception e){
             log.error("发送至Server酱失败：{}",e.getMessage());
         }
@@ -119,6 +86,7 @@ public class MailServiceImpl implements MailService {
 
     }
     @Override
+    @ProviderIsolated(ProviderWorkload.BACKGROUND)
     public boolean sendSimpleMail(String subject, String content) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(jusicProperties.getMailSendFrom());

@@ -15,7 +15,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class JusicApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(JusicApplication.class, "--debug");
+        // Preserve standard Spring Boot command-line configuration. The old
+        // hard-coded --debug argument discarded every operator supplied limit
+        // or lifecycle override.
+        SpringApplication.run(JusicApplication.class, args);
     }
 
 //    @GetMapping("/")

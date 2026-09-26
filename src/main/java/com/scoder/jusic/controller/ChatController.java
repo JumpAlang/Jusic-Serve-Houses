@@ -5,6 +5,9 @@ import com.scoder.jusic.common.page.HulkPage;
 import com.scoder.jusic.common.page.Page;
 import com.scoder.jusic.configuration.HouseContainer;
 import com.scoder.jusic.model.*;
+import com.scoder.jusic.security.InboundPayloadValidator;
+import com.scoder.jusic.security.ProviderCallExecutor;
+import com.scoder.jusic.security.RoomRolePolicy;
 import com.scoder.jusic.service.ChatService;
 import com.scoder.jusic.service.SessionService;
 import com.scoder.jusic.util.StringUtils;
@@ -16,9 +19,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author H
@@ -33,18 +34,17 @@ public class ChatController {
     private HouseContainer houseContainer;
     @Autowired
     private ChatService chatService;
-    private static final List<String> roles = new ArrayList<String>() {{
-        add("root");
-        add("admin");
-    }};
-
+    @Autowired
+    private InboundPayloadValidator inboundPayloadValidator;
+    @Autowired
+    private ProviderCallExecutor providerCallExecutor;
     @MessageMapping("/chat/notice/{msg}")
     @SendTo("/topic/chat")
     public Response notice(@DestinationVariable String msg, StompHeaderAccessor accessor) {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId,houseId);
-        if (!roles.get(0).equals(role)) {
+        if (!RoomRolePolicy.isRoot(role)) {
             return Response.failure((Object) null, "你没有权限");
         }
 
@@ -53,9 +53,27 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void chat(Chat chat, StompHeaderAccessor accessor) {
-        String sessionId = accessor.getHeader("simpSessionId").toString();
-        String houseId = (String)accessor.getSessionAttributes().get("houseId");
+        String sessionId = accessor == null ? null : accessor.getSessionId();
+        String houseId = accessor == null || accessor.getSessionAttributes() == null
+                ? null
+                : (String) accessor.getSessionAttributes().get("houseId");
+        if (sessionId == null || houseId == null) {
+            return;
+        }
+
+        String validationMessage = inboundPayloadValidator.validateChat(chat);
+        if (validationMessage != null) {
+            sessionService.send(sessionId, MessageType.NOTICE,
+                    Response.failure((Object) null, validationMessage), houseId);
+            return;
+        }
+
         User user = sessionService.getUser(sessionId,houseId);
+        if (user == null) {
+            sessionService.send(sessionId, MessageType.NOTICE,
+                    Response.failure((Object) null, "用户会话未初始化，请重新连接"), houseId);
+            return;
+        }
 //        User black = sessionService.getBlack(sessionId,houseId);
         long currentTime = System.currentTimeMillis();
 //        if (null != black && black.getSessionId().equals(sessionId)) {
@@ -66,12 +84,15 @@ public class ChatController {
         } else {
             chat.setSessionId(sessionId);
             chat.setNickName(user.getNickName());
+            chat.setSendTime(currentTime);
             String atsession = StringUtils.getSessionId(chat.getContent());
-            if(atsession != null && atsession != ""){
+            if(atsession != null && !atsession.isEmpty()){
                 User atUser = sessionService.getUser(atsession,houseId);
                 if(atUser != null){
                     sessionService.send(atsession,MessageType.CHAT, Response.success(chat),houseId);
-                    sessionService.send(sessionId,MessageType.CHAT, Response.success(chat),houseId);
+                    if (!atsession.equals(sessionId)) {
+                        sessionService.send(sessionId,MessageType.CHAT, Response.success(chat),houseId);
+                    }
                 }else{
                     sessionService.send(MessageType.CHAT, Response.success(chat),houseId);
                 }
@@ -87,7 +108,7 @@ public class ChatController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId,houseId);
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             log.info("session: {} 尝试拉黑用户: {}, 已被阻止", sessionId, user.getSessionId());
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
@@ -108,7 +129,7 @@ public class ChatController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId,houseId);
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
             if(message != null && message.getContent() != null && message.getContent().length() > 333){
@@ -135,7 +156,7 @@ public class ChatController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId,houseId);
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             log.info("session: {} 尝试解除黑名单: {}, 已被阻止", sessionId, user.getSessionId());
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"), houseId);
         } else {
@@ -150,7 +171,7 @@ public class ChatController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         String role = sessionService.getRole(sessionId,houseId);
-        if (!roles.contains(role)) {
+        if (!RoomRolePolicy.isPrivileged(role)) {
             sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "你没有权限"),houseId);
         } else {
             String blackUser = sessionService.showBlackUser(houseId);
@@ -166,13 +187,24 @@ public class ChatController {
     public void pictureSearch(Chat chat, HulkPage hulkPage, StompHeaderAccessor accessor) {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
-        if (Objects.isNull(chat) || Objects.isNull(chat.getContent())) {
-            log.info("session: {} 尝试搜索图片, 但关键字为空", sessionId);
-            sessionService.send(sessionId, MessageType.NOTICE, Response.failure((Object) null, "请输入要搜索的关键字"),houseId);
+        String validationMessage = inboundPayloadValidator.validateSearch(
+                chat == null ? null : chat.getContent(), false, hulkPage);
+        if (validationMessage != null) {
+            log.info("session: {} 尝试搜索图片, 但请求参数不合法", sessionId);
+            sessionService.send(sessionId, MessageType.NOTICE,
+                    Response.failure((Object) null, validationMessage),houseId);
         } else {
-            Page<List> page = chatService.pictureSearch(chat.getContent(), hulkPage);
-            log.info("session: {} 尝试搜索图片, 关键字: {}, 即将向该用户推送结果", sessionId, chat.getContent());
-            sessionService.send(sessionId, MessageType.SEARCH_PICTURE, Response.success(page, "搜索结果"),houseId);
+            try {
+                Page<List> page = providerCallExecutor.search(
+                        () -> chatService.pictureSearch(chat.getContent(), hulkPage));
+                log.info("session: {} 搜索图片完成，即将向该用户推送结果", sessionId);
+                sessionService.send(sessionId, MessageType.SEARCH_PICTURE,
+                        Response.success(page, "搜索结果"),houseId);
+            } catch (RuntimeException ex) {
+                log.warn("搜索图片失败，reason: {}", ex.getMessage());
+                sessionService.send(sessionId, MessageType.NOTICE,
+                        Response.failure((Object) null, "搜索失败,请稍后重试"),houseId);
+            }
         }
     }
 

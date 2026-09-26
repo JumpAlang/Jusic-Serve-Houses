@@ -40,13 +40,18 @@ public class ConfigRepositoryImpl implements ConfigRepository {
 
     @Override
     public void initialize(String houseId) {
-        this.put(redisKeys.getRedisRoleRoot(), jusicProperties.getRoleRootPassword(),houseId);
-        this.put(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword(),houseId);
-        this.put(redisKeys.getVoteSkipRate(), jusicProperties.getVoteRate(),houseId);
-        this.put(redisKeys.getGoodModel(),jusicProperties.getGoodModel(),houseId);
-        this.put(redisKeys.getRandomModel(),jusicProperties.getRandomModel(),houseId);
-        this.put(redisKeys.getMusicCircleModel(),jusicProperties.getMusicCircleModel(),houseId);
-        this.put(redisKeys.getListCircleModel(),jusicProperties.getListCircleModel(),houseId);
+        this.putIfAbsent(redisKeys.getRedisRoleRoot(), jusicProperties.getRoleRootPassword(),houseId);
+        this.putIfAbsent(redisKeys.getRedisRoleAdmin(), jusicProperties.getRoleAdminPassword(),houseId);
+        this.putIfAbsent(redisKeys.getVoteSkipRate(), jusicProperties.getVoteRate(),houseId);
+        this.putIfAbsent(redisKeys.getGoodModel(),jusicProperties.getGoodModel(),houseId);
+        this.putIfAbsent(redisKeys.getRandomModel(),jusicProperties.getRandomModel(),houseId);
+        this.putIfAbsent(redisKeys.getMusicCircleModel(),jusicProperties.getMusicCircleModel(),houseId);
+        this.putIfAbsent(redisKeys.getListCircleModel(),jusicProperties.getListCircleModel(),houseId);
+    }
+
+    private void putIfAbsent(Object hashKey, Object value, String houseId) {
+        redisTemplate.opsForHash()
+                .putIfAbsent(redisKeys.getConfigHash()+houseId, hashKey, value);
     }
 
     @Override

@@ -1,14 +1,62 @@
 server:
   port: 8888
+  servlet:
+    session:
+      timeout: ${HTTP_SESSION_TIMEOUT:30m}
+      cookie:
+        name: JSESSIONID
+        http-only: true
 management:
   endpoint:
     shutdown:
-      enabled: true
-      sensitive: false
+      enabled: false
   endpoints:
     web:
       exposure:
-        include: "shutdown"
+        include: "health,info"
 spring:
   profiles:
     active: prod
+  mail:
+    properties:
+      mail:
+        smtp:
+          connectiontimeout: ${MAIL_SMTP_CONNECT_TIMEOUT_MS:3000}
+          timeout: ${MAIL_SMTP_READ_TIMEOUT_MS:5000}
+          writetimeout: ${MAIL_SMTP_WRITE_TIMEOUT_MS:5000}
+  session:
+    store-type: ${HTTP_SESSION_STORE_TYPE:redis}
+    timeout: ${HTTP_SESSION_TIMEOUT:30m}
+    redis:
+      namespace: ${HTTP_SESSION_REDIS_NAMESPACE:jusic:http-session:v1}
+      configure-action: ${HTTP_SESSION_REDIS_CONFIGURE_ACTION:notify-keyspace-events}
+  task:
+    scheduling:
+      pool:
+        size: ${SCHEDULING_POOL_SIZE:4}
+      thread-name-prefix: jusic-scheduled-
+jusic:
+  # Read X-Forwarded-For/X-Real-IP supplied by the reverse proxy.
+  network:
+    use-forward-headers: ${JUSIC_NETWORK_USE_FORWARD_HEADERS:true}
+  abuse:
+    # A busy room may legitimately receive many simultaneous joins. Per-user
+    # and per-IP limits remain in force; this raises only the shared room cap.
+    room-enter:
+      room:
+        max-requests: ${JUSIC_ABUSE_ROOM_ENTER_ROOM_MAX_REQUESTS:300}
+        window-ms: ${JUSIC_ABUSE_ROOM_ENTER_ROOM_WINDOW_MS:60000}
+  picture-search:
+    api-url: ${PICTURE_SEARCH_API_URL:https://cn.apihz.cn/api/img/apihzbqb.php}
+    api-id: ${APIHZ_ID:10019935}
+    api-key: ${APIHZ_KEY:cb30d77c6120fbf521c5d318054c25de}
+    fallback-url: ${PICTURE_SEARCH_FALLBACK_URL:https://api.xcvts.cn/api/img/qqbqbss}
+  presence:
+    enabled: ${PRESENCE_ENABLED:true}
+    namespace: ${PRESENCE_NAMESPACE:jusic:presence:v1}
+    ttl: ${PRESENCE_TTL_MS:60000}
+    heartbeat-delay: ${PRESENCE_HEARTBEAT_MS:15000}
+    refresh-batch-size: ${PRESENCE_REFRESH_BATCH_SIZE:200}
+    cleanup-delay: ${PRESENCE_CLEANUP_MS:30000}
+    candidate-grace: ${PRESENCE_CANDIDATE_GRACE_MS:60000}
+    candidate-ttl: ${PRESENCE_CANDIDATE_TTL_MS:180000}

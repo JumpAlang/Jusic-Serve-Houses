@@ -46,7 +46,7 @@
         <logger name="com.scoder" level="DEBUG">
             <appender-ref ref="COMMON" />
         </logger>
-        <logger name="org.springframework" level="DEBUG">
+        <logger name="org.springframework" level="INFO">
             <appender-ref ref="COMMON"/>
         </logger>
     </springProfile>

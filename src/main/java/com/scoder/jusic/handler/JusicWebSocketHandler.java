@@ -2,6 +2,7 @@ package com.scoder.jusic.handler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
@@ -38,8 +39,42 @@ public class JusicWebSocketHandler extends WebSocketHandlerDecorator {
      */
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        jusicWebSocketHandlerAsync.afterConnectionEstablished(session);
-        super.afterConnectionEstablished(session);
+        // Reserve synchronously before the STOMP delegate can retain this
+        // transport. A duplicate is closed with the application-specific
+        // status before this callback returns.
+        if (!jusicWebSocketHandlerAsync.tryReserveConnection(session)) {
+            return;
+        }
+        try {
+            // SubProtocolWebSocketHandler creates its own decorator for STOMP
+            // output. Put our shared final write gate underneath it so both
+            // that path and the application's direct mailbox path serialize
+            // writes to the same physical SockJS session.
+            super.afterConnectionEstablished(
+                    SerializedWebSocketSession.wrap(session));
+            jusicWebSocketHandlerAsync.afterConnectionEstablished(session);
+        } catch (TaskRejectedException ex) {
+            // The bounded executor is deliberately fail-fast. Do not push the
+            // initialization work back onto the WebSocket I/O thread.
+            log.warn("websocket initialization rejected, session: {}", session.getId());
+            jusicWebSocketHandlerAsync.releaseConnectionReservation(session);
+            jusicWebSocketHandlerAsync.markConnectionClosed(session);
+            session.close(new CloseStatus(1013, "server overloaded"));
+        } catch (Exception ex) {
+            // The delegate did not accept the connection, or initialization
+            // failed synchronously before it was queued. Release only if this
+            // exact session still owns the first-wins reservation.
+            jusicWebSocketHandlerAsync.releaseConnectionReservation(session);
+            jusicWebSocketHandlerAsync.markConnectionClosed(session);
+            if (session.isOpen()) {
+                try {
+                    session.close(CloseStatus.SERVER_ERROR);
+                } catch (Exception closeFailure) {
+                    ex.addSuppressed(closeFailure);
+                }
+            }
+            throw ex;
+        }
     }
 
     /**
@@ -53,8 +88,43 @@ public class JusicWebSocketHandler extends WebSocketHandlerDecorator {
      */
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-        jusicWebSocketHandlerAsync.afterConnectionClosed(session, closeStatus);
-        super.afterConnectionClosed(session, closeStatus);
+        // Mark first so a queued establish task cannot insert the session while
+        // the delegate is processing this close event.
+        jusicWebSocketHandlerAsync.markConnectionClosed(session);
+        if (jusicWebSocketHandlerAsync.isDuplicateClientRejected(session)) {
+            // The delegate never saw a synchronously rejected duplicate.
+            jusicWebSocketHandlerAsync.afterConnectionClosed(
+                    session, closeStatus);
+            return;
+        }
+        try {
+            super.afterConnectionClosed(session, closeStatus);
+        } finally {
+            // Cleanup is synchronous on purpose: queue rejection must never
+            // leak local/Redis session and vote state.
+            jusicWebSocketHandlerAsync.afterConnectionClosed(session, closeStatus);
+        }
+    }
+
+    @Override
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+        jusicWebSocketHandlerAsync.markConnectionClosed(session);
+        if (jusicWebSocketHandlerAsync.isDuplicateClientRejected(session)) {
+            jusicWebSocketHandlerAsync.afterConnectionClosed(
+                    session, CloseStatus.SERVER_ERROR);
+            return;
+        }
+        try {
+            super.handleTransportError(session, exception);
+        } finally {
+            // Do not rely exclusively on a later container close callback.
+            // Cleanup is idempotent, so a subsequent afterConnectionClosed is safe.
+            jusicWebSocketHandlerAsync.afterConnectionClosed(
+                    session, CloseStatus.SERVER_ERROR);
+            if (session.isOpen()) {
+                session.close(CloseStatus.SERVER_ERROR);
+            }
+        }
     }
 
 

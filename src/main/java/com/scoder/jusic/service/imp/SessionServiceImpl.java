@@ -1,27 +1,30 @@
 package com.scoder.jusic.service.imp;
 
 import com.alibaba.fastjson.JSON;
+import com.scoder.jusic.configuration.ClientConnectionRegistry;
+import com.scoder.jusic.configuration.ConnectionAdmissionResult;
 import com.scoder.jusic.configuration.JusicProperties;
+import com.scoder.jusic.handler.JusicWebSocketHandlerAsync;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.User;
 import com.scoder.jusic.repository.MusicVoteRepository;
 import com.scoder.jusic.repository.SessionBlackRepository;
 import com.scoder.jusic.repository.SessionRepository;
 import com.scoder.jusic.service.SessionService;
-import com.scoder.jusic.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author H
@@ -30,26 +33,46 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class SessionServiceImpl implements SessionService {
 
+    private static final long CLEANUP_FAILURE_LOG_INTERVAL_MS = 10_000L;
+
+    private final JusicProperties jusicProperties;
+    private final SessionRepository sessionRepository;
+    private final SessionBlackRepository sessionBlackRepository;
+    private final MusicVoteRepository musicVoteRepository;
+    private final SessionOutboundMailboxes outboundMailboxes;
+    private final ClientConnectionRegistry clientConnectionRegistry;
+    private final AtomicLong lastCleanupFailureLog = new AtomicLong();
+
     @Autowired
-    private JusicProperties jusicProperties;
-    @Autowired
-    private SessionRepository sessionRepository;
-    @Autowired
-    private SessionBlackRepository sessionBlackRepository;
-    @Autowired
-    private MusicVoteRepository musicVoteRepository;
+    public SessionServiceImpl(JusicProperties jusicProperties,
+                              SessionRepository sessionRepository,
+                              SessionBlackRepository sessionBlackRepository,
+                              MusicVoteRepository musicVoteRepository,
+                              SessionOutboundMailboxes outboundMailboxes,
+                              ClientConnectionRegistry clientConnectionRegistry) {
+        this.jusicProperties = jusicProperties;
+        this.sessionRepository = sessionRepository;
+        this.sessionBlackRepository = sessionBlackRepository;
+        this.musicVoteRepository = musicVoteRepository;
+        this.outboundMailboxes = outboundMailboxes;
+        this.clientConnectionRegistry = clientConnectionRegistry;
+    }
 
     @Override
     public void settingName(String sessionId, String name,String houseId) {
-        if (null == name) {
-
-        } else {
-            log.info("setting name: {}", name);
-            User user = sessionRepository.getSession(sessionId,houseId);
-            user.setName(name);
-            user.setNickName(user.getName() + "(" + StringUtils.desensitizeIPV4(user.getRemoteAddress()) + ")");
-            sessionRepository.setSession(user,houseId);
+        if (name == null) {
+            return;
         }
+        log.info("setting name: {}", name);
+        User user = sessionRepository.getSession(sessionId,houseId);
+        if (user == null) {
+            log.debug("Ignoring nickname update for missing session {} in house {}",
+                    sessionId, houseId);
+            return;
+        }
+        user.setName(name);
+        user.setNickName(user.getNickName());
+        sessionRepository.setSession(user,houseId);
     }
 
     @Override
@@ -64,29 +87,205 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public User  putSession(WebSocketSession session,String houseId) {
-        jusicProperties.getSessions(houseId).put(session.getId(), session);
+        if (session == null || !session.isOpen()
+                || Boolean.TRUE.equals(session.getAttributes().get(
+                JusicWebSocketHandlerAsync.CONNECTION_CLOSED_ATTRIBUTE))) {
+            throw new IllegalStateException("cannot register a closed WebSocket session");
+        }
+        Object remoteAddress = session.getAttributes().get("remoteAddress");
+        String clientIp = remoteAddress == null ? "unknown" : remoteAddress.toString();
+        ConnectionAdmissionResult admission = jusicProperties.getSession()
+                .move(session, houseId, clientIp);
+        String previousHouseId = admission.getPreviousHouseId();
+        boolean moved = admission.getOutcome() == ConnectionAdmissionResult.Outcome.MOVED;
+        if (moved) {
+            // Frames already queued for the old room must never arrive after
+            // the membership switch.
+            outboundMailboxes.discard(session);
+        }
+        session.getAttributes().put("houseId", houseId);
         User user = User.builder()
                 .sessionId(session.getId())
                 .name("")
                 .nickName("")
-                .remoteAddress(session.getAttributes().get("remoteAddress").toString())
-                .role(session.getId().equals(houseId)?"admin":"default").houseId(session.getAttributes().get("houseId").toString())
+                .remoteAddress(clientIp)
+                .role(session.getId().equals(houseId)?"admin":"default").houseId(houseId)
                 .build();
-        sessionRepository.setSession(user,houseId);
+        try {
+            sessionRepository.setSession(user,houseId);
+        } catch (RuntimeException ex) {
+            // Never leave a half-initialized local connection when Redis
+            // registration fails.
+            try {
+                rollbackAdmission(session, admission, clientIp);
+            } catch (RuntimeException rollbackFailure) {
+                // A rollback can itself be rejected when the old room filled
+                // concurrently. In that case, remove the target registration
+                // so the failed Redis write never leaves a local ghost.
+                try {
+                    jusicProperties.getSession().remove(session);
+                } catch (RuntimeException removalFailure) {
+                    rollbackFailure.addSuppressed(removalFailure);
+                }
+                failClosedAfterRollback(session, admission, rollbackFailure);
+                ex.addSuppressed(rollbackFailure);
+                logCleanupFailure("local-rollback", session.getId(), houseId,
+                        rollbackFailure);
+            }
+            outboundMailboxes.discard(session);
+            throw ex;
+        }
+        if (moved && previousHouseId != null && !previousHouseId.equals(houseId)) {
+            cleanupRedisMembership(session.getId(), previousHouseId);
+        }
         return user;
+    }
+
+    private void rollbackAdmission(WebSocketSession session,
+                                   ConnectionAdmissionResult admission,
+                                   String clientIp) {
+        if (admission.getOutcome() == ConnectionAdmissionResult.Outcome.REGISTERED) {
+            jusicProperties.getSession().remove(session);
+            return;
+        }
+        if (admission.getOutcome() == ConnectionAdmissionResult.Outcome.MOVED
+                && admission.getPreviousHouseId() != null) {
+            jusicProperties.getSession().move(
+                    session, admission.getPreviousHouseId(), clientIp);
+            session.getAttributes().put("houseId", admission.getPreviousHouseId());
+        }
+    }
+
+    private void failClosedAfterRollback(WebSocketSession session,
+                                         ConnectionAdmissionResult admission,
+                                         RuntimeException rollbackFailure) {
+        String previousHouseId = admission.getPreviousHouseId();
+        if (previousHouseId != null) {
+            session.getAttributes().put("houseId", previousHouseId);
+        }
+        session.getAttributes().put(
+                JusicWebSocketHandlerAsync.CONNECTION_CLOSED_ATTRIBUTE, Boolean.TRUE);
+        try {
+            if (session.isOpen()) {
+                session.close(CloseStatus.SERVER_ERROR);
+            }
+        } catch (Exception closeFailure) {
+            rollbackFailure.addSuppressed(closeFailure);
+            log.warn("Failed to close session {} after membership rollback failed: {}",
+                    session.getId(), closeFailure.getMessage());
+            log.debug("WebSocket close failure after membership rollback", closeFailure);
+        }
+    }
+
+    private void cleanupRedisMembership(String sessionId, String houseId) {
+        try {
+            sessionRepository.removeSession(sessionId, houseId);
+        } catch (RuntimeException ex) {
+            logCleanupFailure("redis-session", sessionId, houseId, ex);
+        }
+        try {
+            musicVoteRepository.remove(sessionId, houseId);
+        } catch (RuntimeException ex) {
+            logCleanupFailure("redis-vote", sessionId, houseId, ex);
+        }
     }
 
     @Override
     public void clearSession(WebSocketSession session,String houseId) {
-        log.info("Clear Session: {}", session.getId());
-        jusicProperties.getSessions(houseId).remove(session.getId());
-        sessionRepository.removeSession(session.getId(),houseId);
+        if (session == null) {
+            return;
+        }
+        // All production registration/move paths use the same session monitor.
+        // Cleanup therefore cannot interleave between local admission and its
+        // Redis write, which would otherwise recreate stale Redis presence.
+        synchronized (session) {
+            clearSessionResources(session.getId(), houseId, session);
+        }
     }
+
+    @Override
     public WebSocketSession clearSession(String sessionId,String houseId) {
-        log.info("Clear Session: {}", sessionId);
-        sessionRepository.removeSession(sessionId,houseId);
-        musicVoteRepository.remove(sessionId,houseId);
-        return  jusicProperties.getSessions(houseId).remove(sessionId);
+        return clearSessionResources(sessionId, houseId, null);
+    }
+
+    private WebSocketSession clearSessionResources(String sessionId,
+                                                   String houseId,
+                                                   WebSocketSession sessionHint) {
+        if (sessionId == null || houseId == null) {
+            if (sessionHint != null) {
+                outboundMailboxes.discard(sessionHint);
+            } else if (sessionId != null) {
+                outboundMailboxes.discard(sessionId);
+            }
+            return sessionHint;
+        }
+
+        WebSocketSession removed = null;
+        ConnectionAdmissionResult removal = null;
+        try {
+            removal = sessionHint == null
+                    ? jusicProperties.getSession().remove(sessionId, houseId)
+                    : jusicProperties.getSession().remove(sessionHint);
+            removed = removal.getSession();
+        } catch (RuntimeException ex) {
+            logCleanupFailure("local-session", sessionId, houseId, ex);
+        }
+
+        WebSocketSession indexedSession = removed != null ? removed : sessionHint;
+        if (indexedSession != null) {
+            try {
+                clientConnectionRegistry.unbind(indexedSession);
+            } catch (RuntimeException ex) {
+                logCleanupFailure("client-connection-index", sessionId, houseId, ex);
+            }
+        }
+
+        // A delayed id/house cleanup may refer to the room a live session has
+        // already left. Never discard the current session's mailbox or remove
+        // its new-room Redis presence in that case; only clean the stale room.
+        if (removal != null
+                && removal.getOutcome() == ConnectionAdmissionResult.Outcome.STALE_SESSION) {
+            if (sessionHint != null) {
+                try {
+                    outboundMailboxes.discard(sessionHint);
+                } catch (RuntimeException ex) {
+                    logCleanupFailure("outbound-mailbox", sessionId, houseId, ex);
+                }
+                return sessionHint;
+            }
+            cleanupRedisMembership(sessionId, houseId);
+            return null;
+        }
+
+        WebSocketSession mailboxSession = removed != null ? removed : sessionHint;
+        try {
+            if (mailboxSession == null) {
+                outboundMailboxes.discard(sessionId);
+            } else {
+                outboundMailboxes.discard(mailboxSession);
+            }
+        } catch (RuntimeException ex) {
+            logCleanupFailure("outbound-mailbox", sessionId, houseId, ex);
+        }
+
+        // Each cleanup step is independent and idempotent. A Redis outage in
+        // one repository must not retain the local socket or skip vote cleanup.
+        cleanupRedisMembership(sessionId, houseId);
+        return removed != null ? removed : sessionHint;
+    }
+
+    private void logCleanupFailure(String resource,
+                                   String sessionId,
+                                   String houseId,
+                                   RuntimeException ex) {
+        long now = System.currentTimeMillis();
+        long previous = lastCleanupFailureLog.get();
+        if (now - previous >= CLEANUP_FAILURE_LOG_INTERVAL_MS
+                && lastCleanupFailureLog.compareAndSet(previous, now)) {
+            log.warn("WebSocket cleanup failed for resource {}, session {}, house {}: {}",
+                    resource, sessionId, houseId, ex.getMessage());
+        }
+        log.debug("WebSocket cleanup failure for resource " + resource, ex);
     }
 
     @Override
@@ -96,10 +295,18 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public void send(MessageType messageType, Object payload,String houseId) {
-        Map<String, WebSocketSession> sessions = jusicProperties.getSessions(houseId);
+        Map<String, WebSocketSession> sessions = jusicProperties.getSession()
+                .getHouseSessionIfPresent(houseId);
+        if (sessions == null || sessions.isEmpty()) {
+            return;
+        }
+        SessionOutboundMailboxes.PreparedMessage textMessage =
+                createTextMessage(messageType, payload);
         sessions.forEach((key, session) -> {
             if (session.isOpen()) {
-                this.send(session, messageType, payload);
+                dispatch(session, textMessage);
+            } else {
+                clearSession(session, houseId);
             }
         });
     }
@@ -108,13 +315,24 @@ public class SessionServiceImpl implements SessionService {
     public void send(MessageType messageType, Object payload) {
         JusicProperties.SessionContainer sessions = jusicProperties.getSessions();
         Map<String,ConcurrentHashMap<String,WebSocketSession>> housesSession = sessions.get();
+        if (housesSession.isEmpty()) {
+            return;
+        }
+        SessionOutboundMailboxes.PreparedMessage textMessage =
+                createTextMessage(messageType, payload);
         Set<String> houseIdSet = housesSession.keySet();
         Iterator<String> iterator = houseIdSet.iterator();
         while(iterator.hasNext()){
-            ConcurrentHashMap<String,WebSocketSession> houseSession = housesSession.get(iterator.next());
+            String houseId = iterator.next();
+            ConcurrentHashMap<String,WebSocketSession> houseSession = housesSession.get(houseId);
+            if (houseSession == null) {
+                continue;
+            }
             houseSession.forEach((key, session) -> {
                 if (session.isOpen()) {
-                    this.send(session, messageType, payload);
+                    dispatch(session, textMessage);
+                } else {
+                    clearSession(session, houseId);
                 }
             });
         }
@@ -127,10 +345,18 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public void send(String sessionId, MessageType messageType, Object payload,String houseId) {
-        Map<String, WebSocketSession> sessions = jusicProperties.getSessions(houseId);
+        Map<String, WebSocketSession> sessions = jusicProperties.getSession()
+                .getHouseSessionIfPresent(houseId);
+        if (sessions == null) {
+            return;
+        }
         WebSocketSession session = sessions.get(sessionId);
         if(session != null){
-            this.send(session, messageType, payload);
+            if (session.isOpen()) {
+                this.send(session, messageType, payload);
+            } else {
+                clearSession(session, houseId);
+            }
         }
     }
 
@@ -141,15 +367,27 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public void send(WebSocketSession session, MessageType messageType, Object payload) {
-        TextMessage textMessage = new TextMessage(this.getPayload(messageType.type(), payload));
-        try {
-            synchronized (session) {
-                if (session.isOpen()) {
-                    session.sendMessage(textMessage);
-                }
+        dispatch(session, createTextMessage(messageType, payload));
+    }
+
+    private SessionOutboundMailboxes.PreparedMessage createTextMessage(
+            MessageType messageType, Object payload) {
+        return SessionOutboundMailboxes.PreparedMessage.from(
+                new TextMessage(this.getPayload(messageType.type(), payload)));
+    }
+
+    private void dispatch(WebSocketSession session,
+                          SessionOutboundMailboxes.PreparedMessage textMessage) {
+        SessionOutboundMailboxes.DispatchResult result = outboundMailboxes.dispatch(session, textMessage);
+        if (result.requiresPresenceCleanup()) {
+            Object houseId = session.getAttributes().get("houseId");
+            if (houseId == null) {
+                outboundMailboxes.discard(session);
+                log.warn("Discarded outbound session {} without a house after {}",
+                        session.getId(), result);
+            } else {
+                clearSession(session, houseId.toString());
             }
-        } catch (IOException e) {
-            log.error("send exception.");
         }
     }
 
@@ -224,12 +462,9 @@ public class SessionServiceImpl implements SessionService {
         payload.append(messageType)
                 .append("\n")
                 .append("content-type:application/json");
-        try {
-            payload.append("\n")
-                    .append("content-length:").append(StringUtils.getLength(jsonString, StringUtils.ENCODE_UTF_8));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        payload.append("\n")
+                .append("content-length:")
+                .append(jsonString.getBytes(StandardCharsets.UTF_8).length);
         payload.append("\n")
                 .append("\n")
                 .append(jsonString);

@@ -43,11 +43,7 @@ public class MusicVoteRepositoryImpl implements MusicVoteRepository {
 
     @Override
     public void reset(String houseId) {
-        Set members = this.members(houseId);
-        if (null != members && members.size() > 0) {
-            redisTemplate.opsForSet()
-                    .remove(redisKeys.getSkipSet()+houseId, members.toArray());
-        }
+        redisTemplate.delete(redisKeys.getSkipSet()+houseId);
     }
 
     @Override

@@ -12,16 +12,22 @@ import org.springframework.stereotype.Component;
 public class JusicDisposable implements DisposableBean {
 
     private final HouseContainer houseContainer;
+    private final LifecycleProperties lifecycleProperties;
 
-    public JusicDisposable(HouseContainer houseContainer) {
+    public JusicDisposable(HouseContainer houseContainer,
+                           LifecycleProperties lifecycleProperties) {
         this.houseContainer = houseContainer;
+        this.lifecycleProperties = lifecycleProperties;
     }
 
     @Override
     public void destroy() throws Exception {
-        log.info("销毁工作开始");
+        if (!lifecycleProperties.isCleanupLegacyStateOnShutdown()) {
+            log.info("节点关闭，已跳过会删除房间共享状态的 legacy cleanup");
+            return;
+        }
+        log.warn("legacy shutdown cleanup is enabled; do not use this mode with multiple nodes");
         houseContainer.destroy();
-        log.info("销毁工作完成");
     }
 
 }

@@ -7,7 +7,8 @@ import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.model.RetainKey;
 import com.scoder.jusic.model.Token;
-import com.scoder.jusic.util.IPUtils;
+import com.scoder.jusic.security.ClientIpResolver;
+import com.scoder.jusic.security.ProviderCallExecutor;
 import com.scoder.jusic.util.StringUtils;
 import com.scoder.jusic.util.UUIDUtils;
 import kong.unirest.HttpResponse;
@@ -31,6 +32,7 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Callable;
 
 /**
  * @author JumpAlang
@@ -44,8 +46,13 @@ public class HomeController {
     private HouseContainer houseContainer;
     @Autowired
     private JusicProperties jusicProperties;
+    @Autowired
+    private ProviderCallExecutor providerCallExecutor;
+    @Autowired
+    private ClientIpResolver clientIpResolver;
 
-    public static Token TOKEN;
+    public static volatile Token TOKEN;
+    private static final Object TOKEN_REFRESH_LOCK = new Object();
 
     @RequestMapping("/house/add")
     @ResponseBody
@@ -71,7 +78,8 @@ public class HomeController {
         if(houseContainer.size() >= jusicProperties.getHouseSize()){
             return Response.failure((Object) null, "暂时不能新增房间，待其他空房间被自动腾空方可创建。");
         }
-        String ip = IPUtils.getRemoteAddress(accessor);
+        // Use the same forwarded-address resolution as the WebSocket handshake.
+        String ip = clientIpResolver.resolve(accessor);
         if(houseContainer.isBeyondIpHouse(ip,jusicProperties.getIpHouse())){
             return Response.failure((Object) null, "该网络暂时不能新增房间，待其他空房间被自动腾空方可创建。");
         }
@@ -111,9 +119,7 @@ public class HomeController {
         }else{
             House matchHouse = houseContainer.get(house.getId());
             if(matchHouse.getNeedPwd() &&  !matchHouse.getPassword().equals(house.getPassword())){// || !matchHouse.getSessionId().equals(sessionId)
-             if(jusicProperties.getSessions(house.getId()).size() == 0 && !matchHouse.getEnableStatus()) {
-                 houseContainer.destroy(house.getId());
-             }
+             houseContainer.destroyIfTemporaryAndEmpty(house.getId());
              return Response.failure((Object) null, "请输入正确的房间密码");
             }
         }
@@ -133,7 +139,7 @@ public class HomeController {
             houseSimple.setDesc(house.getDesc());
             houseSimple.setCreateTime(house.getCreateTime());
             houseSimple.setNeedPwd(house.getNeedPwd());
-            houseSimple.setPopulation(jusicProperties.getSessions(house.getId()).size());
+            houseSimple.setPopulation(jusicProperties.getSessionCount(house.getId()));
             houseSimple.setAnnounce(house.getAnnounce());
             housesSimple.add(houseSimple);
         }
@@ -151,7 +157,10 @@ public class HomeController {
                 return Response.failure((Object)null,"当前房间不存在");
             }
             if(house.getCanDestroy() != null && house.getCanDestroy()){
-                houseContainer.destroy(house.getId());
+                if (!houseContainer.destroy(house.getId())) {
+                    return Response.failure((Object) null,
+                            "房间仍有人在线，或清理暂时失败，请稍后再试");
+                }
                 if(housePrimitive.getEnableStatus() != null && housePrimitive.getEnableStatus()){
                     houseContainer.refreshHouses();
                 }
@@ -239,20 +248,19 @@ public class HomeController {
         if(housePrimitive == null){
             housePrimitive = house;
         }
-        String token = getToken();
-        Map<String,Object> map = new LinkedHashMap<>();
-        map.put("path","pages/player/player?houseId="+housePrimitive.getId()+"&housePwd="+housePrimitive.getPassword());
-        map.put("width",280);
-//        HttpResponse<InputStream> response = null;
-        HttpResponse<byte[]> response = null;
-        try {
-//            response = Unirest.post("https://api.weixin.qq.com/wxa/getwxacode?access_token="+token).body(JSONObject.toJSONString(map)).asBinary();
-            response = Unirest.post("https://api.weixin.qq.com/wxa/getwxacode?access_token="+token).body(JSONObject.toJSONString(map)).asBytes();
-
-        } catch (UnirestException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-        return Response.success(inputStreamToBase64(response.getBody()),"获取成功");
+        House selectedHouse = housePrimitive;
+        return executeProvider("微信小程序码", () -> {
+            String token = getToken();
+            Map<String,Object> map = new LinkedHashMap<>();
+            map.put("path","pages/player/player?houseId="+selectedHouse.getId()+"&housePwd="+selectedHouse.getPassword());
+            map.put("width",280);
+            HttpResponse<byte[]> response = Unirest.post(
+                    "https://api.weixin.qq.com/wxa/getwxacode?access_token=" + token)
+                    .body(JSONObject.toJSONString(map))
+                    .asBytes();
+            requireSuccess(response.getStatus());
+            return Response.success(inputStreamToBase64(response.getBody()),"获取成功");
+        });
 
     }
 
@@ -305,7 +313,7 @@ public class HomeController {
     }
 
 
-        private Token requestToken() {
+    Token requestToken() {
         try{
             HttpResponse<String> response = Unirest.get("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+jusicProperties.getMiniId()+"&secret="+jusicProperties.getMiniSecrect()).asString();
             JSONObject jsonObject = JSONObject.parseObject(response.getBody());
@@ -325,13 +333,17 @@ public class HomeController {
         }
     }
 
-    private String getToken() {
+    String getToken() {
         Token token = TOKEN;
-        if(token == null || !token.isValid()){
-            Token newToken = requestToken();
-            token = newToken;
-            return newToken.getToken();
-        }else {
+        if (token != null && token.isValid()) {
+            return token.getToken();
+        }
+        synchronized (TOKEN_REFRESH_LOCK) {
+            token = TOKEN;
+            if (token == null || !token.isValid()) {
+                token = requestToken();
+                TOKEN = token;
+            }
             return token.getToken();
         }
     }
@@ -356,25 +368,54 @@ public class HomeController {
     @RequestMapping("/bili/room_init/{id}")
     @ResponseBody
     public Response room_init(@PathVariable String id, HttpServletRequest accessor) {
-        HttpResponse<String> response = Unirest.get("https://api.live.bilibili.com/room/v1/Room/room_init?id="+id).asString();
-        JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-        return Response.success(jsonObject,"直播间初始信息");
+        return executeProvider("B站直播间初始化", () -> {
+            HttpResponse<String> response = Unirest.get(
+                    "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + id).asString();
+            requireSuccess(response.getStatus());
+            JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+            return Response.success(jsonObject,"直播间初始信息");
+        });
     }
 
     @RequestMapping("/bili/getConf/{id}")
     @ResponseBody
     public Response getConf(@PathVariable String id, HttpServletRequest accessor) {
-        HttpResponse<String> response = Unirest.get("https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id="+id+"&platform=pc&player=web").asString();
-        JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-        return Response.success(jsonObject,"直播间配置信息");
+        return executeProvider("B站直播间配置", () -> {
+            HttpResponse<String> response = Unirest.get(
+                    "https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id="+id+"&platform=pc&player=web").asString();
+            requireSuccess(response.getStatus());
+            JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+            return Response.success(jsonObject,"直播间配置信息");
+        });
     }
 
     @RequestMapping("/bili/getDanmuInfo/{id}")
     @ResponseBody
     public Response getDanmuInfo(@PathVariable String id, HttpServletRequest accessor) {
-        HttpResponse<String> response = Unirest.get("https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+id+"&type=0&web_location=444.8&w_rid=98797b2ff09c3c95135d89227ec4e223&wts=1752924684").asString();
-        JSONObject jsonObject = JSONObject.parseObject(response.getBody());
-        return Response.success(jsonObject,"直播间弹幕信息");
+        return executeProvider("B站弹幕配置", () -> {
+            HttpResponse<String> response = Unirest.get(
+                    "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+id+"&type=0&web_location=444.8&w_rid=98797b2ff09c3c95135d89227ec4e223&wts=1752924684").asString();
+            requireSuccess(response.getStatus());
+            JSONObject jsonObject = JSONObject.parseObject(response.getBody());
+            return Response.success(jsonObject,"直播间弹幕信息");
+        });
+    }
+
+    private Response executeProvider(String operation, Callable<Response> action) {
+        try {
+            return providerCallExecutor.search(action);
+        } catch (RuntimeException ex) {
+            log.warn("{}调用失败: {}", operation, ex.getMessage());
+            log.debug(operation + " provider failure", ex);
+            return Response.failure((Object) null,
+                    "第三方服务暂不可用，请稍后重试");
+        }
+    }
+
+    private void requireSuccess(int status) {
+        if (status < 200 || status >= 300) {
+            throw new IllegalStateException("provider HTTP status " + status);
+        }
     }
 
 

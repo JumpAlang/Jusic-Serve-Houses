@@ -44,10 +44,11 @@ public class User implements Serializable {
     private Long lastMessageTime;
 
     public String getNickName() {
+        String maskedAddress = StringUtils.desensitizeIPV4(this.remoteAddress);
         StringBuilder nickName = new StringBuilder();
-        nickName.append(this.name)
+        nickName.append(this.name == null ? "" : this.name)
                 .append("(")
-                .append(StringUtils.desensitizeIPV4(this.remoteAddress))
+                .append(maskedAddress == null ? "" : maskedAddress)
                 .append(")");
         return nickName.toString();
     }

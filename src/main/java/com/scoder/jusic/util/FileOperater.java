@@ -24,25 +24,16 @@ public class FileOperater {
     }
 
     public static String commonReadFile(File file) throws IOException {
-        String fileStr = "";
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            String str = "";
-            while ((str = br.readLine()) != null) {
-                fileStr += str;
-            }
-            br.close();
-        return fileStr;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            return readAllLines(reader);
+        }
     }
 
     public static String commonReadFile(Resource resource) throws IOException {
-        String fileStr = "";
-            BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()));
-            String str = "";
-            while ((str = br.readLine()) != null) {
-                fileStr += str;
-            }
-            br.close();
-        return fileStr;
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(resource.getInputStream()))) {
+            return readAllLines(reader);
+        }
     }
 
     public static String getfileinfo(String tokenPath) throws IOException {
@@ -52,14 +43,23 @@ public class FileOperater {
 
     public static void writefileinfo(String t,String tokenPath) throws IOException {
         FileSystemResource resource = new FileSystemResource(tokenPath);
-            FileWriter fileWriter = (new FileWriter(resource.getFile()));
+        try (FileWriter fileWriter = new FileWriter(resource.getFile())) {
             fileWriter.write(t);
-            fileWriter.close();
+        }
     }
 
     public static void writefileinfo(String t,Resource resource) throws IOException {
-        FileWriter fileWriter = (new FileWriter(resource.getFile()));
-        fileWriter.write(t);
-        fileWriter.close();
+        try (FileWriter fileWriter = new FileWriter(resource.getFile())) {
+            fileWriter.write(t);
+        }
+    }
+
+    private static String readAllLines(BufferedReader reader) throws IOException {
+        StringBuilder content = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            content.append(line);
+        }
+        return content.toString();
     }
 }
