@@ -27,6 +27,9 @@ class RoomStateSyncTest {
         when(config.getListCircleModel("room")).thenReturn(true);
         when(config.getEnableSearch("room")).thenReturn(false);
         when(config.getEnableSwitch("room")).thenReturn(true);
+        when(config.getPickWaitMinutes("room")).thenReturn(8);
+        when(config.getClearQueuedOnLeave("room")).thenReturn(true);
+        when(config.getDefaultPlaylistRandom("room")).thenReturn(false);
         RoomState state = RoomState.read(config, "room");
         assertEquals("room", state.getHouseId());
         assertEquals(0.35f, state.getVoteRate());
@@ -36,6 +39,9 @@ class RoomStateSyncTest {
         assertFalse(state.isMusicCircleModel());
         assertFalse(state.isEnableSearch());
         assertTrue(state.isEnableSwitch());
+        assertEquals(8, state.getPickWaitMinutes());
+        assertTrue(state.isClearQueuedOnLeave());
+        assertFalse(state.isDefaultPlaylistRandom());
     }
 
     @Test
@@ -107,6 +113,60 @@ class RoomStateSyncTest {
         assertEquals(ban, afterPick.isEnableSwitch());
         assertEquals(!ban, afterSkip.isEnableSearch());
         assertEquals(!ban, afterSkip.isEnableSwitch());
+    }
+
+    @Test
+    void administratorCanChangePickWaitAndBroadcastState() {
+        ConfigService config = mock(ConfigService.class);
+        SessionService sessions = mock(SessionService.class);
+        MusicController controller = new MusicController();
+        ReflectionTestUtils.setField(controller, "configService", config);
+        ReflectionTestUtils.setField(controller, "sessionService", sessions);
+        when(sessions.getRole("session", "room")).thenReturn("admin");
+        when(config.getPickWaitMinutes("room")).thenReturn(12);
+
+        controller.pickWait(12, accessor());
+
+        verify(config).setPickWaitMinutes(12, "room");
+        ArgumentCaptor<Response> response = ArgumentCaptor.forClass(Response.class);
+        verify(sessions).send(eq(MessageType.ROOM_STATE), response.capture(), eq("room"));
+        assertEquals(12, ((RoomState) response.getValue().getData()).getPickWaitMinutes());
+    }
+
+    @Test
+    void administratorCanChangeDepartureCleanupAndBroadcastState() {
+        ConfigService config = mock(ConfigService.class);
+        SessionService sessions = mock(SessionService.class);
+        MusicController controller = new MusicController();
+        ReflectionTestUtils.setField(controller, "configService", config);
+        ReflectionTestUtils.setField(controller, "sessionService", sessions);
+        when(sessions.getRole("session", "room")).thenReturn("admin");
+        when(config.getClearQueuedOnLeave("room")).thenReturn(false);
+
+        controller.clearQueueOnLeave(false, accessor());
+
+        verify(config).setClearQueuedOnLeave(false, "room");
+        ArgumentCaptor<Response> response = ArgumentCaptor.forClass(Response.class);
+        verify(sessions).send(eq(MessageType.ROOM_STATE), response.capture(), eq("room"));
+        assertFalse(((RoomState) response.getValue().getData()).isClearQueuedOnLeave());
+    }
+
+    @Test
+    void administratorCanChangeDefaultPlaylistModeAndBroadcastState() {
+        ConfigService config = mock(ConfigService.class);
+        SessionService sessions = mock(SessionService.class);
+        MusicController controller = new MusicController();
+        ReflectionTestUtils.setField(controller, "configService", config);
+        ReflectionTestUtils.setField(controller, "sessionService", sessions);
+        when(sessions.getRole("session", "room")).thenReturn("admin");
+        when(config.getDefaultPlaylistRandom("room")).thenReturn(false);
+
+        controller.defaultPlaylistMode(false, accessor());
+
+        verify(config).setDefaultPlaylistRandom(false, "room");
+        ArgumentCaptor<Response> response = ArgumentCaptor.forClass(Response.class);
+        verify(sessions).send(eq(MessageType.ROOM_STATE), response.capture(), eq("room"));
+        assertFalse(((RoomState) response.getValue().getData()).isDefaultPlaylistRandom());
     }
 
     private StompHeaderAccessor accessor() {

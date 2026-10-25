@@ -4,15 +4,22 @@ import com.alibaba.fastjson.JSON;
 import com.scoder.jusic.configuration.ClientConnectionRegistry;
 import com.scoder.jusic.configuration.ConnectionAdmissionResult;
 import com.scoder.jusic.configuration.JusicProperties;
+import com.scoder.jusic.configuration.RoomMusicLocks;
+import com.scoder.jusic.common.message.Response;
 import com.scoder.jusic.handler.JusicWebSocketHandlerAsync;
 import com.scoder.jusic.model.MessageType;
+import com.scoder.jusic.model.Music;
 import com.scoder.jusic.model.User;
 import com.scoder.jusic.repository.MusicVoteRepository;
 import com.scoder.jusic.repository.SessionBlackRepository;
 import com.scoder.jusic.repository.SessionRepository;
 import com.scoder.jusic.service.SessionService;
+import com.scoder.jusic.service.ConfigService;
+import com.scoder.jusic.service.MusicService;
+import com.scoder.jusic.security.RoomRolePolicy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -20,11 +27,13 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author H
@@ -34,6 +43,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SessionServiceImpl implements SessionService {
 
     private static final long CLEANUP_FAILURE_LOG_INTERVAL_MS = 10_000L;
+    public static final String ROOM_ROLE_ATTRIBUTE =
+            SessionServiceImpl.class.getName() + ".roomRole";
 
     private final JusicProperties jusicProperties;
     private final SessionRepository sessionRepository;
@@ -42,6 +53,13 @@ public class SessionServiceImpl implements SessionService {
     private final SessionOutboundMailboxes outboundMailboxes;
     private final ClientConnectionRegistry clientConnectionRegistry;
     private final AtomicLong lastCleanupFailureLog = new AtomicLong();
+    @Autowired(required = false)
+    private ConfigService configService;
+    @Autowired(required = false)
+    @Lazy
+    private MusicService musicService;
+    @Autowired(required = false)
+    private RoomMusicLocks roomMusicLocks;
 
     @Autowired
     public SessionServiceImpl(JusicProperties jusicProperties,
@@ -104,12 +122,15 @@ public class SessionServiceImpl implements SessionService {
             outboundMailboxes.discard(session);
         }
         session.getAttributes().put("houseId", houseId);
+        String initialRole = session.getId().equals(houseId)?"admin":"default";
+        session.getAttributes().put(ROOM_ROLE_ATTRIBUTE, initialRole);
         User user = User.builder()
                 .sessionId(session.getId())
                 .name("")
                 .nickName("")
                 .remoteAddress(clientIp)
-                .role(session.getId().equals(houseId)?"admin":"default").houseId(houseId)
+                .joinedAt(System.currentTimeMillis())
+                .role(initialRole).houseId(houseId)
                 .build();
         try {
             sessionRepository.setSession(user,houseId);
@@ -220,6 +241,8 @@ public class SessionServiceImpl implements SessionService {
             return sessionHint;
         }
 
+        User departingUser = readDepartingUserForQueueCleanup(
+                sessionId, houseId, sessionHint);
         WebSocketSession removed = null;
         ConnectionAdmissionResult removal = null;
         try {
@@ -271,7 +294,63 @@ public class SessionServiceImpl implements SessionService {
         // Each cleanup step is independent and idempotent. A Redis outage in
         // one repository must not retain the local socket or skip vote cleanup.
         cleanupRedisMembership(sessionId, houseId);
+        if (removal != null
+                && removal.getOutcome() == ConnectionAdmissionResult.Outcome.REMOVED) {
+            cleanupDepartedUserQueue(departingUser, houseId);
+        }
         return removed != null ? removed : sessionHint;
+    }
+
+    private User readDepartingUserForQueueCleanup(String sessionId,
+                                                   String houseId,
+                                                   WebSocketSession sessionHint) {
+        if (configService == null || musicService == null || roomMusicLocks == null) {
+            return null;
+        }
+        try {
+            if (Boolean.FALSE.equals(configService.getClearQueuedOnLeave(houseId))) {
+                return null;
+            }
+            User user = sessionRepository.getSession(sessionId, houseId);
+            if (user == null) {
+                WebSocketSession roleSource = sessionHint != null
+                        ? sessionHint
+                        : jusicProperties.getSessionIfPresent(houseId, sessionId);
+                Object cachedRole = roleSource == null ? null
+                        : roleSource.getAttributes().get(ROOM_ROLE_ATTRIBUTE);
+                if (cachedRole != null) {
+                    user = User.builder().sessionId(sessionId).houseId(houseId)
+                            .role(cachedRole.toString()).build();
+                }
+            }
+            return user != null && !RoomRolePolicy.isPrivileged(user.getRole())
+                    ? user : null;
+        } catch (RuntimeException ex) {
+            logCleanupFailure("departure-queue-policy", sessionId, houseId, ex);
+            return null;
+        }
+    }
+
+    private void cleanupDepartedUserQueue(User departingUser, String houseId) {
+        if (departingUser == null) {
+            return;
+        }
+        ReentrantLock musicLock = roomMusicLocks.getLock(houseId);
+        musicLock.lock();
+        try {
+            long removed = musicService.removeQueuedMusicBySession(
+                    departingUser.getSessionId(), houseId);
+            if (removed > 0L) {
+                LinkedList<Music> pickList = musicService.getPickList(houseId);
+                send(MessageType.PICK,
+                        Response.success(pickList, "点歌列表"), houseId);
+            }
+        } catch (RuntimeException ex) {
+            logCleanupFailure("departure-queue", departingUser.getSessionId(),
+                    houseId, ex);
+        } finally {
+            musicLock.unlock();
+        }
     }
 
     private void logCleanupFailure(String resource,

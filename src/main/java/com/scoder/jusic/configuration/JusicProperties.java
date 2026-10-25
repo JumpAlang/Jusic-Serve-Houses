@@ -672,6 +672,9 @@ public class JusicProperties {
 
         private String switchMusicEnable ="switch_music_enable";
         private String searchMusicEnable ="search_music_enable";
+        private String pickWaitMinutes ="pick_wait_minutes";
+        private String clearQueuedOnLeave ="clear_queued_on_leave";
+        private String defaultPlaylistRandom = "default_playlist_random";
         private String goodModel = "good_model";
         private String randomModel = "random_model";
         private String musicCircleModel = "music_circle_model";

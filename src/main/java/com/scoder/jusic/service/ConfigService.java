@@ -15,9 +15,15 @@ public interface ConfigService {
     void setEnableSwitch(boolean enableSwitch,String houseId);
 
     void setEnableSearch(boolean enableSearch,String houseId);
+    void setPickWaitMinutes(int minutes,String houseId);
+    void setClearQueuedOnLeave(boolean enabled,String houseId);
+    void setDefaultPlaylistRandom(boolean random,String houseId);
     void setVoteRate(Float voteRate,String houseId);
 
     Boolean getEnableSearch(String houseId);
+    Integer getPickWaitMinutes(String houseId);
+    Boolean getClearQueuedOnLeave(String houseId);
+    Boolean getDefaultPlaylistRandom(String houseId);
 
     Boolean getEnableSwitch(String houseId);
 

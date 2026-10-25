@@ -152,7 +152,7 @@ class HouseControllerRoomSwitchQueueCleanupTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "root", "admin", "root,voter", "admin,voter", "default,picker"
+            "root", "admin", "root,voter", "admin,voter"
     })
     void privilegedOldRoomRoleKeepsQueuedMusic(String role) {
         Fixture fixture = successfulFixture(role);
@@ -164,6 +164,31 @@ class HouseControllerRoomSwitchQueueCleanupTest {
                 any(String.class), any(String.class));
         verify(fixture.musicService, never()).getPickList(SOURCE_HOUSE_ID);
         assertEquals(TARGET_HOUSE_ID, fixture.attributes.get("houseId"));
+    }
+
+    @Test
+    void pickerCapabilityDoesNotBypassDepartureCleanup() {
+        Fixture fixture = successfulFixture("default,picker");
+
+        fixture.controller.enterHouse(request(TARGET_HOUSE_ID),
+                accessor(fixture.attributes));
+
+        verify(fixture.musicService).removeQueuedMusicBySession(
+                SESSION_ID, SOURCE_HOUSE_ID);
+    }
+
+    @Test
+    void disabledDepartureCleanupKeepsQueueOnRoomSwitch() {
+        Fixture fixture = successfulFixture("default");
+        ConfigService configService = (ConfigService) ReflectionTestUtils.getField(
+                fixture.controller, "configService");
+        when(configService.getClearQueuedOnLeave(SOURCE_HOUSE_ID)).thenReturn(false);
+
+        fixture.controller.enterHouse(request(TARGET_HOUSE_ID),
+                accessor(fixture.attributes));
+
+        verify(fixture.musicService, never()).removeQueuedMusicBySession(
+                any(String.class), any(String.class));
     }
 
     @Test
@@ -296,7 +321,9 @@ class HouseControllerRoomSwitchQueueCleanupTest {
                 new RoomMusicLocks());
         ReflectionTestUtils.setField(controller, "sessionCommandLocks",
                 new SessionCommandLocks());
-        ReflectionTestUtils.setField(controller, "configService", mock(ConfigService.class));
+        ConfigService configService = mock(ConfigService.class);
+        when(configService.getClearQueuedOnLeave(SOURCE_HOUSE_ID)).thenReturn(true);
+        ReflectionTestUtils.setField(controller, "configService", configService);
         House newHouse = new House();
         newHouse.setName("new room");
         return new CreationFixture(controller, sessionService, musicService,
@@ -345,8 +372,9 @@ class HouseControllerRoomSwitchQueueCleanupTest {
         ReflectionTestUtils.setField(controller, "musicService", musicService);
         ReflectionTestUtils.setField(controller, "musicPlayingRepository",
                 musicPlayingRepository);
-        ReflectionTestUtils.setField(controller, "configService",
-                mock(ConfigService.class));
+        ConfigService configService = mock(ConfigService.class);
+        when(configService.getClearQueuedOnLeave(SOURCE_HOUSE_ID)).thenReturn(true);
+        ReflectionTestUtils.setField(controller, "configService", configService);
         ReflectionTestUtils.setField(controller, "houseOperationLocks",
                 new HouseOperationLocks());
         ReflectionTestUtils.setField(controller, "roomMusicLocks",

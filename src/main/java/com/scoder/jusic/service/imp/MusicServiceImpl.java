@@ -258,11 +258,14 @@ public class MusicServiceImpl implements MusicService {
      */
     private Music resolveDefaultMusic(String houseId) {
         String defaultPlayListHouse = isDefaultPlaylistEmpty(houseId) ? "" : houseId;
+        boolean random = !Boolean.FALSE.equals(
+                configRepository.getDefaultPlaylistRandom(houseId));
         for (int attempt = 0; attempt < DEFAULT_MUSIC_RESOLVE_ATTEMPTS; attempt++) {
             if (ProviderCallExecutor.shouldAbortCurrentCall()) {
                 return null;
             }
-            String keyword = musicDefaultRepository.randomMember(defaultPlayListHouse);
+            String keyword = musicDefaultRepository.nextMember(
+                    defaultPlayListHouse, houseId, random);
             if (!hasText(keyword)) {
                 log.warn("Default playlist returned an empty keyword, houseId: {}, attempt: {}",
                         houseId, attempt + 1);
@@ -272,7 +275,8 @@ public class MusicServiceImpl implements MusicService {
                 continue;
             }
 
-            log.info("选歌列表为空, 已从默认列表中随机选择一首: {}", keyword);
+            log.info("选歌列表为空, 已从默认列表中按{}模式选择一首: {}",
+                    random ? "随机不重复" : "顺序", keyword);
             Music candidate = resolveDefaultKeyword(keyword);
             if (hasPlayableUrl(candidate)) {
                 return prepareDefaultMusic(candidate);

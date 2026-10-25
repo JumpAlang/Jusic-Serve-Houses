@@ -8,6 +8,7 @@ import com.scoder.jusic.job.MusicJob;
 import com.scoder.jusic.model.House;
 import com.scoder.jusic.model.Music;
 import com.scoder.jusic.model.PickMusicResult;
+import com.scoder.jusic.model.User;
 import com.scoder.jusic.service.imp.LegacyLocalRoomCommandService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -166,6 +167,26 @@ class LegacyLocalRoomCommandServiceTest {
 
         assertFalse(result.isSuccess());
         assertEquals("当前禁止点歌", result.getMessage());
+        verify(musicService, never()).toPick(
+                SESSION_ID, music(), HOUSE_ID, "qq");
+    }
+
+    @Test
+    void roomEntryWaitIsRecheckedInsideTheCriticalSection() {
+        when(houseContainer.get(HOUSE_ID)).thenReturn(house(false));
+        allowCurrentMembership();
+        when(configService.getEnableSearch(HOUSE_ID)).thenReturn(true);
+        when(configService.getPickWaitMinutes(HOUSE_ID)).thenReturn(10);
+        when(sessionService.getRole(SESSION_ID, HOUSE_ID)).thenReturn("default");
+        User user = new User();
+        user.setJoinedAt(System.currentTimeMillis());
+        when(sessionService.getUser(SESSION_ID, HOUSE_ID)).thenReturn(user);
+
+        PickMusicResult result = commandService.commitPick(
+                SESSION_ID, HOUSE_ID, "qq", music());
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.getMessage().contains("进入房间满10分钟后才能点歌"));
         verify(musicService, never()).toPick(
                 SESSION_ID, music(), HOUSE_ID, "qq");
     }

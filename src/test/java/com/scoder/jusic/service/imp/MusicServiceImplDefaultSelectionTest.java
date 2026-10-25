@@ -78,7 +78,7 @@ class MusicServiceImplDefaultSelectionTest {
     @Test
     void nullKeywordsAreBoundedAndNeverReachAProviderParser() {
         Fixture fixture = fixture();
-        when(fixture.defaultRepository.randomMember(HOUSE_ID)).thenReturn(null);
+        when(fixture.defaultRepository.nextMember(HOUSE_ID, HOUSE_ID, true)).thenReturn(null);
         Music fallback = music("https://music.invalid/fallback.mp3", "lz");
         doReturn(fallback).when(fixture.service).getLZMusic(251);
 
@@ -86,7 +86,7 @@ class MusicServiceImplDefaultSelectionTest {
 
         assertSame(fallback, selected);
         verify(fixture.defaultRepository, times(MAX_DEFAULT_ATTEMPTS))
-                .randomMember(anyString());
+                .nextMember(anyString(), eq(HOUSE_ID), eq(true));
         verify(fixture.service, never()).getWYMusicById(anyString(), any());
         verify(fixture.service, never()).getQQMusicById(anyString(), any());
     }
@@ -103,7 +103,8 @@ class MusicServiceImplDefaultSelectionTest {
         when(pickRepository.size(HOUSE_ID)).thenReturn(0L);
         when(playingRepository.getPlaying(HOUSE_ID)).thenReturn(null);
         when(defaultRepository.size(HOUSE_ID)).thenReturn(1L);
-        when(defaultRepository.randomMember(HOUSE_ID)).thenReturn("bad-track");
+        when(defaultRepository.nextMember(HOUSE_ID, HOUSE_ID, true)).thenReturn("bad-track");
+        when(configRepository.getDefaultPlaylistRandom(HOUSE_ID)).thenReturn(true);
 
         ReflectionTestUtils.setField(service, "musicPickRepository", pickRepository);
         ReflectionTestUtils.setField(service, "musicPlayingRepository", playingRepository);

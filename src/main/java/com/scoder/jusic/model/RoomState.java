@@ -14,6 +14,9 @@ public class RoomState {
     private boolean listCircleModel;
     private boolean enableSearch;
     private boolean enableSwitch;
+    private int pickWaitMinutes;
+    private boolean clearQueuedOnLeave;
+    private boolean defaultPlaylistRandom;
 
     public static RoomState read(ConfigService config, String houseId) {
         RoomState state = new RoomState();
@@ -26,6 +29,10 @@ public class RoomState {
         // Match command authorization: only an explicit false disables guests.
         state.setEnableSearch(!Boolean.FALSE.equals(config.getEnableSearch(houseId)));
         state.setEnableSwitch(!Boolean.FALSE.equals(config.getEnableSwitch(houseId)));
+        Integer pickWaitMinutes = config.getPickWaitMinutes(houseId);
+        state.setPickWaitMinutes(pickWaitMinutes == null ? 0 : Math.max(0, pickWaitMinutes));
+        state.setClearQueuedOnLeave(!Boolean.FALSE.equals(config.getClearQueuedOnLeave(houseId)));
+        state.setDefaultPlaylistRandom(!Boolean.FALSE.equals(config.getDefaultPlaylistRandom(houseId)));
         return state;
     }
 }

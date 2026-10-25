@@ -35,6 +35,21 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
+    public void setPickWaitMinutes(int minutes, String houseId) {
+        configRepository.setPickWaitMinutes(minutes, houseId);
+    }
+
+    @Override
+    public void setClearQueuedOnLeave(boolean enabled, String houseId) {
+        configRepository.setClearQueuedOnLeave(enabled, houseId);
+    }
+
+    @Override
+    public void setDefaultPlaylistRandom(boolean random, String houseId) {
+        configRepository.setDefaultPlaylistRandom(random, houseId);
+    }
+
+    @Override
     public Float getVoteRate(String houseId) {
         return configRepository.getVoteRate(houseId);
     }
@@ -59,6 +74,21 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public Boolean getEnableSearch(String houseId) {
         return configRepository.getEnableSearch(houseId);
+    }
+
+    @Override
+    public Integer getPickWaitMinutes(String houseId) {
+        return configRepository.getPickWaitMinutes(houseId);
+    }
+
+    @Override
+    public Boolean getClearQueuedOnLeave(String houseId) {
+        return configRepository.getClearQueuedOnLeave(houseId);
+    }
+
+    @Override
+    public Boolean getDefaultPlaylistRandom(String houseId) {
+        return configRepository.getDefaultPlaylistRandom(houseId);
     }
 
     @Override

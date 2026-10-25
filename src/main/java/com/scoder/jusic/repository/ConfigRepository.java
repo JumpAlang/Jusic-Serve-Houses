@@ -147,6 +147,15 @@ public interface ConfigRepository {
     Boolean getEnableSearch(String houseId);
     void setEnableSearch(boolean enableSearch,String houseId);
 
+    Integer getPickWaitMinutes(String houseId);
+    void setPickWaitMinutes(int minutes,String houseId);
+
+    Boolean getClearQueuedOnLeave(String houseId);
+    void setClearQueuedOnLeave(boolean enabled,String houseId);
+
+    Boolean getDefaultPlaylistRandom(String houseId);
+    void setDefaultPlaylistRandom(boolean random,String houseId);
+
     Boolean getGoodModel(String houseId);
     void setGoodModel(boolean goodModel,String houseId);
 

@@ -7,6 +7,7 @@ import com.scoder.jusic.model.House;
 import com.scoder.jusic.model.MessageType;
 import com.scoder.jusic.model.Music;
 import com.scoder.jusic.model.PickMusicResult;
+import com.scoder.jusic.model.User;
 import com.scoder.jusic.security.InboundPayloadValidator;
 import com.scoder.jusic.security.ProviderCallExecutor;
 import com.scoder.jusic.service.ConfigService;
@@ -31,6 +32,7 @@ import java.util.concurrent.Callable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -99,6 +101,66 @@ class MusicControllerPickTest {
         verifyNoInteractions(roomCommandService);
         verify(sessionService, never()).send(eq(MessageType.CHAT), any(), eq(HOUSE_ID));
         verify(sessionService).send(eq(SESSION_ID), eq(MessageType.NOTICE), any(), eq(HOUSE_ID));
+    }
+
+    @Test
+    void newGuestIsRejectedBeforeProviderUntilRoomWaitExpires() {
+        Music request = request();
+        User user = new User();
+        user.setJoinedAt(System.currentTimeMillis());
+        when(houseContainer.get(HOUSE_ID)).thenReturn(house());
+        when(sessionService.getRole(SESSION_ID, HOUSE_ID)).thenReturn("default");
+        when(configService.getPickWaitMinutes(HOUSE_ID)).thenReturn(5);
+        when(sessionService.getUser(SESSION_ID, HOUSE_ID)).thenReturn(user);
+
+        controller.pick(request, accessor());
+
+        verify(providerCallExecutor, never()).pick(any());
+        verifyNoInteractions(roomCommandService);
+        ArgumentCaptor<Response> response = ArgumentCaptor.forClass(Response.class);
+        verify(sessionService).send(eq(SESSION_ID), eq(MessageType.NOTICE), response.capture(), eq(HOUSE_ID));
+        assertTrue(response.getValue().getMessage().contains("进入房间满5分钟后才能点歌"));
+    }
+
+    @Test
+    void administratorBypassesRoomWait() {
+        Music request = request();
+        Music resolved = resolvedMusic();
+        when(houseContainer.get(HOUSE_ID)).thenReturn(house());
+        when(sessionService.getRole(SESSION_ID, HOUSE_ID)).thenReturn("admin");
+        when(jusicProperties.getPlaylistSize()).thenReturn(3);
+        when(musicService.noDefaultPlaylistSize(HOUSE_ID)).thenReturn(0L);
+        when(musicService.getQQMusicById("song-1", "320k")).thenReturn(resolved);
+        when(roomCommandService.commitPick(SESSION_ID, HOUSE_ID, "qq", resolved))
+                .thenReturn(PickMusicResult.failure("stop after authorization"));
+
+        controller.pick(request, accessor());
+
+        verify(providerCallExecutor).pick(any());
+        verify(configService, never()).getPickWaitMinutes(HOUSE_ID);
+        verify(sessionService, never()).getUser(SESSION_ID, HOUSE_ID);
+    }
+
+    @Test
+    void guestCanReachProviderAfterRoomWaitExpires() {
+        Music request = request();
+        Music resolved = resolvedMusic();
+        User user = new User();
+        user.setJoinedAt(System.currentTimeMillis() - 5 * 60_000L - 1_000L);
+        when(houseContainer.get(HOUSE_ID)).thenReturn(house());
+        when(sessionService.getRole(SESSION_ID, HOUSE_ID)).thenReturn("default");
+        when(configService.getPickWaitMinutes(HOUSE_ID)).thenReturn(5);
+        when(sessionService.getUser(SESSION_ID, HOUSE_ID)).thenReturn(user);
+        when(jusicProperties.getPlaylistSize()).thenReturn(3);
+        when(musicService.noDefaultPlaylistSize(HOUSE_ID)).thenReturn(0L);
+        when(musicService.getQQMusicById("song-1", "320k")).thenReturn(resolved);
+        when(roomCommandService.commitPick(SESSION_ID, HOUSE_ID, "qq", resolved))
+                .thenReturn(PickMusicResult.failure("stop after authorization"));
+
+        controller.pick(request, accessor());
+
+        verify(providerCallExecutor).pick(any());
+        verify(roomCommandService).commitPick(SESSION_ID, HOUSE_ID, "qq", resolved);
     }
 
     @Test

@@ -437,15 +437,17 @@ public class HouseController {
                 JusicWebSocketHandlerAsync.CONNECTION_CLOSED_ATTRIBUTE));
     }
 
-    private boolean shouldClearQueuedMusicOnRoomSwitch(String role) {
+    private boolean shouldClearQueuedMusicOnRoomSwitch(String role,
+                                                        String houseId) {
         return !RoomRolePolicy.isPrivileged(role)
-                && !RoomRolePolicy.hasCapability(role, "picker");
+                && !Boolean.FALSE.equals(
+                configService.getClearQueuedOnLeave(houseId));
     }
 
     /** Caller must already hold the room lifecycle lock. */
     private LinkedList<Music> cleanupQueuedMusicAfterRoomSwitch(
             String sessionId, String previousHouseId, String previousRole) {
-        if (!shouldClearQueuedMusicOnRoomSwitch(previousRole)) {
+        if (!shouldClearQueuedMusicOnRoomSwitch(previousRole, previousHouseId)) {
             return null;
         }
 

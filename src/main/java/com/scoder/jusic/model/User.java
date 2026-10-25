@@ -38,6 +38,8 @@ public class User implements Serializable {
      * 角色
      */
     private String role = "default";
+    /** Time when this connection entered the current room. */
+    private Long joinedAt;
     /**
      * 最后时间..
      */

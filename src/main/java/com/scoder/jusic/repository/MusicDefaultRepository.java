@@ -35,6 +35,12 @@ public interface MusicDefaultRepository {
      */
     String randomMember(String houseId);
 
+    /**
+     * Returns the next member in a room-specific playback cycle. Random mode
+     * shuffles once per cycle, so no member repeats until the cycle is empty.
+     */
+    String nextMember(String playlistHouseId, String playbackHouseId, boolean random);
+
     void remove(String id,String houseId);
 
     /**

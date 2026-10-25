@@ -9,6 +9,7 @@ import com.scoder.jusic.model.User;
 import com.scoder.jusic.security.RoomRolePolicy;
 import com.scoder.jusic.service.AuthService;
 import com.scoder.jusic.service.SessionService;
+import com.scoder.jusic.service.imp.SessionServiceImpl;
 import com.scoder.jusic.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,8 @@ public class AuthController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         boolean result = authService.authRoot(sessionId, auth.getPassword(),houseId);
+        accessor.getSessionAttributes().put(
+                SessionServiceImpl.ROOM_ROLE_ATTRIBUTE, result ? "root" : "default");
         sessionService.send(sessionId,
                 MessageType.AUTH_ROOT,
                 result ? Response.success((Object) null, "登录成功") : Response.failure((Object) null, "登录失败"),houseId);
@@ -46,6 +49,8 @@ public class AuthController {
         String sessionId = accessor.getHeader("simpSessionId").toString();
         String houseId = (String)accessor.getSessionAttributes().get("houseId");
         boolean result = authService.authAdmin(sessionId, auth.getPassword(), houseId);
+        accessor.getSessionAttributes().put(
+                SessionServiceImpl.ROOM_ROLE_ATTRIBUTE, result ? "admin" : "default");
         sessionService.send(sessionId,
                 MessageType.AUTH_ADMIN,
                 result ? Response.success((Object) null, "登录成功") : Response.failure((Object) null, "登录失败"),houseId);

@@ -2,12 +2,17 @@ package com.scoder.jusic.service.imp;
 
 import com.scoder.jusic.configuration.JusicProperties;
 import com.scoder.jusic.configuration.OutboundMailboxProperties;
+import com.scoder.jusic.configuration.RoomMusicLocks;
 import com.scoder.jusic.model.MessageType;
+import com.scoder.jusic.model.User;
 import com.scoder.jusic.repository.MusicVoteRepository;
 import com.scoder.jusic.repository.SessionBlackRepository;
 import com.scoder.jusic.repository.SessionRepository;
+import com.scoder.jusic.service.ConfigService;
+import com.scoder.jusic.service.MusicService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -152,6 +157,71 @@ class SessionServiceImplOutboundMailboxTest {
         verify(fixture.sessionRepository).removeSession("session-close", "house-1");
         assertEquals(0, mailboxes.mailboxCount());
         assertFalse(fixture.properties.getSessions("house-1").containsKey("session-close"));
+    }
+
+    @Test
+    void ordinaryDisconnectRemovesOwnedQueuedMusic() {
+        Fixture fixture = fixture(mailboxes(Runnable::run, 10, 16_384),
+                "session-leaving", "house-1");
+        ConfigService configService = mock(ConfigService.class);
+        MusicService musicService = mock(MusicService.class);
+        User user = User.builder().sessionId("session-leaving")
+                .houseId("house-1").role("default").build();
+        when(configService.getClearQueuedOnLeave("house-1")).thenReturn(true);
+        when(fixture.sessionRepository.getSession("session-leaving", "house-1"))
+                .thenReturn(user);
+        when(musicService.removeQueuedMusicBySession("session-leaving", "house-1"))
+                .thenReturn(1L);
+        when(musicService.getPickList("house-1"))
+                .thenReturn(new java.util.LinkedList<>());
+        ReflectionTestUtils.setField(fixture.service, "configService", configService);
+        ReflectionTestUtils.setField(fixture.service, "musicService", musicService);
+        ReflectionTestUtils.setField(fixture.service, "roomMusicLocks", new RoomMusicLocks());
+
+        fixture.service.clearSession(fixture.session, "house-1");
+
+        verify(musicService).removeQueuedMusicBySession(
+                "session-leaving", "house-1");
+    }
+
+    @Test
+    void administratorDisconnectKeepsOwnedQueuedMusic() {
+        Fixture fixture = fixture(mailboxes(Runnable::run, 10, 16_384),
+                "admin-leaving", "house-1");
+        ConfigService configService = mock(ConfigService.class);
+        MusicService musicService = mock(MusicService.class);
+        User user = User.builder().sessionId("admin-leaving")
+                .houseId("house-1").role("admin").build();
+        when(configService.getClearQueuedOnLeave("house-1")).thenReturn(true);
+        when(fixture.sessionRepository.getSession("admin-leaving", "house-1"))
+                .thenReturn(user);
+        ReflectionTestUtils.setField(fixture.service, "configService", configService);
+        ReflectionTestUtils.setField(fixture.service, "musicService", musicService);
+        ReflectionTestUtils.setField(fixture.service, "roomMusicLocks", new RoomMusicLocks());
+
+        fixture.service.clearSession(fixture.session, "house-1");
+
+        verify(musicService, never()).removeQueuedMusicBySession(
+                any(String.class), any(String.class));
+    }
+
+    @Test
+    void disabledDepartureCleanupKeepsQueueOnDisconnect() {
+        Fixture fixture = fixture(mailboxes(Runnable::run, 10, 16_384),
+                "session-kept", "house-1");
+        ConfigService configService = mock(ConfigService.class);
+        MusicService musicService = mock(MusicService.class);
+        when(configService.getClearQueuedOnLeave("house-1")).thenReturn(false);
+        ReflectionTestUtils.setField(fixture.service, "configService", configService);
+        ReflectionTestUtils.setField(fixture.service, "musicService", musicService);
+        ReflectionTestUtils.setField(fixture.service, "roomMusicLocks", new RoomMusicLocks());
+
+        fixture.service.clearSession(fixture.session, "house-1");
+
+        verify(fixture.sessionRepository, never()).getSession(
+                "session-kept", "house-1");
+        verify(musicService, never()).removeQueuedMusicBySession(
+                any(String.class), any(String.class));
     }
 
     @Test

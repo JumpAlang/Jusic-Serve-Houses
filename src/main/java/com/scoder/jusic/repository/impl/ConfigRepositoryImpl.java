@@ -47,6 +47,9 @@ public class ConfigRepositoryImpl implements ConfigRepository {
         this.putIfAbsent(redisKeys.getRandomModel(),jusicProperties.getRandomModel(),houseId);
         this.putIfAbsent(redisKeys.getMusicCircleModel(),jusicProperties.getMusicCircleModel(),houseId);
         this.putIfAbsent(redisKeys.getListCircleModel(),jusicProperties.getListCircleModel(),houseId);
+        this.putIfAbsent(redisKeys.getPickWaitMinutes(),0,houseId);
+        this.putIfAbsent(redisKeys.getClearQueuedOnLeave(),true,houseId);
+        this.putIfAbsent(redisKeys.getDefaultPlaylistRandom(),true,houseId);
     }
 
     private void putIfAbsent(Object hashKey, Object value, String houseId) {
@@ -211,6 +214,39 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     @Override
     public void setEnableSearch(boolean enableSearch,String houseId) {
         this.put(redisKeys.getSearchMusicEnable(), enableSearch,houseId);
+    }
+
+    @Override
+    public Integer getPickWaitMinutes(String houseId) {
+        Object value = this.get(redisKeys.getPickWaitMinutes(), houseId);
+        return value instanceof Number ? Math.max(0, ((Number) value).intValue()) : 0;
+    }
+
+    @Override
+    public void setPickWaitMinutes(int minutes, String houseId) {
+        this.put(redisKeys.getPickWaitMinutes(), minutes, houseId);
+    }
+
+    @Override
+    public Boolean getClearQueuedOnLeave(String houseId) {
+        Object value = this.get(redisKeys.getClearQueuedOnLeave(), houseId);
+        return value instanceof Boolean ? (Boolean) value : true;
+    }
+
+    @Override
+    public void setClearQueuedOnLeave(boolean enabled, String houseId) {
+        this.put(redisKeys.getClearQueuedOnLeave(), enabled, houseId);
+    }
+
+    @Override
+    public Boolean getDefaultPlaylistRandom(String houseId) {
+        Object value = this.get(redisKeys.getDefaultPlaylistRandom(), houseId);
+        return value instanceof Boolean ? (Boolean) value : true;
+    }
+
+    @Override
+    public void setDefaultPlaylistRandom(boolean random, String houseId) {
+        this.put(redisKeys.getDefaultPlaylistRandom(), random, houseId);
     }
 
     @Override

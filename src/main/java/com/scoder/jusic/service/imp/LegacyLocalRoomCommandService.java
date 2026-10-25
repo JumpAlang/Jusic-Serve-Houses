@@ -69,8 +69,9 @@ public class LegacyLocalRoomCommandService implements RoomCommandService {
             if (house == null) {
                 return PickMusicResult.failure("房间不存在");
             }
-            if (!canPick(sessionId, houseId)) {
-                return PickMusicResult.failure("当前禁止点歌");
+            String pickDenialMessage = pickDenialMessage(sessionId, houseId);
+            if (pickDenialMessage != null) {
+                return PickMusicResult.failure(pickDenialMessage);
             }
 
             long limit = playlistLimit(house);
@@ -129,20 +130,39 @@ public class LegacyLocalRoomCommandService implements RoomCommandService {
         }
     }
 
-    private boolean canPick(String sessionId, String houseId) {
+    private String pickDenialMessage(String sessionId, String houseId) {
         // A provider call may finish after this connection has switched rooms.
         // Recheck the node-local authoritative membership while holding the
         // same lifecycle lock as the move, so a delayed old-room request can
         // never enqueue after switch cleanup has completed.
         if (jusicProperties.getSessionIfPresent(houseId, sessionId) == null) {
-            return false;
-        }
-        if (!Boolean.FALSE.equals(configService.getEnableSearch(houseId))) {
-            return true;
+            return "当前禁止点歌";
         }
         String role = sessionService.getRole(sessionId, houseId);
-        return RoomRolePolicy.isPrivileged(role)
-                || RoomRolePolicy.hasCapability(role, "picker");
+        if (RoomRolePolicy.isPrivileged(role)) {
+            return null;
+        }
+        if (Boolean.FALSE.equals(configService.getEnableSearch(houseId))
+                && !RoomRolePolicy.hasCapability(role, "picker")) {
+            return "当前禁止点歌";
+        }
+        Integer configuredMinutes = configService.getPickWaitMinutes(houseId);
+        int waitMinutes = configuredMinutes == null ? 0 : Math.max(0, configuredMinutes);
+        if (waitMinutes == 0) {
+            return null;
+        }
+        com.scoder.jusic.model.User user = sessionService.getUser(sessionId, houseId);
+        if (user == null || user.getJoinedAt() == null) {
+            return null;
+        }
+        long remainingMillis = waitMinutes * 60_000L
+                - (System.currentTimeMillis() - user.getJoinedAt());
+        if (remainingMillis <= 0) {
+            return null;
+        }
+        long remainingMinutes = (remainingMillis + 59_999L) / 60_000L;
+        return "进入房间满" + waitMinutes + "分钟后才能点歌，还需等待约"
+                + remainingMinutes + "分钟";
     }
 
     private long playlistLimit(House house) {

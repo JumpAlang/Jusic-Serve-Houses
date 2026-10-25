@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.query.SortQueryBuilder;
 import com.alibaba.fastjson.JSONObject;
 import com.scoder.jusic.model.DefaultPlaylistSong;
 import java.util.*;
@@ -27,6 +26,9 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
     private StringRedisTemplate stringRedisTemplate;
 
     private String metadataKey(String houseId) { return redisKeys.getDefaultSet() + "_metadata_" + houseId; }
+    private String orderKey(String houseId) { return redisKeys.getDefaultSet() + "_order_" + houseId; }
+    private String cycleKey(String houseId) { return redisKeys.getDefaultSet() + "_cycle_" + houseId; }
+    private String cycleModeKey(String houseId) { return redisKeys.getDefaultSet() + "_cycle_mode_" + houseId; }
 
     @Override
     public Long addSongs(List<DefaultPlaylistSong> songs, String houseId) {
@@ -45,10 +47,11 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<DefaultPlaylistSong> page(String houseId, long offset, int limit) {
-        // Keep the legacy set authoritative; bound the response even for large lists.
-        List<String> members = redisTemplate.sort(SortQueryBuilder.sort(redisKeys.getDefaultSet()+"_"+houseId)
-                .alphabetical(true).limit(offset, limit).build());
+    public synchronized List<DefaultPlaylistSong> page(String houseId, long offset, int limit) {
+        List<String> ordered = orderedMembers(houseId);
+        int from = (int) Math.min(Math.max(0L, offset), ordered.size());
+        int to = Math.min(ordered.size(), from + Math.max(0, limit));
+        List<String> members = ordered.subList(from, to);
         if (members == null || members.isEmpty()) return Collections.emptyList();
         List<Object> fields = new ArrayList<>(members);
         List<Object> details = stringRedisTemplate.opsForHash().multiGet(metadataKey(houseId), fields);
@@ -70,7 +73,8 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
 
     @Override
     public Boolean destroy(String houseId) {
-        Long deleted = redisTemplate.delete(Arrays.asList(redisKeys.getDefaultSet()+"_"+houseId, metadataKey(houseId)));
+        Long deleted = redisTemplate.delete(Arrays.asList(redisKeys.getDefaultSet()+"_"+houseId,
+                metadataKey(houseId), orderKey(houseId), cycleKey(houseId), cycleModeKey(houseId)));
         return deleted != null && deleted > 0;
 //        Set members = redisTemplate.opsForSet()
 //                .members(redisKeys.getDefaultSet());
@@ -80,8 +84,7 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
 
     @Override
     public Long initialize(String houseId) {
-        return redisTemplate.opsForSet()
-                .add(redisKeys.getDefaultSet()+"_"+houseId, JusicProperties.getDefaultListForRepository().toArray());
+        return add(JusicProperties.getDefaultListForRepository().toArray(new String[0]), houseId);
     }
 
     /**
@@ -108,15 +111,96 @@ public class MusicDefaultRepositoryImpl implements MusicDefaultRepository {
     }
 
     @Override
+    public synchronized String nextMember(String playlistHouseId, String playbackHouseId,
+                                          boolean random) {
+        String signature = playlistHouseId + "|" + (random ? "random" : "ordered");
+        Object previousSignature = redisTemplate.opsForValue().get(cycleModeKey(playbackHouseId));
+        if (!signature.equals(previousSignature)) {
+            redisTemplate.delete(cycleKey(playbackHouseId));
+            redisTemplate.opsForValue().set(cycleModeKey(playbackHouseId), signature);
+        }
+
+        Object next = redisTemplate.opsForList().leftPop(cycleKey(playbackHouseId));
+        if (next != null) {
+            return next.toString();
+        }
+
+        List<String> cycle = orderedMembers(playlistHouseId);
+        if (cycle.isEmpty()) {
+            return "25718007";
+        }
+        if (random) {
+            Collections.shuffle(cycle);
+        }
+        redisTemplate.opsForList().rightPushAll(cycleKey(playbackHouseId), cycle);
+        Object first = redisTemplate.opsForList().leftPop(cycleKey(playbackHouseId));
+        return first == null ? "25718007" : first.toString();
+    }
+
+    @Override
     public void remove(String id, String houseId) {
         stringRedisTemplate.opsForHash().delete(metadataKey(houseId), id);
         redisTemplate.opsForSet()
                 .remove(redisKeys.getDefaultSet()+"_"+houseId,id);
+        redisTemplate.opsForList().remove(orderKey(houseId), 0, id);
+        redisTemplate.opsForList().remove(cycleKey(houseId), 0, id);
     }
 
     @Override
-    public Long add(String[] value,String houseId) {
-        return redisTemplate.opsForSet()
-                .add(redisKeys.getDefaultSet()+"_"+houseId, value);
+    public synchronized Long add(String[] value,String houseId) {
+        long added = 0L;
+        if (value == null) return added;
+        for (String member : value) {
+            if (member == null || member.trim().isEmpty()) continue;
+            Long count = redisTemplate.opsForSet()
+                    .add(redisKeys.getDefaultSet()+"_"+houseId, member);
+            if (count != null && count > 0L) {
+                redisTemplate.opsForList().rightPush(orderKey(houseId), member);
+                added += count;
+            }
+        }
+        return added;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> orderedMembers(String houseId) {
+        Set<Object> rawMembers = redisTemplate.opsForSet()
+                .members(redisKeys.getDefaultSet()+"_"+houseId);
+        if (rawMembers == null || rawMembers.isEmpty()) {
+            redisTemplate.delete(orderKey(houseId));
+            return new ArrayList<>();
+        }
+
+        LinkedHashSet<String> valid = rawMembers.stream()
+                .filter(Objects::nonNull)
+                .map(Object::toString)
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        List<Object> stored = redisTemplate.opsForList().range(orderKey(houseId), 0, -1);
+        LinkedHashSet<String> repaired = new LinkedHashSet<>();
+        if (stored != null) {
+            for (Object member : stored) {
+                if (member != null && valid.contains(member.toString())) {
+                    repaired.add(member.toString());
+                }
+            }
+        }
+        List<String> missing = new ArrayList<>();
+        for (String member : valid) {
+            if (!repaired.contains(member)) missing.add(member);
+        }
+        // A Redis Set did not retain the order of legacy data. Keep migration
+        // deterministic; all newly imported songs retain their source order.
+        Collections.sort(missing);
+        repaired.addAll(missing);
+        List<String> result = new ArrayList<>(repaired);
+        if (stored == null || stored.size() != result.size()
+                || !result.equals(stored.stream().map(Object::toString)
+                .collect(java.util.stream.Collectors.toList()))) {
+            redisTemplate.delete(orderKey(houseId));
+            if (!result.isEmpty()) {
+                redisTemplate.opsForList().rightPushAll(orderKey(houseId), result);
+            }
+        }
+        return result;
     }
 }

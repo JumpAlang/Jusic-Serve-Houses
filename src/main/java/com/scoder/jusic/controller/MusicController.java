@@ -34,6 +34,8 @@ import java.util.List;
 @Slf4j
 public class MusicController {
 
+    private static final int MAX_PICK_WAIT_MINUTES = 24 * 60;
+
     @Autowired
     private HouseContainer houseContainer;
     @Autowired
@@ -74,8 +76,9 @@ public class MusicController {
             sendPickFailure(sessionId, houseId, "房间不存在");
             return;
         }
-        if (!canPick(sessionId, houseId)) {
-            sendPickFailure(sessionId, houseId, "当前禁止点歌");
+        String pickDenialMessage = pickDenialMessage(sessionId, houseId);
+        if (pickDenialMessage != null) {
+            sendPickFailure(sessionId, houseId, pickDenialMessage);
             return;
         }
         long limitPlaylistSize = playlistLimit(matchHouse);
@@ -155,12 +158,32 @@ public class MusicController {
                 : musicService.getWYMusic(music);
     }
 
-    private boolean canPick(String sessionId, String houseId) {
-        if (!Boolean.FALSE.equals(configService.getEnableSearch(houseId))) {
-            return true;
-        }
+    private String pickDenialMessage(String sessionId, String houseId) {
         String role = sessionService.getRole(sessionId,houseId);
-        return RoomRolePolicy.isPrivileged(role) || RoomRolePolicy.hasCapability(role, "picker");
+        if (RoomRolePolicy.isPrivileged(role)) {
+            return null;
+        }
+        if (Boolean.FALSE.equals(configService.getEnableSearch(houseId))
+                && !RoomRolePolicy.hasCapability(role, "picker")) {
+            return "当前禁止点歌";
+        }
+        Integer configuredMinutes = configService.getPickWaitMinutes(houseId);
+        int waitMinutes = configuredMinutes == null ? 0 : Math.max(0, configuredMinutes);
+        if (waitMinutes == 0) {
+            return null;
+        }
+        User user = sessionService.getUser(sessionId, houseId);
+        if (user == null || user.getJoinedAt() == null) {
+            return null;
+        }
+        long waitMillis = waitMinutes * 60_000L;
+        long remainingMillis = waitMillis - (System.currentTimeMillis() - user.getJoinedAt());
+        if (remainingMillis <= 0) {
+            return null;
+        }
+        long remainingMinutes = (remainingMillis + 59_999L) / 60_000L;
+        return "进入房间满" + waitMinutes + "分钟后才能点歌，还需等待约"
+                + remainingMinutes + "分钟";
     }
 
     private long playlistLimit(House house) {
@@ -611,6 +634,70 @@ public class MusicController {
                 sessionService.send(MessageType.NOTICE, Response.success((Object) null, "启用点歌功能成功"),houseId);
             }
         }
+    }
+
+    @MessageMapping("/music/pickwait/{minutes}")
+    public void pickWait(@DestinationVariable int minutes, StompHeaderAccessor accessor) {
+        String sessionId = accessor.getSessionId();
+        String houseId = (String) accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!RoomRolePolicy.isPrivileged(role)) {
+            log.info("session: {} 尝试设置进房点歌等待时间, 没有权限, 已被阻止", sessionId);
+            sessionService.send(sessionId, MessageType.NOTICE,
+                    Response.failure((Object) null, "你没有权限"), houseId);
+            return;
+        }
+        if (minutes < 0 || minutes > MAX_PICK_WAIT_MINUTES) {
+            sessionService.send(sessionId, MessageType.NOTICE,
+                    Response.failure((Object) null, "点歌等待时间必须在0到1440分钟之间"), houseId);
+            return;
+        }
+        configService.setPickWaitMinutes(minutes, houseId);
+        sessionService.send(MessageType.NOTICE,
+                Response.success((Object) null, minutes == 0
+                        ? "已取消进房点歌等待限制"
+                        : "已设置进入房间" + minutes + "分钟后可点歌"), houseId);
+        broadcastRoomState(houseId);
+    }
+
+    @MessageMapping("/music/clearqueueonleave/{enabled}")
+    public void clearQueueOnLeave(@DestinationVariable boolean enabled,
+                                  StompHeaderAccessor accessor) {
+        String sessionId = accessor.getSessionId();
+        String houseId = (String) accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId,houseId);
+        if (!RoomRolePolicy.isPrivileged(role)) {
+            log.info("session: {} 尝试设置离房清理点歌, 没有权限, 已被阻止", sessionId);
+            sessionService.send(sessionId, MessageType.NOTICE,
+                    Response.failure((Object) null, "你没有权限"), houseId);
+            return;
+        }
+        configService.setClearQueuedOnLeave(enabled, houseId);
+        sessionService.send(MessageType.NOTICE,
+                Response.success((Object) null, enabled
+                        ? "已开启成员离房自动清理点歌"
+                        : "已关闭成员离房自动清理点歌"), houseId);
+        broadcastRoomState(houseId);
+    }
+
+    @MessageMapping("/music/defaultplaylistmode/{random}")
+    public void defaultPlaylistMode(@DestinationVariable boolean random,
+                                    StompHeaderAccessor accessor) {
+        String sessionId = accessor.getSessionId();
+        String houseId = (String) accessor.getSessionAttributes().get("houseId");
+        String role = sessionService.getRole(sessionId, houseId);
+        if (!RoomRolePolicy.isPrivileged(role)) {
+            log.info("session: {} 尝试设置默认列表播放模式, 没有权限, 已被阻止", sessionId);
+            sessionService.send(sessionId, MessageType.NOTICE,
+                    Response.failure((Object) null, "你没有权限"), houseId);
+            return;
+        }
+        configService.setDefaultPlaylistRandom(random, houseId);
+        sessionService.send(MessageType.NOTICE,
+                Response.success((Object) null, random
+                        ? "默认列表已切换为随机不重复播放"
+                        : "默认列表已切换为顺序播放"), houseId);
+        broadcastRoomState(houseId);
     }
 
     @MessageMapping("/music/unblack")
